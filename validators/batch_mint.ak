@@ -22,7 +22,7 @@ type Action {
 //  Total Transactions: 0
 
 validator {
-  fn mint(redeemer: Action, reference: OutputReference) {
+  fn mint(redeemer: Action, _reference: OutputReference) {
     when redeemer is {
       Mint -> True
       Burn -> True
@@ -31,7 +31,7 @@ validator {
 }
 
 validator {
-  fn modify(_d: Data, _r: Data, context: ScriptContext) {
+  fn modify(_d: Data, _r: Data, _context: ScriptContext) {
     True
   }
 }
