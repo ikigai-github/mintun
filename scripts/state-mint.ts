@@ -1,11 +1,11 @@
 import { Constr, Data, Lucid, Script, UTxO, applyDoubleCborEncoding, applyParamsToScript, fromText, toLabel } from "https://deno.land/x/lucid@0.10.7/mod.ts";
 import { PosixTimeIntervalSchema } from "./aiken.ts";
 import { getValidator } from "./validators.ts";
+import { createReferenceTokenSchema } from "./cip68.ts";
 
 export const TOKEN_NAME = fromText('state');
 export const USER_TOKEN_NAME = `${toLabel(111)}${TOKEN_NAME}`;
 export const REFERENCE_TOKEN_NAME = `${toLabel(100)}${TOKEN_NAME}`; 
-
 
 // Custom state mint datum type definition
 const StateMintMetadataSchema = Data.Object({
@@ -15,12 +15,7 @@ const StateMintMetadataSchema = Data.Object({
   transactions: Data.Integer()
 });
 
-const StateMintDatumSchema = Data.Object({
-  metadata: StateMintMetadataSchema,
-  version: Data.Integer(),
-  extra: Data.Any()
-})
-
+const StateMintDatumSchema = createReferenceTokenSchema(StateMintMetadataSchema);
 type StateMintDatum = Data.Static<typeof StateMintDatumSchema>;
 const StateMintDatumShape = StateMintDatumSchema as unknown as StateMintDatum;
 

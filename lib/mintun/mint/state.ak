@@ -1,5 +1,7 @@
 use aiken/interval.{Interval}
 use aiken/time.{PosixTime}
+use aiken/transaction.{Datum, InlineDatum}
+use mintun/mint/cip68.{ReferenceToken}
 
 /// Mint State token name and datum used by stateful minting contracts to track mint count
 /// (100)State reference token asset name
@@ -19,4 +21,23 @@ pub type MintState {
   validity_window: Option<Interval<PosixTime>>,
   tokens: Int,
   transactions: Int,
+}
+
+/// Assures the datum is inline cip-68 reference token shape.
+/// Then it takes the metadata of the reference token datum and assures it matches MintState shape. 
+/// Finally, if all is well, it returns the mint state.
+pub fn from_datum(datum: Datum) {
+  // That output must include an inline datum
+  expect InlineDatum(maybe_reference_token_data) = datum
+  trace @"Found datum on reference token output"
+
+  // The inline datum must match the reference token shape
+  expect reference_token_data: ReferenceToken = maybe_reference_token_data
+  trace @"Reference token datum matches expected shape"
+
+  // The metadata must be in the mint state shape
+  expect mint_state_data: MintState = reference_token_data.metadata
+  trace @"metadata on reference token is the mint state"
+
+  mint_state_data
 }

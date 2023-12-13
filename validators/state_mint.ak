@@ -1,11 +1,10 @@
 use aiken/transaction.{
-  InlineDatum, Mint, OutputReference, ScriptContext, Transaction, find_input,
+  Mint, OutputReference, ScriptContext, Transaction, find_input,
 }
 use aiken/transaction/value.{from_minted_value, quantity_of}
-use mintun/find.{find_asset_outputs}
-use mintun/mint/cip68.{ReferenceToken}
+use mintun/util.{find_asset_outputs}
 use mintun/mint/state.{
-  MintState, state_reference_asset_name, state_user_asset_name,
+  MintState, from_datum, state_reference_asset_name, state_user_asset_name,
 }
 
 /// This minting policy is for creating a CIP-68 user token and reference token to store the state of a minting policy
@@ -44,19 +43,8 @@ validator(utxo_reference: OutputReference) {
           find_asset_outputs(outputs, policy_id, state_reference_asset_name)
         trace @"Found reference utxo in outputs"
 
-        // That output must include an inline datum
-        expect InlineDatum(maybe_reference_token_datum) =
-          reference_token_output.datum
-        trace @"Found datum on reference token output"
-
-        // The inline datum must match the reference token shape
-        expect reference_token_datum: ReferenceToken =
-          maybe_reference_token_datum
-        trace @"Reference token datum matches expected shape"
-
-        // The metadata must be in the mint state shape
-        expect mint_state: MintState = reference_token_datum.metadata
-        trace @"metadata on reference token is the mint state"
+        // Grab the mint state from the datum
+        let mint_state = from_datum(reference_token_output.datum)
 
         // Must also mint a user token and the mint state must be initialized to 0
         and {
