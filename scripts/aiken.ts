@@ -1,4 +1,4 @@
-// Type definitons for aiken std lib types
+// Schema for aiken stdlib types added here as needed.
 import { Data } from "https://deno.land/x/lucid@0.10.7/mod.ts";
 
 const PosixTimeIntervalBoundTypeSchema = Data.Enum([
@@ -16,4 +16,3 @@ export const PosixTimeIntervalSchema = Data.Object({
   lower_bound: PosixTimeIntervalBoundSchema,
   uppper_bound: PosixTimeIntervalBoundSchema
 });
-

@@ -11,8 +11,9 @@ export const REFERENCE_TOKEN_NAME = `${toLabel(100)}${TOKEN_NAME}`;
 const StateMintMetadataSchema = Data.Object({
   max_tokens: Data.Nullable(Data.Integer()),
   validity_window: Data.Nullable(PosixTimeIntervalSchema),
+  reference_token_output_policy_id: Data.Nullable(Data.Bytes()),
   tokens: Data.Integer(),
-  transactions: Data.Integer()
+  has_minted_royalty: Data.Boolean()
 });
 
 const StateMintDatumSchema = createReferenceTokenSchema(StateMintMetadataSchema);
@@ -24,8 +25,9 @@ function createInitialStateMintDatum(): StateMintDatum {
     metadata: {
       max_tokens: null,
       validity_window: null,
+      reference_token_output_policy_id: null,
       tokens: 0n,
-      transactions: 0n
+      has_minted_royalty: false
     },
     version: 1n,
     extra: Data.void()
@@ -33,9 +35,8 @@ function createInitialStateMintDatum(): StateMintDatum {
 }
 
 // Uses the passed in reference utxo to parameterize the state mint policy and returns the paramaterized script
-function getStateMintingPolicy(referenceUtxo: UTxO): Script {
-  // Feel like I should be able to use the blueprint provided in the definitions of plutus.json instead of this.
-  // but that's a whole thing to parse the plutus.json and construct a schema so will just manual for now.
+function paramaterizeStateMintingPolicy(referenceUtxo: UTxO): Script {
+  // TODO: just use schema definition to build this instead.
   const outputReference = new Constr(0, [
     new Constr(0, [referenceUtxo.txHash]),
     BigInt(referenceUtxo.outputIndex),
@@ -50,11 +51,25 @@ function getStateMintingPolicy(referenceUtxo: UTxO): Script {
   }
 }
 
-export function buildStateMintTx(lucid: Lucid, referenceUtxo: UTxO, recipientAddress: string) {
-  const policy = getStateMintingPolicy(referenceUtxo);
+function getStateMintingPolicyInfo(lucid:Lucid, referenceUtxo: UTxO) {
+  const policy = paramaterizeStateMintingPolicy(referenceUtxo);
   const policyId = lucid.utils.validatorToScriptHash(policy);
   const referenceUnit = `${policyId}${REFERENCE_TOKEN_NAME}`;
   const userUnit = `${policyId}${USER_TOKEN_NAME}`;
+
+  return {
+    policy,
+    policyId,
+    referenceUnit,
+    userUnit
+  }
+}
+
+/// Uses the reference Utxo to paramaterize the minting policy and then sets up a minting
+/// transaction for the state tokens and returns it uncompleted to allow caller to adjust
+/// if needed.
+export function buildStateMintTx(lucid: Lucid, referenceUtxo: UTxO, recipientAddress: string) {
+  const { policy, policyId, referenceUnit, userUnit } = getStateMintingPolicyInfo(lucid, referenceUtxo);
 
   // Setup the initial state datum to attach to the reference token
   const initialStateDatum = createInitialStateMintDatum();
@@ -86,11 +101,11 @@ export function buildStateMintTx(lucid: Lucid, referenceUtxo: UTxO, recipientAdd
   }
 }
 
+/// Construction a transaction to burn state tokens.  
+/// TODO: The reference token needs to be collected from the other minting policy it ends up locked at. 
+///       Not sure how I would build the TX to do that but I think it is feasible.
 export function buildStateBurnTx(lucid: Lucid, referenceUtxo: UTxO, tokenUtxos: UTxO[]) {
-  const policy = getStateMintingPolicy(referenceUtxo);
-  const policyId = lucid.utils.validatorToScriptHash(policy);
-  const referenceUnit = `${policyId}${REFERENCE_TOKEN_NAME}`;
-  const userUnit = `${policyId}${USER_TOKEN_NAME}`;
+  const { policy, policyId, referenceUnit, userUnit } = getStateMintingPolicyInfo(lucid, referenceUtxo);
   
   const tx = lucid.newTx()
   .attachMintingPolicy(policy)

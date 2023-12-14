@@ -3,7 +3,6 @@ import { Network } from "https://deno.land/x/lucid@0.10.7/mod.ts";
 
 const env = await load();
 
-
 export function getBlockfrostId() {
   return env['BLOCKFROST_PROJECT_ID'];
 }

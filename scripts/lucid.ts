@@ -3,6 +3,7 @@ Assets,
   Blockfrost,
   Emulator,
   Lucid,
+  Tx,
   generateSeedPhrase
 } from "https://deno.land/x/lucid@0.10.7/mod.ts";
 import { getBlockfrostId, getBlockfrostUrl, getCardanoNetwork, getWalletSigningKey } from "./env.ts";
@@ -39,4 +40,11 @@ export async function createEmulatorLucid() {
     lucid,
     accounts: [ACCOUNT_0, ACCOUNT_1]
   }
+}
+
+// Utility function for completing a transaction, signing it, and then submitting it.
+export async function submit(tx: Tx) {
+  const completed = await tx.complete();
+  const signed = await completed.sign().complete();
+  return await signed.submit();
 }

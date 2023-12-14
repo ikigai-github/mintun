@@ -3,34 +3,21 @@ use aiken/dict
 use aiken/interval.{intersection}
 use aiken/list
 use aiken/transaction.{Mint, ScriptContext, Transaction}
+use aiken/transaction/credential.{from_script}
 use aiken/transaction/value.{PolicyId, from_minted_value}
 use mintun/label.{nft_user_token_label, reference_token_label}
 use mintun/mint/cip68.{to_cip68_asset_name}
 use mintun/mint/state.{
   MintState, from_datum, state_reference_asset_name, state_user_asset_name,
 }
-use mintun/util.{find_asset_inputs, find_policy_inputs}
+use mintun/util.{
+  find_asset_inputs, find_asset_outputs, find_outputs_by_label,
+  find_policy_inputs,
+}
 
-// CIP-68 Time windowed minting policy - Batch mint
-//  - Time Windowed can only mint until time X
-//  - Can burn anytime 
-//  - Must mint two tokens 100 and 222
-//  - 500 Token can only be minted once and before all other tokens
-//     - Must go to either owner or a script address (spending validator for mutation royalties)
-//     - Can only mint on the 0th transaction
-//  - 100 token must be output to specific address: 
-//     - Same as 222 token (user holds reference)
-//     - Script Address (spending validator for mutating reference)
-//  - 100 token must have a datum (inline or not)
-//  - 100 Datum must structurally match the standard with required fields and matching types for optional
-// Initial Data:
-//  Total Mints: 0
-//  Total Transactions: 0
-
-validator(
-  state_mint_policy_id: PolicyId,
-  reference_spending_validator_id: Option<PolicyId>,
-) {
+/// This minting policy is parameterized by the policy id of the state mint token which generates the initial state of the mint.
+/// It expects a user token be supplied to authorize a mint.  It also requires the reference token which will update state respectively.
+validator(state_mint_policy_id: PolicyId) {
   fn mint(_, context: ScriptContext) {
     trace @"batch_mint start"
     let ScriptContext { transaction, purpose } = context
@@ -43,23 +30,37 @@ validator(
     let previous_mint_state =
       validate_state_input(state_mint_policy_id, transaction)
 
-    // Validate the minted assets match requirements
-    let new_token_count =
-      validate_mints(transaction, policy_id, previous_mint_state.tokens)
+    // TODO: Handle special case here of minting a royalty token (previous_mint_state.tokens == 0 && previous_mint_state.has_royalty == False)
+    let updated_minted_royalty = False
+    // Validate the minted assets match requirements and compute new token count
+    let new_token_count = validate_mints(transaction, policy_id)
 
-    // TODO: Check the new state exactly matches the old state with the updated token count
-    // TODO: Make sure there reference token is either returned to this address or going to the burn of the state mint policy
-    False
+    // Compute what the new token count should be
+    let updated_token_count = new_token_count + previous_mint_state.tokens
+
+    // Expect no black magic to have occurred
+    expect updated_token_count >= 0
+    // Enforce max token count if there is a max
+    expect
+      when previous_mint_state.max_tokens is {
+        Some(max_count) -> updated_token_count <= max_count
+        None -> True
+      }
+    // Finally check outputs are sent to valid addresses
+    validate_outputs(
+      transaction,
+      policy_id,
+      state_mint_policy_id,
+      previous_mint_state,
+      updated_token_count,
+      updated_minted_royalty,
+    )
   }
 }
 
-fn validate_mints(
-  transaction: Transaction,
-  policy_id: PolicyId,
-  previous_token_count: Int,
-) {
-  // Need to increment the token count not sure if a closure type thing can work here
-  //let token_count = token_count + referenceAsset.2nd
+/// This function sorts through the minted tokens to pair user and reference tokens.  
+/// Then for each pair it validates they are labelled with CIP-68 standard 100 and 222. 
+fn validate_mints(transaction: Transaction, policy_id: PolicyId) {
   let Transaction { mint, .. } = transaction
 
   let assets =
@@ -68,34 +69,40 @@ fn validate_mints(
       |> dict.to_list()
       |> list.sort(fn(l, r) { bytearray.compare(l.1st, r.1st) })
 
-  let token_count = previous_token_count
-
-  // If we only allow exlusively mints or burns in a transaction then this count is easily computed as: previoust_token_count + num_tokens / 2
   let num_assets = list.length(assets)
 
   expect num_assets % 2 == 0
   let asset_partition = list.span(assets, num_assets / 2)
   let groups = list.zip(asset_partition.1st, asset_partition.2nd)
 
-  validate_mint_recursive(groups, previous_token_count)
+  validate_mint_recursive(groups)
 }
 
-fn validate_mint_recursive(
-  mint: List<((ByteArray, Int), (ByteArray, Int))>,
-  sum: Int,
-) {
+/// This function takes the first pair in the list and validates it match CIP-68 spec. 
+/// Then it recursively calls itself with the remainder of the list until every mint pair has been validated.
+fn validate_mint_recursive(mint: List<((ByteArray, Int), (ByteArray, Int))>) {
   when mint is {
     [(reference_token_asset, user_token_asset), ..rest] -> {
       let reference_token_name = to_cip68_asset_name(reference_token_asset.1st)
       let user_token_name = to_cip68_asset_name(user_token_asset.1st)
 
-      expect
-        reference_token_name.label == reference_token_label && user_token_name.label == nft_user_token_label && reference_token_name.name == user_token_name.name && reference_token_asset.2nd == user_token_asset.2nd && (
-          reference_token_asset.2nd == 1 || reference_token_asset.2nd == -1
-        )
-      validate_mint_recursive(rest, sum) + reference_token_asset.2nd
+      // Check we have a token pair of single quantity that is mint or burn
+      expect and {
+          reference_token_name.label == reference_token_label,
+          user_token_name.label == nft_user_token_label,
+          reference_token_name.name == user_token_name.name,
+          reference_token_asset.2nd == user_token_asset.2nd,
+          or {
+            reference_token_asset.2nd == 1,
+            reference_token_asset.2nd == -1,
+          },
+        }
+      // Valdate the remaining mints
+      let token_count = validate_mint_recursive(rest)
+      // Add this mint token count to the total token count
+      token_count + reference_token_asset.2nd
     }
-    [] -> sum
+    [] -> 0
   }
 }
 
@@ -133,4 +140,57 @@ fn validate_state_input(
       None -> True
     }
   previous_mint_state
+}
+
+/// Validates the state token is output with the correct datum to the correct address 
+/// Additionaly validates the reference tokens are set to correct script address, if it is set.
+/// It doesn't bother to check the datum of each output right now though it could but that feels like overkill.
+fn validate_outputs(
+  transaction: Transaction,
+  policy_id: PolicyId,
+  state_mint_policy_id: PolicyId,
+  previous_mint_state: MintState,
+  updated_token_count: Int,
+  updated_minted_royalty: Bool,
+) -> Bool {
+  let Transaction { outputs, .. } = transaction
+
+  // Must be exactly one reference token output
+  expect [reference_token_output] =
+    find_asset_outputs(outputs, policy_id, state_reference_asset_name)
+  trace @"Found state reference token utxo in outputs"
+
+  // Verify reference token outputs to this script or back to its minting script
+  expect or {
+      reference_token_output.address == from_script(policy_id),
+      reference_token_output.address == from_script(state_mint_policy_id),
+    }
+  trace @"Verified reference token is output to a valid address"
+
+  // Grab the mint state from the datum
+  let updated_mint_state = from_datum(reference_token_output.datum)
+
+  expect and {
+      previous_mint_state.max_tokens == updated_mint_state.max_tokens,
+      previous_mint_state.validity_window == updated_mint_state.validity_window,
+      previous_mint_state.reference_token_output_policy_id == updated_mint_state.reference_token_output_policy_id,
+      updated_token_count == updated_mint_state.tokens,
+      updated_minted_royalty == updated_mint_state.has_minted_royalty,
+    }
+  trace @"Verified mint state datum is updated to correct count"
+
+  // If the reference_token_output_policy_id is set then validate all reference tokens are sent to that script address
+  // TODO: (maybe) Check the datum of each reference output contains the CIP-68 100/222 data.
+  when previous_mint_state.reference_token_output_policy_id is {
+    Some(output_policy_id) -> {
+      let output_address = from_script(output_policy_id)
+      let reference_outputs =
+        find_outputs_by_label(outputs, policy_id, reference_token_label)
+      list.all(
+        reference_outputs,
+        fn(output) { output.address == output_address },
+      )
+    }
+    None -> True
+  }
 }

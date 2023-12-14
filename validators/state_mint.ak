@@ -2,10 +2,10 @@ use aiken/transaction.{
   Mint, OutputReference, ScriptContext, Transaction, find_input,
 }
 use aiken/transaction/value.{from_minted_value, quantity_of}
-use mintun/util.{find_asset_outputs}
 use mintun/mint/state.{
   MintState, from_datum, state_reference_asset_name, state_user_asset_name,
 }
+use mintun/util.{find_asset_outputs}
 
 /// This minting policy is for creating a CIP-68 user token and reference token to store the state of a minting policy
 validator(utxo_reference: OutputReference) {
@@ -50,7 +50,7 @@ validator(utxo_reference: OutputReference) {
         and {
           user_token_amount == 1,
           mint_state.tokens == 0,
-          mint_state.transactions == 0,
+          mint_state.has_minted_royalty == False,
         }
       }
       -1 -> {

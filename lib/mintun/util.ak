@@ -1,5 +1,7 @@
-use aiken/dict.{Dict, insert_with, is_empty}
-use aiken/list.{filter}
+use aiken/bytearray.{take}
+use aiken/dict.{Dict, insert_with, is_empty, keys}
+use aiken/list.{filter, find}
+use aiken/option.{is_some}
 use aiken/transaction.{Input, Output}
 use aiken/transaction/value.{AssetName, PolicyId, quantity_of, tokens}
 
@@ -13,6 +15,24 @@ pub fn find_asset_outputs(
   filter(
     outputs,
     fn(output) { quantity_of(output.value, policy_id, asset_name) > 0 },
+  )
+}
+
+/// Find outputs that contain assets with the given policy_id and asset name label
+pub fn find_outputs_by_label(
+  outputs: List<Output>,
+  policy_id: PolicyId,
+  label: ByteArray,
+) -> List<Output> {
+  trace @"Finding asset outputs"
+  filter(
+    outputs,
+    fn(output) {
+      tokens(output.value, policy_id)
+        |> keys()
+        |> find(fn(asset_name) { take(asset_name, 4) == label })
+        |> is_some()
+    },
   )
 }
 

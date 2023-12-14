@@ -1,3 +1,4 @@
+// Schema for cip-68 reference token metadata
 import { Data } from "https://deno.land/x/lucid@0.10.7/mod.ts";
 import { TSchema } from "https://deno.land/x/typebox@0.25.13/src/typebox.ts";
 
