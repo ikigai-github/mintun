@@ -1,8 +1,16 @@
+// CIP-68 defined values
 use aiken/bytearray.{drop, take}
 use aiken/transaction/value.{AssetName}
 
-/// CIP-68 Standard datums
-///
+/// CIP-68 reference token label (100)
+pub const reference_token_label = #"000643b0"
+
+/// CIP-68 NFT user token label (222)
+pub const nft_user_token_label = #"000de140"
+
+/// CIP-102 Royalty token label (500)
+pub const royalty_token_asset_name = #"001f4d70526f79616c7479"
+
 /// A URI matching CIP-25 can be either a string or array of strings.  
 /// Therefore it is typed as Data for type checking.  
 pub type Uri =

@@ -1,10 +1,7 @@
 import { createEmulatorLucid, submit } from "./lucid.ts";
-import {
-  assert, assertEquals
-} from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { buildStateBurnTx, buildStateMintTx  } from "./state-mint.ts";
-
-
+import { assert } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { buildStateBurnTx  } from "./state-mint.ts";
+import { mintStateToken } from './utils.test.ts';
 
 Deno.test('Mint and burn state tokens', async () => {
   // Get a reference UTxO
@@ -15,29 +12,13 @@ Deno.test('Mint and burn state tokens', async () => {
   // Set ourselves as the recipient of the tokens
   const recipientAddress = await lucid.wallet.address();
 
-  // Build and submit the minting transaction
-  const { tx: mintTx, datum, referenceUnit, userUnit } = buildStateMintTx(lucid, utxos[0], recipientAddress);
-  const mintTxHash = await submit(mintTx)
+  const referenceUtxo = utxos[0]
 
-  // Now wait for the tx to show up so we can inspect the result
-  await lucid.awaitTx(mintTxHash);
-
-  // Fetch the utxos at the recipient address
-  const mintedUtxos = await lucid.utxosAt(recipientAddress);
-
-  // Verify reference token was received
-  const referenceTokenUtxo = mintedUtxos.find(utxo => utxo.assets[referenceUnit])
-  assert(referenceTokenUtxo);
-
-  // Verify user token was received
-  const userTokenUtxo = mintedUtxos.find(utxo => utxo.assets[userUnit]);
-  assert(userTokenUtxo);
-
-  // Verify reference token datum matches expected datum
-  assertEquals(referenceTokenUtxo.datum, datum);
-
+  // Run the common minting steps 
+  const { referenceUnit, userUnit, referenceTokenUtxo, userTokenUtxo } = await mintStateToken(lucid, referenceUtxo, recipientAddress);
+  
   // Build and submit the burn transaction
-  const { tx: burnTx } = buildStateBurnTx(lucid, utxos[0], mintedUtxos);
+  const { burnTx } = buildStateBurnTx(lucid, referenceUtxo, userTokenUtxo, referenceTokenUtxo );
   const burnTxHash = await submit(burnTx);
 
   // Now wait for the tx to show up to confirm success
