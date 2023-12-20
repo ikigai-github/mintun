@@ -3,7 +3,7 @@ use aiken/string
 use aiken/transaction.{
   Mint, OutputReference, ScriptContext, Transaction, find_input,
 }
-use aiken/transaction/credential.{ScriptCredential, from_script}
+use aiken/transaction/credential.{ScriptCredential}
 use aiken/transaction/value.{from_minted_value, quantity_of}
 use mintun/mint/state.{
   MintState, from_datum, state_reference_asset_name, state_user_asset_name,

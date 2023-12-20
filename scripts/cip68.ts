@@ -2,6 +2,7 @@
 import { Data, fromText, toLabel } from "https://deno.land/x/lucid@0.10.7/mod.ts";
 import { TSchema } from "https://deno.land/x/typebox@0.25.13/src/typebox.ts";
 
+export const REFERENCE_DATA_VERSION = 1n;
 export const REFERENCE_TOKEN_LABEL = 100;
 export const NFT_TOKEN_LABEL = 222;
 
@@ -13,6 +14,14 @@ export function createReferenceTokenSchema<T extends TSchema>(metadata: T) {
     version: Data.Integer(),
     extra: Data.Any()
   });
+}
+
+export function createReferenceData<T>(metadata: T) {
+  return {
+    metadata,
+    version: REFERENCE_DATA_VERSION,
+    extra: Data.void()
+  }
 }
 
 // Combines the policyId (already hex encoded), label number, and content (UTF8 string) to create a asset unit
@@ -36,16 +45,29 @@ const NftMetadataFileSchema = Data.Object({
   src: Data.Bytes()
 });
 
-
 const NftMetadataSchema = Data.Object({
   name: Data.Bytes(),
   image: Data.Bytes(),
   description: Data.Nullable(Data.Any()), // Can be Data.Bytes() or Data.Array(Data.Bytes()) no way to express that
-  files: Data.Nullable(NftMetadataFileSchema)
+  files: Data.Nullable(NftMetadataFileSchema),
+
+  // Everything below here is not in the spec but common to genun (maybe still working out that part)
+  attributes: Data.Nullable(Data.Map(Data.Bytes(), Data.Any())), // Collection of unique properties associated with the NFT
+  tags: Data.Nullable(Data.Array(Data.Bytes())), // Can be used group related NFTs (i.e. "upppercut", "ascent", "season-2") 
+  id: Data.Nullable(Data.Bytes()),   // Unique id can be used as a link into offchain data about the NFT
+  type: Data.Nullable(Data.Bytes()), // Can be used to classify NFT (i.e. Thruster, Ship Body, etc..)
+
+  // Collection information sometimes stored per NFT
+  collection: Data.Nullable(Data.Bytes()), // Name of the colletion
+  website: Data.Nullable(Data.Bytes()), 
+  twitter: Data.Nullable(Data.Bytes()),
 })
+
+export type NftMetadata = Data.Static<typeof NftMetadataSchema>
+export const NftMetdataShape = NftMetadataSchema as unknown as NftMetadata;
 
 
 // Todo: Actually use this for the mints.  Add custom bit to schema for traits/attributes of the NFT
 export const NftSchema = createReferenceTokenSchema(NftMetadataSchema);
-export type NftDatum = Data.Static<typeof NftSchema>
-export const NftShape = NftSchema as unknown as NftDatum;
+export type NftData = Data.Static<typeof NftSchema>
+export const NftShape = NftSchema as unknown as NftData;

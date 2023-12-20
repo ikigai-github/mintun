@@ -87,7 +87,7 @@ export function asChainAddress(address: Address): ChainAddress {
   };
 }
 
-export function toBech32Address(address: ChainAddress, lucid: Lucid): Address {
+export function toBech32Address(lucid: Lucid, address: ChainAddress): Address {
   const paymentCredential = (() => {
     if ("VerificationKeyCredential" in address.paymentCredential) {
       return lucid.utils.keyHashToCredential(
