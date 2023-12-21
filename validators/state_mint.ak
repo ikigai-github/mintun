@@ -63,6 +63,7 @@ validator(utxo_reference: OutputReference) {
           bytearray.to_hex(mint_state.state_policy_id),
         )
 
+        // Make sure reference token goes to state validator addresss
         expect ScriptCredential(state_policy_id) =
           reference_token_output.address.payment_credential
 
