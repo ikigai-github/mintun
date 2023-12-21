@@ -1,5 +1,6 @@
 use aiken/dict
 use aiken/list
+use aiken/string
 use aiken/transaction.{ScriptContext, Spend, Transaction}
 use aiken/transaction/value.{
   MintedValue, PolicyId, from_minted_value, quantity_of,
@@ -11,7 +12,7 @@ use mintun/mint/state.{
   MintState, find_state_inputs, from_datum, state_reference_asset_name,
   state_user_asset_name,
 }
-use mintun/util.{find_asset_outputs, tx_in_interval}
+use mintun/util.{bool_to_string, find_asset_outputs, tx_in_interval}
 
 validator(state_mint_policy_id: PolicyId) {
   fn validate(_datum, _redeemer, context: ScriptContext) {
@@ -44,6 +45,7 @@ validator(state_mint_policy_id: PolicyId) {
     let reference_output_count = list.length(reference_outputs)
     // Check if we are burning the reference token (otherwise must be minting from batch mint policy)
     if reference_output_count == 0 {
+      trace @"This should be a burn of the reference token"
       let values = from_minted_value(mint) |> value.to_dict()
 
       // Only should be minting to the state burn address
@@ -60,6 +62,7 @@ validator(state_mint_policy_id: PolicyId) {
         reference_token_quantity == -1,
       }
     } else {
+      trace @"This spend should include a mint from the associated minting policy"
       expect reference_output_count == 1
       expect [state_reference_output] = reference_outputs
       let output_state = from_datum(transaction, state_reference_output.datum)
@@ -69,20 +72,23 @@ validator(state_mint_policy_id: PolicyId) {
         from_minted_value(mint)
           |> quantity_of(input_state.mint_policy_id, royalty_token_asset_name)
 
-      let royalty_minted = royalty_mint_quantity == 1
-
       // Either the royalty wasn't minted or if it was then the state should have been updated
-      // Also don't allow minting a royalty if NFTs have been minted in previous transactions (could make optional)
       expect or {
-          royalty_minted == False,
           and {
-            royalty_minted == True,
+            royalty_mint_quantity == 0,
+            input_state.has_minted_royalty == output_state.has_minted_royalty,
+          },
+          and {
+            royalty_mint_quantity == 1,
             input_state.has_minted_royalty == False,
             output_state.has_minted_royalty == True,
             input_state.tokens == 0,
           },
         }
+      trace @"Royalty token state validated"
+
       let output_count = count_mints(mint, input_state)
+      trace string.concat(@"Mint count is ", string.from_int(output_count))
 
       // Check that the output count hasn't exceeded max token count
       expect
@@ -105,9 +111,15 @@ validator(state_mint_policy_id: PolicyId) {
 
 /// Count the number of tokens minted or burned at the batch mint policy_id
 fn count_mints(mint: MintedValue, state: MintState) {
-  let tokens =
-    from_minted_value(mint)
-      |> value.tokens(state.mint_policy_id)
+  let values = from_minted_value(mint)
+
+  trace string.concat(@"Value is zero? ", bool_to_string(value.is_zero(values)))
+  let tokens = value.tokens(values, state.mint_policy_id)
+
+  trace string.concat(
+    @"Mint tokens dict is empty? ",
+    bool_to_string(dict.is_empty(tokens)),
+  )
 
   // Must mint at least one token with the batch mint policy
   expect dict.is_empty(tokens) |> not()

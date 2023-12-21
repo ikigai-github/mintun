@@ -15,10 +15,10 @@ Deno.test('Mint and burn state tokens', async () => {
   const seedUtxo = utxos[0]
 
   // Run the common minting steps 
-  const { unit, referenceTokenUtxo, userTokenUtxo } = await mintStateToken(lucid, seedUtxo, recipientAddress);
+  const { unit, stateUserUtxo, stateReferenceUtxo } = await mintStateToken(lucid, seedUtxo, recipientAddress);
 
   // Build and submit the burn transaction
-  const { tx: burnTx } = prepareStateBurnTransaction(lucid, toTxReference(seedUtxo), userTokenUtxo, referenceTokenUtxo );
+  const { tx: burnTx } = prepareStateBurnTransaction(lucid, toTxReference(seedUtxo), stateUserUtxo, stateReferenceUtxo );
   const burnTxHash = await submit(burnTx);
 
   // Now wait for the tx to show up to confirm success

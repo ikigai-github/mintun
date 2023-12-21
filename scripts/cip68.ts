@@ -16,9 +16,10 @@ export function createReferenceTokenSchema<T extends TSchema>(metadata: T) {
   });
 }
 
+/// Creates reference data from given metadata. Any strings will be hex encoded unless they start with 0x 
 export function createReferenceData<T>(metadata: T) {
   return {
-    metadata,
+    metadata: metadata,
     version: REFERENCE_DATA_VERSION,
     extra: Data.void()
   }
@@ -45,11 +46,14 @@ const NftMetadataFileSchema = Data.Object({
   src: Data.Bytes()
 });
 
+export type NftMetadataFile = Data.Static<typeof NftMetadataFileSchema>
+export const NftMetadataFileShape = NftMetadataFileSchema as unknown as NftMetadataFile;
+
 const NftMetadataSchema = Data.Object({
   name: Data.Bytes(),
   image: Data.Bytes(),
   description: Data.Nullable(Data.Any()), // Can be Data.Bytes() or Data.Array(Data.Bytes()) no way to express that
-  files: Data.Nullable(NftMetadataFileSchema),
+  files: Data.Nullable(Data.Array(NftMetadataFileSchema)),
 
   // Everything below here is not in the spec but common to genun (maybe still working out that part)
   attributes: Data.Nullable(Data.Map(Data.Bytes(), Data.Any())), // Collection of unique properties associated with the NFT

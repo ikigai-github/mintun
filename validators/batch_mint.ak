@@ -41,6 +41,9 @@ validator(state_mint_policy_id: PolicyId) {
 fn validate_mints(transaction: Transaction, policy_id: PolicyId) {
   let Transaction { mint, .. } = transaction
 
+  // TODO: Don't allow duplicate asset names 
+  //  Can enforce across multiple calls if we have a monotonically increasing value in the state that is 
+  //  required to be part of the asset names to ensure the same asset name never shows up twice
   let assets =
     from_minted_value(mint)
       |> value.tokens(policy_id)

@@ -15,7 +15,7 @@ pub fn find_asset_outputs(
   policy_id: PolicyId,
   asset_name: AssetName,
 ) -> List<Output> {
-  trace @"Finding asset outputs"
+  trace @"Finding outputs by asset name"
   list.filter(
     outputs,
     fn(output) { value.quantity_of(output.value, policy_id, asset_name) > 0 },
@@ -28,7 +28,7 @@ pub fn find_outputs_by_label(
   policy_id: PolicyId,
   label: ByteArray,
 ) -> List<Output> {
-  trace @"Finding asset outputs"
+  trace @"Finding outputs by label"
   list.filter(
     outputs,
     fn(output) {
@@ -46,7 +46,7 @@ pub fn find_asset_inputs(
   policy_id: PolicyId,
   asset_name: AssetName,
 ) -> List<Input> {
-  trace @"Finding asset outputs"
+  trace @"Finding inputs by asset name"
   list.filter(
     inputs,
     fn(input) {
@@ -103,5 +103,14 @@ pub fn get_data(tx: Transaction, datum: Datum) -> Data {
       data
     }
     InlineDatum(data) -> data
+  }
+}
+
+/// Debug utility function converts a bool to a string
+pub fn bool_to_string(value: Bool) {
+  if value {
+    @"True"
+  } else {
+    @"False"
   }
 }

@@ -16,7 +16,8 @@ pub const state_user_asset_name = #"0006f0a07374617465"
 
 /// State datum used by batch minting policy to configure the contract and track mints.
 /// max tokens - If set the contract must enforce a limited number of tokens be minted
-/// validity_window - If set the contract must enforce minting only occurs inside the valid time window
+/// validity_range - If set the contract must enforce minting only occurs inside the valid time window
+/// reference_address - If set the address reference tokens are required to be sent to 
 /// refernce_policy_id - The spending validator that should hold minted NFT reference token, if set.
 /// state_policy_id - The spending validator that holds the state reference token
 /// mint_policy_id - The minting policy that will mint NFTs using this state config

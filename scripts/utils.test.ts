@@ -3,9 +3,9 @@ import { Lucid, UTxO } from 'https://deno.land/x/lucid@0.10.7/mod.ts';
 import { prepareStateMintTransaction } from './state-mint.ts';
 import { submit } from './lucid.ts';
 
-export async function mintStateToken(lucid: Lucid, referenceUtxo: UTxO, recipientAddress: string) {
+export async function mintStateToken(lucid: Lucid, seedUtxo: UTxO, recipientAddress: string) {
   // Build and submit the minting transaction
-  const { tx, mint, validator, unit } = prepareStateMintTransaction(lucid, referenceUtxo, recipientAddress);
+  const { tx, stateMint, stateValidator, batchMint, unit } = prepareStateMintTransaction(lucid, seedUtxo, recipientAddress);
   const txHash = await submit(tx)
   await lucid.awaitTx(txHash);
 
@@ -13,20 +13,21 @@ export async function mintStateToken(lucid: Lucid, referenceUtxo: UTxO, recipien
   const recipientUtxos = await lucid.utxosAt(recipientAddress);
 
   // Verify user token was received
-  const userTokenUtxo = recipientUtxos.find(utxo => utxo.assets[unit.user]);
-  assert(userTokenUtxo);
+  const stateUserUtxo = recipientUtxos.find(utxo => utxo.assets[unit.user]);
+  assert(stateUserUtxo);
 
-  const validatorUtxos = await lucid.utxosAt(validator.address)
+  const validatorUtxos = await lucid.utxosAt(stateValidator.address)
     
   // Verify reference token was received
-  const referenceTokenUtxo = validatorUtxos.find(utxo => utxo.assets[unit.reference])
-  assert(referenceTokenUtxo);
+  const stateReferenceUtxo = validatorUtxos.find(utxo => utxo.assets[unit.reference])
+  assert(stateReferenceUtxo);
 
   return {
-    mint,
-    validator,
+    stateMint,
+    stateValidator,
+    batchMint,
     unit,
-    referenceTokenUtxo,
-    userTokenUtxo
+    stateUserUtxo,
+    stateReferenceUtxo
   }
 }

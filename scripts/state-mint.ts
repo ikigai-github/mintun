@@ -1,6 +1,6 @@
 import { Address, Data, Lucid, Tx, UTxO, applyParamsToScript, fromText, toLabel } from "https://deno.land/x/lucid@0.10.7/mod.ts";
 import { ChainAddressSchema, OutputReferenceSchema, PolicyIdSchema, PosixTimeIntervalSchema, asChainAddress } from "./aiken.ts";
-import { getScript } from "./validators.ts";
+import { getScript, paramaterizeValidators } from "./validators.ts";
 import { createReferenceTokenSchema, createReferenceData } from "./cip68.ts";
 import { TxReference, ValidatorInfo, getValidatorInfo, toTxReference } from './lucid.ts';
 
@@ -41,9 +41,11 @@ export type StateUnitLookup = {
 
 export type PreparedStateTransaction = {
   tx: Tx,
-  mint: ValidatorInfo,
-  validator: ValidatorInfo,
-  unit: StateUnitLookup
+  stateMint: ValidatorInfo,
+  stateValidator: ValidatorInfo,
+  batchMint: ValidatorInfo,
+  unit: StateUnitLookup,
+  state: StateMintData
 }
 
 /// Utility for generating the initial mint state data. 
@@ -91,23 +93,6 @@ export function paramaterizeStateValidator(lucid: Lucid, stateMintingPolicyId: s
   return getValidatorInfo(lucid, parameterizedValidator)
 }
 
-/// Parameterizes both the minting policy script and the validator script using the given seed transaction output hash and index
-export function paramaterizeValidators(lucid: Lucid, seed: TxReference) {
-  const mint = paramaterizeStateMintingPolicy(lucid, seed);
-  const validator = paramaterizeStateValidator(lucid, mint.policyId);
-  const reference = getStateReferenceUnit(mint.policyId);
-  const user = getStateUserUnit(mint.policyId);
-
-  return {
-    mint,
-    validator,
-    unit: {
-      reference,
-      user
-    }
-  }
-}
-
 /// Utility function for constructing the state reference token unit for a given policy_id
 export function getStateReferenceUnit(policyId: string) {
   return `${policyId}${REFERENCE_TOKEN_NAME}`;
@@ -123,16 +108,17 @@ export function getStateUserUnit(policyId: string) {
 /// if needed.
 export function prepareStateMintTransaction(lucid: Lucid, seedUtxo: UTxO, recipientAddress: string): PreparedStateTransaction {
   const { 
-    mint,
-    validator,
+    stateMint,
+    stateValidator,
+    batchMint,
     unit
   } = paramaterizeValidators(lucid, toTxReference(seedUtxo));
   // Setup the initial state datum to attach to the reference token
-  const initialStateData = createInitialStateMintData(mint.policyId, validator.policyId);
-  const initialDatum = Data.to(initialStateData, StateMintShape);
+  const state = createInitialStateMintData(batchMint.policyId, stateValidator.policyId);
+  const datum = Data.to(state, StateMintShape);
 
   const tx = lucid.newTx()
-  .attachMintingPolicy(mint.policy)
+  .attachMintingPolicy(stateMint.policy)
   .collectFrom([seedUtxo])
   .mintAssets(
     {
@@ -141,8 +127,8 @@ export function prepareStateMintTransaction(lucid: Lucid, seedUtxo: UTxO, recipi
     },
     Data.void()
   )
-  .payToAddressWithData(validator.address, { 
-    inline: initialDatum 
+  .payToAddressWithData(stateValidator.address, { 
+    inline: datum 
   }, {
     [unit.reference]: 1n
   }).payToAddress(recipientAddress, {
@@ -151,23 +137,25 @@ export function prepareStateMintTransaction(lucid: Lucid, seedUtxo: UTxO, recipi
 
   return {
     tx,
-    mint,
-    validator,
-    unit
+    stateMint,
+    stateValidator,
+    batchMint,
+    unit, 
+    state
   }
 }
 
 /// Construct a transaction to burn state tokens.  
 export function prepareStateBurnTransaction(lucid: Lucid, seed: TxReference, userTokenUtxo: UTxO, referenceTokenUtxo: UTxO) {
-  const { mint, validator, unit } = paramaterizeValidators(lucid, seed);
+  const { stateMint, stateValidator, unit } = paramaterizeValidators(lucid, seed);
 
   // User token should come from a wallet while the reference token should be at the state spending validator
   // Both should be burned back at the minting policy
   const tx = lucid.newTx()
   .collectFrom([userTokenUtxo])
-  .attachSpendingValidator(validator.policy)
+  .attachSpendingValidator(stateValidator.policy)
   .collectFrom([referenceTokenUtxo], Data.void())
-  .attachMintingPolicy(mint.policy)
+  .attachMintingPolicy(stateMint.policy)
   .mintAssets(
     {
       [unit.reference]: -1n,
@@ -178,8 +166,8 @@ export function prepareStateBurnTransaction(lucid: Lucid, seed: TxReference, use
 
   return {
     tx,
-    mint,
-    validator,
+    stateMint,
+    stateValidator,
     unit
   }
 }
@@ -190,13 +178,12 @@ export function prepareStateBurnTransaction(lucid: Lucid, seed: TxReference, use
 ///   If you already know the address you can use `lucid.utxosAt(validatorAddress)` and skip that extra work.
 ///   Alternatively, If you already have the reference unit name then you can use `lucid.utxoByUnit(referenceUnit)`
 export async function findStateUtxo(lucid: Lucid, seed: TxReference) {
-  const { 
-    validator,
-    unit, 
-  } = paramaterizeValidators(lucid, seed);
+  const stateMint = paramaterizeStateMintingPolicy(lucid, seed);
+  const { address } = paramaterizeStateValidator(lucid, stateMint.policyId);
+  const unit = getStateReferenceUnit(stateMint.policyId);
 
-  const utxos = await lucid.utxosAt(validator.address)
-  return utxos.find(utxo => utxo.assets[unit.reference]);
+  const utxos = await lucid.utxosAt(address)
+  return utxos.find(utxo => utxo.assets[unit]);
 }
 
 /// Wrapper function for clairity and typing. Calls lucid.datumOf(referenceTokenUtxo, StateMintShape)

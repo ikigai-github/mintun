@@ -1,7 +1,7 @@
 import { createEmulatorLucid, submit } from "./lucid.ts";
 import { assert } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { mintStateToken } from './utils.test.ts';
-import { BatchMintConfig, prepareBatchMintTx } from './batch-mint.ts';
+import { BatchMintCache, NftMint, prepareBatchMintTx } from './batch-mint.ts';
 
 Deno.test('Mint a few NFTs', async () => {
   // Get a reference UTxO
@@ -11,24 +11,54 @@ Deno.test('Mint a few NFTs', async () => {
 
   // Set ourselves as the recipient of the tokens
   const recipientAddress = await lucid.wallet.address();
+  const seedUtxo = utxos[0];
 
-  // Mint the state tokens and send them to our wallet
-  const stateMint = await mintStateToken(lucid, utxos, recipientAddress);
+  // Mint the state tokens and send the user token to our wallet
+  const result = await mintStateToken(lucid, seedUtxo, recipientAddress);
 
+  // Warm up the cache with the stuff we already know from the mint
+  const cache: BatchMintCache = {
+    seed: {
+      hash: seedUtxo.txHash,
+      index: seedUtxo.outputIndex,
 
-  const config: BatchMintConfig = {
-    statePolicyId: stateMint.policyId,
-    stateUserTokenUtxo: stateMint.userTokenUtxo,
-    stateReferenceTokenUtxo: stateMint.referenceTokenUtxo,
+    },
+    stateMint: result.stateMint,
+    stateValidator: result.stateValidator,
+    batchMint: result.batchMint,
+    unit: result.unit,
+    stateUserUtxo: result.stateUserUtxo,
+    stateReferenceUtxo: result.stateReferenceUtxo,
     recipientAddress,
-    mints: 'later'
+    inlineDatum: true
   }
 
-  const { tx } = await prepareBatchMintTx(lucid, config)
-
+  // Generate enough mint data to mint a few NFTS
+  const mints: NftMint[] = Array.from(Array(3).keys()).map(generateTestMintData);
+  const tx = await prepareBatchMintTx(lucid, cache, mints)
   const txHash = await submit(tx);
   await lucid.awaitTx(txHash);
 
   // Parameterize a batch mint and mint a few CIP-68 NFTs with the state mint token
   // Try burning the state mint token if you can kudos.  
 });
+
+/// Utility just to generate some unique mints
+function generateTestMintData(count: number): NftMint {
+  return {
+    name: `test${count}`,
+    metadata: {
+      name: `Test ${count}`,
+      image: `https://picsum.photos/seed/test${count}/200/200`,
+      description: null,
+      files: null,
+      attributes: null,
+      tags: null,
+      id: null,
+      type: null,
+      collection: `Test`,
+      website: null,
+      twitter: null
+    }
+  }
+}
