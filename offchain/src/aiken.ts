@@ -1,35 +1,34 @@
 // Schema for aiken stdlib types added here as needed.
-import { Address, Data, Lucid, getAddressDetails } from "https://deno.land/x/lucid@0.10.7/mod.ts";
+import { Address, Data, getAddressDetails, Lucid } from 'lucid';
 
 export const PolicyIdSchema = Data.Bytes({ minLength: 28, maxLength: 28 });
 export const AssetNameSchema = Data.Bytes({ minLength: 0, maxLength: 32 });
 
 export const OutputReferenceSchema = Data.Object({
   transaction_id: Data.Object({
-    hash: Data.Bytes()
+    hash: Data.Bytes(),
   }),
-  output_index: Data.Integer()
+  output_index: Data.Integer(),
 });
 
 const PosixTimeIntervalBoundTypeSchema = Data.Enum([
-  Data.Literal('NegativeInfinity'), 
-  Data.Object({ 'Finite': Data.Tuple([Data.Integer()]) }), 
-  Data.Literal('PositiveInfinity')
+  Data.Literal('NegativeInfinity'),
+  Data.Object({ 'Finite': Data.Tuple([Data.Integer()]) }),
+  Data.Literal('PositiveInfinity'),
 ]);
 
 const PosixTimeIntervalBoundSchema = Data.Object({
   bound_type: PosixTimeIntervalBoundTypeSchema,
-  is_inclusive: Data.Boolean()
-})
+  is_inclusive: Data.Boolean(),
+});
 
 export const PosixTimeIntervalSchema = Data.Object({
   lower_bound: PosixTimeIntervalBoundSchema,
-  uppper_bound: PosixTimeIntervalBoundSchema
+  uppper_bound: PosixTimeIntervalBoundSchema,
 });
 
-
 // The following section was taken from https://github.com/spacebudz/nebula/blob/main/common/utils.ts
-// 
+//
 export const CredentialSchema = Data.Enum([
   Data.Object({
     VerificationKeyCredential: Data.Tuple([
@@ -65,10 +64,10 @@ export function asChainAddress(address: Address): ChainAddress {
     address,
   );
 
-  if (!paymentCredential) throw new Error("Not a valid payment address.");
+  if (!paymentCredential) throw new Error('Not a valid payment address.');
 
   return {
-    paymentCredential: paymentCredential?.type === "Key"
+    paymentCredential: paymentCredential?.type === 'Key'
       ? {
         VerificationKeyCredential: [paymentCredential.hash],
       }
@@ -76,7 +75,7 @@ export function asChainAddress(address: Address): ChainAddress {
     stakeCredential: stakeCredential
       ? {
         Inline: [
-          stakeCredential.type === "Key"
+          stakeCredential.type === 'Key'
             ? {
               VerificationKeyCredential: [stakeCredential.hash],
             }
@@ -89,7 +88,7 @@ export function asChainAddress(address: Address): ChainAddress {
 
 export function toBech32Address(lucid: Lucid, address: ChainAddress): Address {
   const paymentCredential = (() => {
-    if ("VerificationKeyCredential" in address.paymentCredential) {
+    if ('VerificationKeyCredential' in address.paymentCredential) {
       return lucid.utils.keyHashToCredential(
         address.paymentCredential.VerificationKeyCredential[0],
       );
@@ -101,8 +100,8 @@ export function toBech32Address(lucid: Lucid, address: ChainAddress): Address {
   })();
   const stakeCredential = (() => {
     if (!address.stakeCredential) return undefined;
-    if ("Inline" in address.stakeCredential) {
-      if ("VerificationKeyCredential" in address.stakeCredential.Inline[0]) {
+    if ('Inline' in address.stakeCredential) {
+      if ('VerificationKeyCredential' in address.stakeCredential.Inline[0]) {
         return lucid.utils.keyHashToCredential(
           address.stakeCredential.Inline[0].VerificationKeyCredential[0],
         );
@@ -117,4 +116,3 @@ export function toBech32Address(lucid: Lucid, address: ChainAddress): Address {
   })();
   return lucid.utils.credentialToAddress(paymentCredential, stakeCredential);
 }
-

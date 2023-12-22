@@ -5,10 +5,10 @@ use aiken/transaction.{ScriptContext, Spend, Transaction}
 use aiken/transaction/value.{
   MintedValue, PolicyId, from_minted_value, quantity_of,
 }
-use mintun/mint/cip68.{
+use mintun/cip68.{
   has_label, reference_token_label, royalty_token_asset_name,
 }
-use mintun/mint/state.{
+use mintun/state.{
   MintState, find_state_inputs, from_datum, state_reference_asset_name,
   state_user_asset_name,
 }

@@ -3,7 +3,7 @@ use aiken/time.{PosixTime}
 use aiken/transaction.{Datum, Input, Transaction}
 use aiken/transaction/credential.{Address}
 use aiken/transaction/value.{PolicyId}
-use mintun/mint/cip68.{ReferenceToken}
+use mintun/cip68.{ReferenceToken}
 use mintun/util.{find_asset_inputs, find_policy_inputs, get_data}
 
 /// Mint State token name and datum used by stateful minting contracts to track mint count

@@ -1,0 +1,6 @@
+{
+  "name": "mintun",
+  "version": "1.0.0",
+  "description": "A batch minting contract and integration with Lucid for interacting with that contract",
+  "author": "Clifford Garvis"
+}

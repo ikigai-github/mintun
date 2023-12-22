@@ -5,7 +5,7 @@ use aiken/transaction.{
 }
 use aiken/transaction/credential.{ScriptCredential}
 use aiken/transaction/value.{from_minted_value, quantity_of}
-use mintun/mint/state.{
+use mintun/state.{
   MintState, from_datum, state_reference_asset_name, state_user_asset_name,
 }
 use mintun/util.{find_asset_outputs}

@@ -4,10 +4,10 @@ use aiken/list
 use aiken/transaction.{Mint, ScriptContext, Transaction}
 use aiken/transaction/credential.{Address}
 use aiken/transaction/value.{PolicyId, from_minted_value}
-use mintun/mint/cip68.{
+use mintun/cip68.{
   nft_user_token_label, reference_token_label, to_cip68_asset_name,
 }
-use mintun/mint/state.{MintState, find_state_inputs, from_datum}
+use mintun/state.{MintState, find_state_inputs, from_datum}
 use mintun/util.{find_outputs_by_label}
 
 /// This minting policy is parameterized by the policy id of the state mint token which generates the initial state of the mint.

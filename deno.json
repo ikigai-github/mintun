@@ -1,0 +1,23 @@
+{
+  "imports": {
+    "lucid": "https://deno.land/x/lucid@0.10.7/mod.ts",
+    "typebox": "https://deno.land/x/typebox@0.25.13/src/typebox.ts",
+    "std/": "https://deno.land/std@0.208.0/"
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 120,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": true,
+    "proseWrap": "preserve",
+    "include": ["offchain/src/"]
+  },
+  "lint": {
+    "include": ["offchain/src/"]
+  },
+  "tasks": {
+    "build": "aiken build contracts && mv contracts/plutus.json offchain/contracts.json",
+    "test": "aiken build contracts --keep-traces && deno test --allow-read --allow-net"
+  }
+}
