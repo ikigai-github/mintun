@@ -16,7 +16,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
-      - run: aiken fmt --check aiken
-      - run: aiken check -D aiken
+      - run: aiken fmt --check contracts
+      - run: aiken check -D contracts
       - run: deno task build 
 

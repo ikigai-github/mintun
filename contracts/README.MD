@@ -7,6 +7,5 @@ to create a state token which has on it's datum the state of the mint.  The toke
 ## Future work
 
 * Combine the state/batch mints by adding a redeemer for the gensis mint that creates the state
-* Add support for creating a collection token following the CIP-88 standard in some 
+* Add support for creating a collection token following the CIP-88 standard in some form
 * Add support for minting royalties to the offchain code
-* 
