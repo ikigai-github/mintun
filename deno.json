@@ -11,10 +11,10 @@
     "semiColons": true,
     "singleQuote": true,
     "proseWrap": "preserve",
-    "include": ["offchain/src/"]
+    "exclude": ["./contracts"]
   },
   "lint": {
-    "include": ["offchain/src/"]
+    "exclude": ["./contracts"]
   },
   "tasks": {
     "build": "aiken build contracts && mv contracts/plutus.json offchain/contracts.json",

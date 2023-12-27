@@ -54,17 +54,14 @@ const NftMetadataSchema = Data.Object({
   image: Data.Bytes(),
   description: Data.Nullable(Data.Any()), // Can be Data.Bytes() or Data.Array(Data.Bytes()) no way to express that
   files: Data.Nullable(Data.Array(NftMetadataFileSchema)),
-
   // Everything below here is not in the spec but common to genun (maybe still working out that part)
-  attributes: Data.Nullable(Data.Map(Data.Bytes(), Data.Any())), // Collection of unique properties associated with the NFT
-  tags: Data.Nullable(Data.Array(Data.Bytes())), // Can be used group related NFTs (i.e. "upppercut", "ascent", "season-2")
-  id: Data.Nullable(Data.Bytes()), // Unique id can be used as a link into offchain data about the NFT
-  type: Data.Nullable(Data.Bytes()), // Can be used to classify NFT (i.e. Thruster, Ship Body, etc..)
-
-  // Collection information sometimes stored per NFT
-  collection: Data.Nullable(Data.Bytes()), // Name of the colletion
-  website: Data.Nullable(Data.Bytes()),
-  twitter: Data.Nullable(Data.Bytes()),
+  extra: Data.Object({
+    attributes: Data.Nullable(Data.Map(Data.Bytes(), Data.Any())), // Collection of unique properties associated with the NFT
+    tags: Data.Nullable(Data.Array(Data.Bytes())), // Can be used group related NFTs (i.e. "upppercut", "ascent", "season-2")
+    id: Data.Nullable(Data.Bytes()), // Unique id can be used as a link into offchain data about the NFT
+    type: Data.Nullable(Data.Bytes()), // Can be used to classify NFT (i.e. Thruster, Ship Body, etc..)
+  
+  })
 });
 
 export type NftMetadata = Data.Static<typeof NftMetadataSchema>;
