@@ -14,24 +14,14 @@ pub fn insert_unique(
   dict.insert_with(self, key, value, fn(_, _, _) { fail }, compare)
 }
 
-/// If there is contract validity range then this function checks 
-/// that the transaction validity range is completely contained within the contract validity window.
-pub fn tx_in_interval(
-  tx_validity_range: Interval<PosixTime>,
-  maybe_contract_validity_range: Option<Interval<PosixTime>>,
+/// If there is a container range this function checks that contained range is completely within that range.
+pub fn time_contains(
+  contained_range: Interval<PosixTime>,
+  maybe_container_range: Option<Interval<PosixTime>>,
 ) {
-  when maybe_contract_validity_range is {
-    Some(contract_validity_range) ->
-      interval.intersection(contract_validity_range, tx_validity_range) == contract_validity_range
+  when maybe_container_range is {
+    Some(container_range) ->
+      interval.intersection(container_range, contained_range) == container_range
     None -> True
-  }
-}
-
-/// Debug utility function converts a bool to a string
-pub fn bool_to_string(value: Bool) {
-  if value {
-    @"True"
-  } else {
-    @"False"
   }
 }
