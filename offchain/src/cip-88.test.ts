@@ -7,6 +7,7 @@ import {
   RegistrationPayloadField,
   RoyaltyDetail,
   RoyaltyDetailField,
+  SCOPE_PLUTUS_V2,
   TokenProjectDetail,
   TokenProjectDetailField,
 } from './cip-88.ts';
@@ -18,6 +19,7 @@ Deno.test('Build CIP-88 metadata', async () => {
   const { lucid, seedUtxo } = await createEmulatorLucid();
 
   const mintingPolicy = paramaterizeMintingPolicy(lucid, seedUtxo.txHash, seedUtxo.outputIndex);
+  const policyId = `0x${mintingPolicy.policyId}`;
   const address = await lucid.wallet.address();
   const projectName = 'Test Name';
   const info = TEST_COLLECTION_INFO;
@@ -32,15 +34,16 @@ Deno.test('Build CIP-88 metadata', async () => {
     .validateWithbeacon(mintingPolicy.policyId)
     .build(lucid);
 
+  console.log(JSON.stringify(metadata, undefined, 2));
+
   assert(metadata[RegistrationMetadataField.VERSION] === 1, 'CIP 88 Version 1');
-  assert(metadata[RegistrationMetadataField.WITNESS][0].length === 0, 'Beacon has empty witness set');
+  assert(metadata[RegistrationMetadataField.WITNESS][0].length === 0, 'Beacon validation uses empty witness set');
 
   const payload = metadata[RegistrationMetadataField.PAYLOAD];
   const scope = payload[RegistrationPayloadField.SCOPE];
 
-  assert(scope[0] === 0, 'Scope is native script');
-  assert(scope[1][0] === mintingPolicy.policyId, 'Scope Minting policy matches supplied script');
-  assert(scope[1][1].join('') === mintingPolicy.script.script, 'Scoped script is array chunks of script');
+  assert(scope[0] === SCOPE_PLUTUS_V2, 'Scope is plutus v2');
+  assert(scope[1][0] === policyId, 'Scope Minting policy matches supplied script');
 
   const featureSet = payload[RegistrationPayloadField.FEATURE_SET];
 
@@ -52,7 +55,7 @@ Deno.test('Build CIP-88 metadata', async () => {
 
   assert(validationMethod[0] === 1, 'Validation method is beacon token');
   assert(
-    validationMethod[1][0] === mintingPolicy.policyId,
+    validationMethod[1][0] === policyId,
     'Validation Method Beacon Token Policy matches minting policy',
   );
   assert(validationMethod[1][1] === assetName, 'Beacon token asset name is null (can be other things)');

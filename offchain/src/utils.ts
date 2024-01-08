@@ -58,20 +58,21 @@ export function checkPolicyId(policyId: string) {
 
 /// Utility function splitting a UTF8 string into chunks
 /// Default characters per chunk is 64
-export function chunk(str: string, charactersPerChunk = 64): string[] {
+/// Prefix is applied to every chunk.  Mainly for adding a 0x to each part of chunked hex string.
+export function chunk(str: string, charactersPerChunk = 64, prefix = ''): string[] {
   const chunks = Array(Math.ceil(str.length / charactersPerChunk));
   for (let i = 0; i < chunks.length; ++i) {
-    chunks[i] = str.slice(i * charactersPerChunk, (i + 1) * charactersPerChunk);
+    chunks[i] = `${prefix}${str.slice(i * charactersPerChunk, (i + 1) * charactersPerChunk)}`;
   }
 
   return chunks;
 }
 
 /// Utility function for encoding and splitting a UTF8 string into 64 byte chunks.
-export function asChunkedHex(utf8String: string): string[] {
+export function asChunkedHex(utf8String: string, prefix = ''): string[] {
   const hex = fromText(utf8String);
   const charactersPerChunk = 128;
-  return chunk(hex, charactersPerChunk);
+  return chunk(hex, charactersPerChunk, prefix);
 }
 
 /// Utility function for resting a chunked hex string to a single UTF8 string

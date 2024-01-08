@@ -1,19 +1,3 @@
-// Genesis Transaction
-// 1) Select seed UTxO and collection name
-// 2) Add contstraints (max tokens, mint_window, reference_address)
-// 3) Optional: Set collection info
-//   a) Maybe support flag to mint to state token or cip-88 metadata or both
-//   b) Probably has it's own builder
-// 4) Optional: Set Royalties
-//   a) Should support setting a flag for also minting cip-27 null token
-//   b) Should support setting an address to send royalty tokens to
-// 5) Optional: Set owner recipient address
-//   a) Default to current selected wallet address
-// 6) Build (Fail if seed or colletion name is null)
-//   a) Should include cip-88 metadata if collection info is set.
-//   b) Should include cip-27 metadata if royalty and cip-27 is set
-// 7) Sign
-
 import { applyParamsToScript, Data, fromText, Lucid, toText, UTxO } from 'lucid';
 import { getScript } from './validators.ts';
 import { asChainAddress, asChainTimeWindow, OutputReferenceSchema, toBech32Address, toTimeWindow } from './aiken.ts';

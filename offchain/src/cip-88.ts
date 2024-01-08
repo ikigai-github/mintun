@@ -18,8 +18,14 @@ export type RegistrationMetadata = {
   [RegistrationMetadataField.WITNESS]: string[][];
 };
 
+export const SCOPE_NATIVE = 0;
+export const SCOPE_PLUTUS_V1 = 1;
+export const SCOPE_PLUTUS_V2 = 2;
+
 /// Only currently supported is native script [0, [policy_id, [compiled_script_hex]]]
-export type RegistrationScope = [0, [string, string[]]];
+/// but just to give an idea of what a smart contract would look like added the other script types found in lucid
+/// I think the compiled hex will be less useful in smart contract and potentially makes the metadata quite large so it isn't in the plutus scope
+export type RegistrationScope = [0, [string, string[]]] | [typeof SCOPE_PLUTUS_V1 | typeof SCOPE_PLUTUS_V2, [string]];
 
 // TODO: Expand to rest of spec NFT to CIP-26, CIP-48, CIP-60, and CIP-86
 // TODO: Currently CIP-102 doesn't have a definiton in CIP-88 but could add
@@ -189,7 +195,7 @@ export function toRoyaltyDetail(royalty: Royalty): RoyaltyDetail {
   return {
     [FEATURE_VERSION_FIELD]: 1,
     [FEATURE_DETAIL_FIELD]: {
-      [RoyaltyDetailField.RATE]: `${royalty.percentFee}`,
+      [RoyaltyDetailField.RATE]: `${royalty.percentFee / 100}`,
       [RoyaltyDetailField.RECIPIENT]: address,
     },
   };
@@ -249,6 +255,7 @@ export class Cip88Builder {
       // "The payload to be signed should be the hex-encoded CBOR  epresentation of the Registration Payload object."
       // so I think I might need to declare a complete data schema for CIP-88 and use Data.to(...) to get cbor hex.
       const result = await lucid.wallet.signMessage(address, JSON.stringify(payload));
+      // Probably should also add `0x` to these to convert them into byte arrays in the metadata
       witness = [[result.key, result.signature]];
     }
 
@@ -283,14 +290,13 @@ export class Cip88Builder {
   }
 
   private buildPayload(lucid: Lucid): RegistrationPayload {
-    const policyId = lucid.utils.validatorToScriptHash(this.#script);
-    const scriptChunks = chunk(this.#script.script);
-    const scope: RegistrationScope = [0, [policyId, scriptChunks]];
-
+    const scope = this.buildScope(lucid);
     let validationMethod: RegistrationValidationMethod | undefined;
     if (this.#beacon) {
       const { policyId, assetName } = fromUnit(this.#beacon);
-      validationMethod = [1, [policyId, assetName || '']];
+
+      const hexAssetName = assetName ? `0x${assetName}` : '';
+      validationMethod = [1, [`0x${policyId}`, hexAssetName]];
     } else {
       validationMethod = [0]; // Witness validation
     }
@@ -307,5 +313,20 @@ export class Cip88Builder {
       [RegistrationPayloadField.ORACLE_URI]: oracleUri,
       [RegistrationPayloadField.FEATURE_DETAILS]: this.#features,
     };
+  }
+
+  private buildScope(lucid: Lucid): RegistrationScope {
+    const policyId = `0x${lucid.utils.validatorToScriptHash(this.#script)}`;
+
+    if (this.#script.type === 'Native') {
+      const scriptChunks = chunk(this.#script.script, 64, '0x');
+      return [SCOPE_NATIVE, [policyId, scriptChunks]];
+    } else if (this.#script.type === 'PlutusV1') {
+      return [SCOPE_PLUTUS_V1, [policyId]];
+    } else if (this.#script.type === 'PlutusV2') {
+      return [SCOPE_PLUTUS_V2, [policyId]];
+    }
+
+    throw Error(`Could not determine scope. Unexpected script type ${this.#script.type}`);
   }
 }

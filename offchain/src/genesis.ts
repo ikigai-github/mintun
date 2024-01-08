@@ -213,13 +213,13 @@ export class GenesisTxBuilder {
       addCip102RoyaltyToTransaction(tx, mint.policyId, royaltyAddress, royalties, redeemer);
     }
 
-    // Add CIP-88 metadta to transaction
+    // Add CIP-88 metadata to transaction
     if (this.#useCip88) {
       const builder = Cip88Builder
         .register(mint.script)
         .validateWithbeacon(unit.owner);
-      if (this.#useCip27) {
-        builder.cip27Royalty(this.#royalties[0]);
+      if (this.#useCip27 && royalties.length === 1) {
+        builder.cip27Royalty(royalties[0]);
       }
 
       if (this.#state.name && this.#state.info) {
@@ -227,7 +227,7 @@ export class GenesisTxBuilder {
       }
 
       const cip88Metadata = await builder.build(this.#lucid);
-      tx.attachMetadata(CIP_88_METADATA_LABEL, cip88Metadata);
+      tx.attachMetadataWithConversion(CIP_88_METADATA_LABEL, cip88Metadata);
     }
 
     tx
