@@ -1,4 +1,4 @@
-import { Lucid, Tx, Unit, UTxO } from 'lucid';
+import { fromText, Lucid, toText, Tx, Unit, UTxO } from 'lucid';
 
 /// Simple form of UTxO that only includes part needed to reference a transaction
 export type TxReference = {
@@ -56,19 +56,29 @@ export function checkPolicyId(policyId: string) {
   return /[0-9A-Fa-f]{56}/.test(policyId);
 }
 
-/// Utility function for splitting strings into chunks.
-/// Default number of bytes per chunk is 64.
-/// If the string begins with `0x` it is treated as a hex string where each two characters are counted as a byte rather than one.
-export function chunk(str: string, bytesPerChunk = 64): string[] {
-  if (str.startsWith('0x')) {
-    bytesPerChunk *= 2;
-    str = str.slice(2);
-  }
-
-  const chunks = Array(Math.ceil(str.length / bytesPerChunk));
+/// Utility function splitting a UTF8 string into chunks
+/// Default characters per chunk is 64
+export function chunk(str: string, charactersPerChunk = 64): string[] {
+  const chunks = Array(Math.ceil(str.length / charactersPerChunk));
   for (let i = 0; i < chunks.length; ++i) {
-    chunks[i] = str.slice(i * bytesPerChunk, (i + 1) * bytesPerChunk);
+    chunks[i] = str.slice(i * charactersPerChunk, (i + 1) * charactersPerChunk);
   }
 
   return chunks;
+}
+
+/// Utility function for encoding and splitting a UTF8 string into 64 byte chunks.
+export function asChunkedHex(utf8String: string): string[] {
+  const hex = fromText(utf8String);
+  const charactersPerChunk = 128;
+  return chunk(hex, charactersPerChunk);
+}
+
+/// Utility function for resting a chunked hex string to a single UTF8 string
+export function toJoinedText(hexStrings: string | string[]) {
+  if (Array.isArray(hexStrings)) {
+    return toText(hexStrings.join(''));
+  } else {
+    return toText(hexStrings);
+  }
 }

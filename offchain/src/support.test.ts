@@ -1,7 +1,5 @@
 import { assert } from 'std/assert/mod.ts';
-import { Assets, Emulator, generateSeedPhrase, Lucid, UTxO } from 'lucid';
-// import { prepareStateMintTx } from './state-mint.ts';
-// import { submit } from './utils.ts';
+import { Assets, Emulator, generateSeedPhrase, Lucid } from 'lucid';
 
 /// Creates a new emulator account with the given assets, if any.
 export async function generateEmulatorAccount(assets: Assets = {}) {
@@ -25,41 +23,13 @@ export async function createEmulatorLucid() {
   const lucid = await Lucid.new(emulator);
   lucid.selectWalletFromSeed(ACCOUNT_0.seedPhrase);
 
+  const utxos = await lucid.wallet.getUtxos();
+  assert(utxos.length > 0, 'Wallet must have at least one UTXO for this test');
+  const seedUtxo = utxos[0];
+
   return {
     lucid,
     accounts: [ACCOUNT_0, ACCOUNT_1, ACCOUNT_2, ACCOUNT_3],
+    seedUtxo,
   };
 }
-
-// export async function mintStateToken(lucid: Lucid, seedUtxo: UTxO, recipientAddress: string) {
-//   // Build and submit the minting transaction
-//   const { tx, stateMint, stateValidator, batchMint, unit } = prepareStateMintTx(
-//     lucid,
-//     seedUtxo,
-//     recipientAddress,
-//   );
-//   const txHash = await submit(tx);
-//   await lucid.awaitTx(txHash);
-
-//   // Fetch the utxos at the recipient address
-//   const recipientUtxos = await lucid.utxosAt(recipientAddress);
-
-//   // Verify user token was received
-//   const stateUserUtxo = recipientUtxos.find((utxo) => utxo.assets[unit.user]);
-//   assert(stateUserUtxo);
-
-//   const validatorUtxos = await lucid.utxosAt(stateValidator.address);
-
-//   // Verify reference token was received
-//   const stateReferenceUtxo = validatorUtxos.find((utxo) => utxo.assets[unit.reference]);
-//   assert(stateReferenceUtxo);
-
-//   return {
-//     stateMint,
-//     stateValidator,
-//     batchMint,
-//     unit,
-//     stateUserUtxo,
-//     stateReferenceUtxo,
-//   };
-// }

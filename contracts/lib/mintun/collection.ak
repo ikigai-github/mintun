@@ -63,7 +63,7 @@ pub type CollectionInfo {
   /// The name of a project that created the collection. Sometimes used in place of a specific artist
   project: Option<ByteArray>,
   /// Flag indicating if the collection is not safe for work
-  nsfw: Option<Bool>,
+  nsfw: Bool,
   /// Description of the collection in 64 byte chunks
   description: List<ByteArray>,
   /// Supporting images to be used to display the collection 
@@ -75,7 +75,7 @@ pub type CollectionInfo {
   /// The website to visit for more details about the collection broken up into 64 chunks
   website: List<ByteArray>,
   /// Links to social media accounts associated with the project or artist
-  social: Option<Dict<ByteArray, List<ByteArray>>>,
+  social: Dict<ByteArray, List<ByteArray>>,
   /// Anything else not defined in the standard
   extra: Data,
 }

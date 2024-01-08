@@ -1,11 +1,13 @@
 import { Address, Data, Lucid, Script, UTxO } from 'lucid';
-import { CollectionInfo, CollectionState, CollectionStateMetadataShape, SEQUENCE_MAX_VALUE } from './collection.ts';
+import { CollectionState, CollectionStateMetadataShape, SEQUENCE_MAX_VALUE } from './collection.ts';
 import { createGenesisData, MintRedeemerShape, toCollectionState } from './mintun.ts';
 import { checkPolicyId } from './utils.ts';
 import { addCip102RoyaltyToTransaction } from './cip-102.ts';
 import { addCip27RoyaltyToTransaction } from './cip-27.ts';
 import { Royalty } from './royalty.ts';
 import { ScriptCache } from './script.ts';
+import { CollectionInfo } from './collection-info.ts';
+import { Cip88Builder, CIP_88_METADATA_LABEL } from './cip-88.ts';
 
 export class GenesisTxBuilder {
   #lucid: Lucid;
@@ -211,9 +213,23 @@ export class GenesisTxBuilder {
       addCip102RoyaltyToTransaction(tx, mint.policyId, royaltyAddress, royalties, redeemer);
     }
 
-    // TODO: Add metadata to transaction
-    //  Cip-88
-    //  Collection Info?
+    // Add CIP-88 metadta to transaction
+    if (this.#useCip88) {
+      const builder = Cip88Builder
+        .register(mint.script)
+        .validateWithbeacon(unit.owner);
+      if (this.#useCip27) {
+        builder.cip27Royalty(this.#royalties[0]);
+      }
+
+      if (this.#state.name && this.#state.info) {
+        builder.cip68Info(this.#state.name, this.#state.info);
+      }
+
+      const cip88Metadata = await builder.build(this.#lucid);
+      tx.attachMetadata(CIP_88_METADATA_LABEL, cip88Metadata);
+    }
+
     tx
       .mintAssets(assets, redeemer)
       .payToAddressWithData(spend.address, {

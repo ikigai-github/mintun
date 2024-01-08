@@ -1,43 +1,11 @@
 import { assert, assertThrows } from 'std/assert/mod.ts';
-
 import { submit } from './utils.ts';
 import { GenesisTxBuilder } from './genesis.ts';
 import { createEmulatorLucid } from './support.test.ts';
 import { extractCollectionState } from './mintun.ts';
 import { ScriptCache } from './script.ts';
 import { Lucid, Tx } from 'lucid';
-import { CollectionInfo, IMAGE_PURPOSE } from './collection.ts';
-
-const TEST_COLLECTION_INFO: CollectionInfo = {
-  artist: 'Arty McArtface',
-  nsfw: true,
-  project: 'Mystical Mystic',
-  description: `Sometimes when the sun arrives in the backyard and an iguana 
-  perches upon your forseen consequences you drive to be the 
-  youngest forest in the hold of great hearts located underneath 
-  your smile and beneath their eyes.  Laden with the glory of the 
-  guilty you dance the song of night swept dreams until that 
-  undefinable clash of heart and soul sunders you from the whole.`,
-  images: [{
-    src: 'https://picsum.photos/200/200',
-    purpose: IMAGE_PURPOSE.Thumbnail,
-    dimensions: { width: 200, height: 200 },
-    mediaType: 'image/jpeg',
-  }],
-  attributes: ['Coolness', 'Color', 'Magic Level'],
-  tags: ['Test', 'Fancy'],
-  website: 'https://www.website.com',
-  social: { 'x': 'https://www.x.com', 'instagram': 'https://www.instagram.com' },
-};
-
-async function setup() {
-  const { lucid, accounts } = await createEmulatorLucid();
-  const utxos = await lucid.wallet.getUtxos();
-  assert(utxos.length > 0, 'Wallet must have at least one UTXO for this test');
-  const seedUtxo = utxos[0];
-
-  return { lucid, accounts, seedUtxo };
-}
+import { TEST_COLLECTION_INFO } from './fixtures.test.ts';
 
 async function run(lucid: Lucid, tx: Tx, cache: ScriptCache) {
   const txHash = await submit(tx);
@@ -54,7 +22,7 @@ async function run(lucid: Lucid, tx: Tx, cache: ScriptCache) {
 }
 
 Deno.test('Minimal minting policy genesis transaction', async () => {
-  const { lucid, seedUtxo } = await setup();
+  const { lucid, seedUtxo } = await createEmulatorLucid();
   const { tx, cache } = await GenesisTxBuilder
     .create(lucid)
     .name('No Constraints')
@@ -76,7 +44,7 @@ Deno.test('Minimal minting policy genesis transaction', async () => {
 });
 
 Deno.test('All configuration genesis transaction', async () => {
-  const { lucid, seedUtxo, accounts } = await setup();
+  const { lucid, seedUtxo, accounts } = await createEmulatorLucid();
 
   // Use different address than selected wallet (account 0)
   const ownerAddress = accounts[1].address;
@@ -94,7 +62,7 @@ Deno.test('All configuration genesis transaction', async () => {
     .nftReferenceTokenAddress(referenceTokenAddress)
     .royaltyTokenAddress(royaltyTokenAddress)
     .ownerAddress(ownerAddress)
-    //.info(TEST_COLLECTION_INFO)
+    .info(TEST_COLLECTION_INFO)
     .useCip27()
     .useCip88()
     .royalty(accounts[0].address, 4.3)
@@ -110,7 +78,7 @@ Deno.test('All configuration genesis transaction', async () => {
 });
 
 Deno.test('Builder errors during build', async () => {
-  const { lucid } = await setup();
+  const { lucid } = await createEmulatorLucid();
 
   // End time <= Start Time
   assertThrows(() => {

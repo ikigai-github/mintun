@@ -16,14 +16,7 @@
 
 import { applyParamsToScript, Data, fromText, Lucid, toText, UTxO } from 'lucid';
 import { getScript } from './validators.ts';
-import {
-  asChainAddress,
-  asChainMap,
-  asChainTimeWindow,
-  OutputReferenceSchema,
-  toBech32Address,
-  toTimeWindow,
-} from './aiken.ts';
+import { asChainAddress, asChainTimeWindow, OutputReferenceSchema, toBech32Address, toTimeWindow } from './aiken.ts';
 import {
   CollectionState,
   CollectionStateMetadataShape,
@@ -32,6 +25,7 @@ import {
 } from './collection.ts';
 import { createReferenceData } from './cip-68.ts';
 import { getScriptInfo } from './script.ts';
+import { asChainCollectionInfo } from './collection-info.ts';
 
 /// Minting policy paramaterization schema
 const MintParameterSchema = Data.Tuple([OutputReferenceSchema]);
@@ -94,7 +88,7 @@ export function createGenesisData(state: Partial<CollectionState>, includeInfo: 
   const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.startMs, state.mintWindow.endMs) : null;
   const max_nfts = state.maxNfts ? BigInt(state.maxNfts) : null;
   const reference_address = state.nftReferenceTokenAddress ? asChainAddress(state.nftReferenceTokenAddress) : null;
-  const info = state.info && includeInfo ? asChainMap(state.info) : null;
+  const info = state.info && includeInfo ? asChainCollectionInfo(state.info) : null;
   const extra = Data.void();
   const metadata: CollectionStateType = {
     name,
@@ -144,28 +138,3 @@ export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetad
     extra,
   };
 }
-
-// Mint Transaction
-// 1) Select seed UTxO
-// 2) Optional: Use reference script (Might be needed if contract is large)
-// 3) Add single or array of mints
-//     a) Should support a recipient address (default of current selected wallet)
-//     b) Should support a flag if datum should be inline (default to inline?)
-//     c) Should support a flag if cip-25 data should be sent (recommend no for mutable data)
-// 4) Build (Fail if seed is not set or TX too large)
-
-// Collection Info Builder (TBD if this should be Map<ByteArray, Data> or more formal structure)
-// description(str)
-// image(src, mediaType, purpose, { width,  height })
-// attributes(str[])
-// tags(str[])
-// website(str)
-// social(name, url)
-// extra(any)
-
-// Nft Mint Builder
-// 1) Set an NFT Name
-// 2) Set a Thumbnail image
-//    a) Should include mediatype
-// 3) Optional: Set a description
-// 4) Set Attributes

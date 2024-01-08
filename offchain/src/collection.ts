@@ -2,6 +2,7 @@ import { Data, fromText, toUnit, UTxO } from 'lucid';
 import { ChainAddressSchema, PosixTimeIntervalSchema } from './aiken.ts';
 import { createReferenceTokenSchema, NFT_TOKEN_LABEL, REFERENCE_TOKEN_LABEL } from './cip-68.ts';
 import { TimeWindow } from './common.ts';
+import { CollectionInfo, CollectionInfoSchema } from './collection-info.ts';
 
 /// Speical collection owner token label.
 /// Selected because it has similar pattern to other labels, there is no standard.
@@ -24,58 +25,6 @@ export const COLLECTION_TOKEN_PURPOSE = {
 
 export type CollectionTokenPurpose = keyof typeof COLLECTION_TOKEN_PURPOSE;
 
-/// Image purpose are hints at how the creator inteded the image to be used
-export const IMAGE_PURPOSE = {
-  Thumbnail: 'Thumbnail',
-  Banner: 'Banner',
-  Avatar: 'Avatar',
-  Gallery: 'Gallery',
-  General: 'General',
-} as const;
-
-export type ImagePurpose = keyof typeof IMAGE_PURPOSE;
-
-/// On chain data schema for image purpose
-const CollectionImagePurposeSchema = Data.Enum([
-  Data.Literal(IMAGE_PURPOSE.Thumbnail),
-  Data.Literal(IMAGE_PURPOSE.Banner),
-  Data.Literal(IMAGE_PURPOSE.Avatar),
-  Data.Literal(IMAGE_PURPOSE.Gallery),
-  Data.Literal(IMAGE_PURPOSE.General),
-]);
-
-/// On chain data schema for image dimensions
-const CollectionImageDimensionsSchema = Data.Object({
-  width: Data.Integer({ minimum: 1 }),
-  height: Data.Integer({ minimum: 1 }),
-});
-
-// On chain data schema for a collection image with hints
-const CollectionImageSchema = Data.Object({
-  purpose: CollectionImagePurposeSchema,
-  dimensions: CollectionImageDimensionsSchema,
-  media_type: Data.Bytes(),
-  src: Data.Array(Data.Bytes()),
-});
-
-/// On chain schema for the collection market information.
-/// TBD: May be better left as a Map<string, Data>
-const CollectionInfoSchema = Data.Object({
-  artist: Data.Nullable(Data.Bytes()),
-  project: Data.Nullable(Data.Bytes()),
-  nsfw: Data.Nullable(Data.Boolean()),
-  description: Data.Nullable(Data.Array(Data.Bytes())),
-  images: Data.Nullable(Data.Array(CollectionImageSchema)),
-  attributes: Data.Nullable(Data.Array(Data.Bytes())),
-  tags: Data.Nullable(Data.Array(Data.Bytes())),
-  website: Data.Nullable(Data.Array(Data.Bytes())),
-  social: Data.Map(Data.Bytes(), Data.Array(Data.Bytes())),
-  extra: Data.Any(),
-});
-
-export type CollectionInfoType = Data.Static<typeof CollectionInfoSchema>;
-export const CollectionInfoShape = CollectionInfoSchema as unknown as CollectionInfoType;
-
 /// On chain schema for the collection state data. For more details on the purpose of the
 /// fields see smart contract library docs.
 /// Note: Currently undecided on if info should be well defined or just a Map<string, Data>
@@ -88,7 +37,7 @@ const CollectionStateSchema = Data.Object({
   current_nfts: Data.Integer({ minimum: 0, maximum: SEQUENCE_MAX_VALUE }),
   next_sequence: Data.Integer({ minimum: 0, maximum: SEQUENCE_MAX_VALUE }),
   reference_address: Data.Nullable(ChainAddressSchema),
-  info: Data.Nullable(Data.Map(Data.Bytes(), Data.Any())),
+  info: Data.Nullable(CollectionInfoSchema),
   extra: Data.Any(),
 });
 
@@ -99,34 +48,6 @@ export const CollectionStateShape = CollectionStateSchema as unknown as Collecti
 export const CollectionStateMetadataSchema = createReferenceTokenSchema(CollectionStateSchema);
 export type CollectionStateMetadataType = Data.Static<typeof CollectionStateMetadataSchema>;
 export const CollectionStateMetadataShape = CollectionStateMetadataSchema as unknown as CollectionStateMetadataType;
-
-/// Width height of an image in pixels
-export type ImageDimensionsType = {
-  width: number;
-  height: number;
-};
-
-/// An image with hints for its format, purpose, and dimensions
-export type CollectionImage = {
-  purpose: ImagePurpose;
-  dimensions: ImageDimensionsType;
-  mediaType: string;
-  src: string;
-};
-
-/// The collection information in offchain format.
-export type CollectionInfo = {
-  artist?: string;
-  nsfw?: boolean;
-  project?: string;
-  description?: string;
-  images?: CollectionImage[];
-  attributes?: string[];
-  tags?: string[];
-  website?: string;
-  social?: Record<string, string>;
-  extra?: unknown;
-};
 
 /// The collection state in offchain format.
 export type CollectionState = {

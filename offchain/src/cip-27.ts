@@ -1,6 +1,6 @@
 import { Tx } from 'lucid';
-import { chunk } from './utils.ts';
 import { Royalty } from './royalty.ts';
+import { chunk } from './utils.ts';
 
 export const CIP_27_METADATA_LABEL = 777;
 
