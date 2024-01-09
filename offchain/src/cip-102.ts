@@ -7,7 +7,7 @@ export const ROYALTY_TOKEN_NAME = fromText('Royalty');
 
 export const RoyaltyRecipientSchema = Data.Object({
   address: ChainAddressSchema,
-  fee: Data.Integer({ minimum: 1 }),
+  variableFee: Data.Integer({ minimum: 1 }),
   minFee: Data.Nullable(Data.Integer()),
   maxFee: Data.Nullable(Data.Integer()),
 });
@@ -32,7 +32,7 @@ export function toRoyaltyUnit(policyId: string) {
 }
 
 /// Converts a percentage between 0 and 100 inclusive to the CIP-102 fee format
-export function asChainPercentFee(percent: number) {
+export function asChainVariableFee(percent: number) {
   if (percent < 0.1 || percent > 100) {
     throw new Error('Royalty fee must be between 0.1 and 100 percent');
   }
@@ -41,7 +41,7 @@ export function asChainPercentFee(percent: number) {
 }
 
 /// Converts from a on chain royalty to a percent between 0 and 100
-export function fromChainFee(fee: bigint) {
+export function fromChainVariableFee(fee: bigint) {
   return Math.ceil(Number(10000n / fee)) / 10;
 }
 
@@ -62,13 +62,13 @@ export function asChainFixedFee(fee?: number) {
 export function toCip102RoyaltyDatum(royalties: Royalty[]) {
   const metadata: RoyaltyRecipientType[] = royalties.map((royalty) => {
     const address = asChainAddress(royalty.address);
-    const fee = asChainPercentFee(royalty.percentFee);
+    const variableFee = asChainVariableFee(royalty.variableFee);
     const minFee = asChainFixedFee(royalty.minFee);
     const maxFee = asChainFixedFee(royalty.maxFee);
 
     return {
       address,
-      fee,
+      variableFee,
       minFee,
       maxFee,
     };

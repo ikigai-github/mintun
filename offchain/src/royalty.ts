@@ -4,7 +4,7 @@ export type Royalty = {
   address: string;
   /// Variable fee percentage applied if it is within any defined min/max bounds.
   /// Percent is a value between 0 and 100 inclusive.
-  percentFee: number;
+  variableFee: number;
   /// Minimum lovelace to be paid as royalty
   minFee?: number;
   /// Maximum lovelace to be paid as royalty

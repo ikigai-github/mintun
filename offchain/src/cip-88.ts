@@ -3,6 +3,7 @@ import { fromUnit, Lucid, Script } from 'lucid';
 import { CollectionImage, CollectionInfo, IMAGE_PURPOSE } from './collection-info.ts';
 import { chunk } from './utils.ts';
 import { Royalty } from './royalty.ts';
+import { asChainFixedFee, asChainVariableFee } from './cip-102.ts';
 
 export const CIP_88_METADATA_LABEL = 867;
 
@@ -30,7 +31,7 @@ export type RegistrationScope = [0, [string, string[]]] | [typeof SCOPE_PLUTUS_V
 // TODO: Expand to rest of spec NFT to CIP-26, CIP-48, CIP-60, and CIP-86
 // TODO: Currently CIP-102 doesn't have a definiton in CIP-88 but could add
 // Currently supported standards for CIP-88 payload
-export type RegistrationFeatureStandard = 25 | 27 | 68;
+export type RegistrationFeatureStandard = 25 | 27 | 68 | 102;
 
 // Either [0] (Ed25519 Key Signature) or [1, [policyid, assetid]] (Beacon Token)
 export type RegistrationValidationMethod = [0] | [1, [string, string]];
@@ -82,17 +83,36 @@ export type TokenProjectDetail = {
   };
 };
 
-export const RoyaltyDetailField = {
+export const Cip27RoyaltyDetailField = {
   RATE: 0,
   RECIPIENT: 1,
 } as const;
 
-export type RoyaltyDetail = {
+export type Cip27RoyaltyDetail = {
   [FEATURE_VERSION_FIELD]: 1;
   [FEATURE_DETAIL_FIELD]: {
-    [RoyaltyDetailField.RATE]: string;
-    [RoyaltyDetailField.RECIPIENT]: string[];
+    [Cip27RoyaltyDetailField.RATE]: string;
+    [Cip27RoyaltyDetailField.RECIPIENT]: string[];
   };
+};
+
+export const Cip102RoyaltyDetailField = {
+  ADDRESS: 0,
+  VARIABLE_FEE: 1,
+  MIN_FEE: 2,
+  MAX_FEE: 3,
+} as const;
+
+export type Cip102RoyaltyRecipient = {
+  [Cip102RoyaltyDetailField.ADDRESS]: string[];
+  [Cip102RoyaltyDetailField.VARIABLE_FEE]: bigint;
+  [Cip102RoyaltyDetailField.MIN_FEE]?: bigint;
+  [Cip102RoyaltyDetailField.MAX_FEE]?: bigint;
+};
+
+export type Cip102RoyaltyDetail = {
+  [FEATURE_VERSION_FIELD]: 1;
+  [FEATURE_DETAIL_FIELD]: Cip102RoyaltyRecipient[];
 };
 
 /// Break up a URI per the CIP-88 standard where the URI scheme is in index 0
@@ -190,14 +210,40 @@ export function toTokenProjectDetail(name: string, info: CollectionInfo): TokenP
   };
 }
 
-export function toRoyaltyDetail(royalty: Royalty): RoyaltyDetail {
+export function toCip27RoyaltyDetail(royalty: Royalty): Cip27RoyaltyDetail {
   const address = chunk(royalty.address);
   return {
     [FEATURE_VERSION_FIELD]: 1,
     [FEATURE_DETAIL_FIELD]: {
-      [RoyaltyDetailField.RATE]: `${royalty.percentFee / 100}`,
-      [RoyaltyDetailField.RECIPIENT]: address,
+      [Cip27RoyaltyDetailField.RATE]: `${royalty.variableFee / 100}`,
+      [Cip27RoyaltyDetailField.RECIPIENT]: address,
     },
+  };
+}
+
+export function toCip102RoyaltyRecipient(royalty: Royalty) {
+  const address = chunk(royalty.address);
+  const recipient: Cip102RoyaltyRecipient = {
+    [Cip102RoyaltyDetailField.ADDRESS]: address,
+    [Cip102RoyaltyDetailField.VARIABLE_FEE]: asChainVariableFee(royalty.variableFee),
+  };
+
+  if (royalty.maxFee !== undefined) {
+    recipient[Cip102RoyaltyDetailField.MAX_FEE] = asChainFixedFee(royalty.maxFee) ?? undefined;
+  }
+
+  if (royalty.minFee !== undefined) {
+    recipient[Cip102RoyaltyDetailField.MIN_FEE] = asChainFixedFee(royalty.minFee) ?? undefined;
+  }
+
+  return recipient;
+}
+
+export function toCip102RoyaltyDetail(royalties: Royalty[]): Cip102RoyaltyDetail {
+  const recipients = royalties.map(toCip102RoyaltyRecipient);
+  return {
+    [FEATURE_VERSION_FIELD]: 1,
+    [FEATURE_DETAIL_FIELD]: recipients,
   };
 }
 
@@ -226,8 +272,15 @@ export class Cip88Builder {
   }
 
   cip27Royalty(royalty: Royalty) {
-    const detail = toRoyaltyDetail(royalty);
-    return this.royalty(27, detail);
+    const detail = toCip27RoyaltyDetail(royalty);
+    this.#features[27] = detail;
+    return this;
+  }
+
+  cip102Royalties(royalties: Royalty[]) {
+    const detail = toCip102RoyaltyDetail(royalties);
+    this.#features[102] = detail;
+    return this;
   }
 
   oracle(url: string) {
@@ -252,8 +305,8 @@ export class Cip88Builder {
     if (!this.#beacon) {
       const address = await lucid.wallet.address();
       // FIXME: This seems wrong. The standard under 3. Validation Method says:
-      // "The payload to be signed should be the hex-encoded CBOR  epresentation of the Registration Payload object."
-      // so I think I might need to declare a complete data schema for CIP-88 and use Data.to(...) to get cbor hex.
+      // "The payload to be signed should be the hex-encoded CBOR representation of the Registration Payload object."
+      // so I think I might need to declare a complete data schema for CIP-88 and use Data.to(...) to get correct cbor hex.
       const result = await lucid.wallet.signMessage(address, JSON.stringify(payload));
       // Probably should also add `0x` to these to convert them into byte arrays in the metadata
       witness = [[result.key, result.signature]];
@@ -274,18 +327,6 @@ export class Cip88Builder {
     }
 
     this.#features[standard] = detail;
-    return this;
-  }
-
-  // TODO: Add CIP-102 support
-  private royalty(standard: 27, royalty: RoyaltyDetail) {
-    if (this.#features[standard]) {
-      throw new Error(
-        'Currently only CIP-27 royalty detail is supported so can only declare a single beneficiary royalty',
-      );
-    }
-
-    this.#features[standard] = royalty;
     return this;
   }
 

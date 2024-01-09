@@ -21,7 +21,7 @@ export function addCip27RoyaltyToTransaction(tx: Tx, policyId: string, royalties
     throw new Error('CIP-27 royalties only support one beneficiary');
   }
 
-  const { percentFee, address, minFee, maxFee } = royalties[0];
+  const { variableFee, address, minFee, maxFee } = royalties[0];
 
   if (maxFee !== undefined || minFee !== undefined) {
     throw new Error('CIP-27 royalties do not support min/max fee');
@@ -29,7 +29,7 @@ export function addCip27RoyaltyToTransaction(tx: Tx, policyId: string, royalties
 
   const cip27Unit = policyId; // Asset name is null
   const cip27Asset = { [cip27Unit]: 1n };
-  const cip27Metadata = toCip27Metadata(percentFee, address);
+  const cip27Metadata = toCip27Metadata(variableFee, address);
 
   // Must be first minted token so directly call mintAssets rather than adding to assets object
   // TODO: verify calling mintAssets here guarantees this gets the 0th index in the mint.

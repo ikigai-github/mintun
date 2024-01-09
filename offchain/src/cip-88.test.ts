@@ -1,12 +1,12 @@
 import { assert } from 'std/assert/assert.ts';
 import {
+  Cip27RoyaltyDetail,
+  Cip27RoyaltyDetailField,
   Cip88Builder,
   FEATURE_DETAIL_FIELD,
   FEATURE_VERSION_FIELD,
   RegistrationMetadataField,
   RegistrationPayloadField,
-  RoyaltyDetail,
-  RoyaltyDetailField,
   SCOPE_PLUTUS_V2,
   TokenProjectDetail,
   TokenProjectDetailField,
@@ -23,18 +23,17 @@ Deno.test('Build CIP-88 metadata', async () => {
   const address = await lucid.wallet.address();
   const projectName = 'Test Name';
   const info = TEST_COLLECTION_INFO;
-  const royalty = { address, percentFee: 1.2 };
+  const royalty = { address, variableFee: 1.2 };
   const assetName = '';
   const oracleUri = 'https://www.whatever.com';
 
   const metadata = await Cip88Builder.register(mintingPolicy.script)
     .cip68Info(projectName, info)
     .cip27Royalty(royalty)
+    .cip102Royalties([royalty])
     .oracle(oracleUri)
     .validateWithbeacon(mintingPolicy.policyId)
     .build(lucid);
-
-  console.log(JSON.stringify(metadata, undefined, 2));
 
   assert(metadata[RegistrationMetadataField.VERSION] === 1, 'CIP 88 Version 1');
   assert(metadata[RegistrationMetadataField.WITNESS][0].length === 0, 'Beacon validation uses empty witness set');
@@ -47,9 +46,10 @@ Deno.test('Build CIP-88 metadata', async () => {
 
   const featureSet = payload[RegistrationPayloadField.FEATURE_SET];
 
-  assert(featureSet.length === 2, 'Exactly two features selected');
+  assert(featureSet.length === 3, 'Exactly three features selected');
   assert(featureSet.includes(27), 'Feature set include CIP-27');
   assert(featureSet.includes(68), 'Feature set includes CIP-68');
+  assert(featureSet.includes(102), 'Feature set include CIP-102');
 
   const validationMethod = payload[RegistrationPayloadField.VALIDATION_METHOD];
 
@@ -80,16 +80,16 @@ Deno.test('Build CIP-88 metadata', async () => {
   );
   // Some other fields I could check here
 
-  const royaltyWrapper = features[27] as RoyaltyDetail;
+  const royaltyWrapper = features[27] as Cip27RoyaltyDetail;
   assert(royaltyWrapper[FEATURE_VERSION_FIELD] === 1, 'CIP-27 feature version field 1');
 
   const royaltyDetail = royaltyWrapper[FEATURE_DETAIL_FIELD];
   assert(
-    royaltyDetail[RoyaltyDetailField.RATE] === `${royalty.percentFee}`,
+    royaltyDetail[Cip27RoyaltyDetailField.RATE] === `${royalty.variableFee / 100}`,
     'Royalty fee is string form of percentage',
   );
   assert(
-    royaltyDetail[RoyaltyDetailField.RECIPIENT].join('') === address,
+    royaltyDetail[Cip27RoyaltyDetailField.RECIPIENT].join('') === address,
     'Rejoined royalty detail address matches original',
   );
 });
