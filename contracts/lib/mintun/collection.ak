@@ -68,14 +68,8 @@ pub type CollectionInfo {
   description: List<ByteArray>,
   /// Supporting images to be used to display the collection 
   images: List<CollectionImage>,
-  /// All possible attributes that can be found on the collection.  Could have specified probabilities but seems to complicate with low value.
-  attributes: List<ByteArray>,
-  /// All possible tags that can be found on the collection NFTs
-  tags: List<ByteArray>,
-  /// The website to visit for more details about the collection broken up into 64 chunks
-  website: List<ByteArray>,
-  /// Links to social media accounts associated with the project or artist
-  social: Dict<ByteArray, List<ByteArray>>,
+  /// Links to social media and website associated with the project or artist
+  links: Dict<ByteArray, List<ByteArray>>,
   /// Anything else not defined in the standard
   extra: Data,
 }
@@ -152,12 +146,12 @@ pub fn parse_name(name: AssetName) -> CollectionName {
   // Right now just bit 40 is set or not set indicates if the purpose is management or nft
   let purpose =
     if bytearray.test_bit(name, 40) == False {
-      Management
-    } else {
       NFT
+    } else {
+      Management
     }
   // 3 byte sequence number
-  let sequence = int.from_hex_bytes(bytearray.slice(name, 6, 8))
+  let sequence = int.from_hex_bytes(bytearray.slice(name, 5, 7))
 
   // Remainder of the array is the content usually just a human readable name for the asset
   let content = bytearray.drop(name, 7)

@@ -1,12 +1,7 @@
-import { applyParamsToScript, Data, fromText, Lucid, toText, UTxO } from 'lucid';
+import { applyParamsToScript, Data, fromText, Lucid } from 'lucid';
 import { getScript } from './validators.ts';
-import { asChainAddress, asChainTimeWindow, OutputReferenceSchema, toBech32Address, toTimeWindow } from './aiken.ts';
-import {
-  CollectionState,
-  CollectionStateMetadataShape,
-  CollectionStateMetadataType,
-  CollectionStateType,
-} from './collection.ts';
+import { asChainAddress, asChainTimeWindow, OutputReferenceSchema } from './aiken.ts';
+import { CollectionState, CollectionStateType } from './collection.ts';
 import { createReferenceData } from './cip-68.ts';
 import { getScriptInfo } from './script.ts';
 import { asChainCollectionInfo } from './collection-info.ts';
@@ -31,6 +26,13 @@ const MintRedeemerSchema = Data.Enum([
 ]);
 export type MintRedeemerType = Data.Static<typeof MintRedeemerSchema>;
 export const MintRedeemerShape = MintRedeemerSchema as unknown as MintRedeemerType;
+
+const ValidatorRedeemerSchema = Data.Enum([
+  Data.Literal('EndpointMint'),
+  Data.Literal('EndpointBurn'),
+]);
+export type ValidatorRedeemerType = Data.Static<typeof ValidatorRedeemerSchema>;
+export const ValidatorRedeemerShape = ValidatorRedeemerSchema as unknown as ValidatorRedeemerType;
 
 /// Given a unique hash and index from the seed transaction parameterizes the minting policy and returns its info
 export function paramaterizeMintingPolicy(lucid: Lucid, hash: string, index: number) {
@@ -73,7 +75,7 @@ export function createGenesisData(state: Partial<CollectionState>, includeInfo: 
   const max_nfts = state.maxNfts ? BigInt(state.maxNfts) : null;
   const reference_address = state.nftReferenceTokenAddress ? asChainAddress(state.nftReferenceTokenAddress) : null;
   const info = state.info && includeInfo ? asChainCollectionInfo(state.info) : null;
-  const extra = Data.void();
+  const extra = '';
   const metadata: CollectionStateType = {
     name,
     group,
@@ -88,37 +90,4 @@ export function createGenesisData(state: Partial<CollectionState>, includeInfo: 
   };
 
   return createReferenceData(metadata);
-}
-
-// Decode CBOR datum of passed in UTxO and then convert the plutus data into offchain data
-export async function extractCollectionState(lucid: Lucid, utxo: UTxO) {
-  const chainState = await lucid.datumOf(utxo, CollectionStateMetadataShape);
-  return toCollectionState(lucid, chainState);
-}
-
-/// Convert from on chain plutus data to off chain data structure
-export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetadataType): CollectionState {
-  const { metadata } = chainState;
-  const name = toText(metadata.name);
-  const group = metadata.group ?? undefined;
-  const mintWindow = metadata.mint_window ? toTimeWindow(metadata.mint_window) : undefined;
-  const maxNfts = metadata.max_nfts ? Number(metadata.max_nfts) : undefined;
-  const currentNfts = Number(metadata.current_nfts);
-  const nextSequence = Number(metadata.next_sequence);
-  const locked = metadata.force_locked;
-  const nftReferenceTokenAddress = metadata.reference_address
-    ? toBech32Address(lucid, metadata.reference_address)
-    : undefined;
-  const extra = metadata.extra;
-  return {
-    name,
-    group,
-    mintWindow,
-    maxNfts,
-    locked,
-    currentNfts,
-    nextSequence,
-    nftReferenceTokenAddress,
-    extra,
-  };
 }

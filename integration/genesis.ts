@@ -27,8 +27,8 @@ const { tx } = await GenesisTxBuilder
   .royaltyTokenAddress(address)
   .ownerAddress(address)
   .info(TEST_COLLECTION_INFO)
-  .useCip27()
-  .useCip88()
+  .useCip27(true)
+  .useCip88(true)
   .royalty(address, 4.3)
   .build();
 

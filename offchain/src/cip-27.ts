@@ -16,12 +16,8 @@ export function toCip27Metadata(percentage: number, address: string) {
   return { rate, addr };
 }
 
-export function addCip27RoyaltyToTransaction(tx: Tx, policyId: string, royalties: Royalty[], redeemer?: string) {
-  if (royalties.length > 1) {
-    throw new Error('CIP-27 royalties only support one beneficiary');
-  }
-
-  const { variableFee, address, minFee, maxFee } = royalties[0];
+export function addCip27RoyaltyToTransaction(tx: Tx, policyId: string, royalty: Royalty, redeemer?: string) {
+  const { variableFee, address, minFee, maxFee } = royalty;
 
   if (maxFee !== undefined || minFee !== undefined) {
     throw new Error('CIP-27 royalties do not support min/max fee');
@@ -31,9 +27,6 @@ export function addCip27RoyaltyToTransaction(tx: Tx, policyId: string, royalties
   const cip27Asset = { [cip27Unit]: 1n };
   const cip27Metadata = toCip27Metadata(variableFee, address);
 
-  // Must be first minted token so directly call mintAssets rather than adding to assets object
-  // TODO: verify calling mintAssets here guarantees this gets the 0th index in the mint.
-  // TODO: Also verify it is okay to pass the same redeemer multiple times.
-  // TODO: Alternatively could call mint assets once if there is some internal sort that orders asset by name
+  // Note: Must be first minted token so this should have been the first asset to be minted
   tx.attachMetadata(CIP_27_METADATA_LABEL, cip27Metadata).mintAssets(cip27Asset, redeemer);
 }

@@ -2,9 +2,9 @@
 /// This cache will be updated if a some part is missing. The only case where
 
 import { applyDoubleCborEncoding, Credential, Lucid, Script } from 'lucid';
-import { findUtxo, TxReference, UtxoFindResult } from './utils.ts';
+import { findUtxo, TxReference } from './utils.ts';
 import { ManageUnitLookup, toManageOwnerUnit, toManageReferenceUnit } from './collection.ts';
-import { paramaterizeMintingPolicy, paramaterizeValidator } from './mintun.ts';
+import { paramaterizeMintingPolicy, paramaterizeValidator } from './contract.ts';
 import contracts from '../contracts.json' assert { type: 'json' };
 
 /// All the parts commonly used when dealing with a paramaterized script
@@ -77,10 +77,23 @@ export class ScriptCache {
     return cache;
   }
 
+  static copy(lucid: Lucid, cache: ScriptCache) {
+    const copy = new ScriptCache(lucid, cache.#seed);
+    copy.#mint = cache.#mint;
+    copy.#spend = cache.#spend;
+    copy.#unit = cache.#unit;
+
+    return copy;
+  }
+
+  lucid() {
+    return this.#lucid;
+  }
+
   mint() {
     if (!this.#mint) {
-      const { hash, index } = this.#seed;
-      this.#mint = paramaterizeMintingPolicy(this.#lucid, hash, index);
+      const { txHash, outputIndex } = this.#seed;
+      this.#mint = paramaterizeMintingPolicy(this.#lucid, txHash, outputIndex);
     }
 
     return this.#mint;
@@ -106,25 +119,18 @@ export class ScriptCache {
 
     return this.#unit;
   }
+}
 
-  /// Fetches the UTxO that holds the management reference token
-  /// Not cached because likely to be spent in TX and need to be refetched if cache is reused.
-  async fetchManageReferenceUtxo(): Promise<UtxoFindResult> {
-    const spend = this.spend();
-    const unit = this.unit();
-    const utxos = await this.#lucid.utxosAt(spend.address);
-    const utxo = utxos.find((utxo) => utxo.assets[unit.reference]);
+/// Fetches the UTxO that holds the management reference token
+export async function fetchManageReferenceUtxo(cache: ScriptCache) {
+  const spend = cache.spend();
+  const unit = cache.unit();
+  const utxos = await cache.lucid().utxosAt(spend.address);
+  const utxo = utxos.find((utxo) => utxo.assets[unit.reference]);
+  return utxo;
+}
 
-    return {
-      utxo,
-      wallet: false,
-    };
-  }
-
-  /// Find the UTxO that holds the management owner token.
-  /// Not cached because likely to be spent.
-  async fetchManageOwnerUtxo(): Promise<UtxoFindResult> {
-    const unit = this.unit();
-    return await findUtxo(this.#lucid, unit.owner);
-  }
+export async function fetchManageOwnerUtxo(cache: ScriptCache) {
+  const unit = cache.unit();
+  return await findUtxo(cache.lucid(), unit.owner);
 }

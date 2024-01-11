@@ -1,13 +1,13 @@
 import { Address, Data, Lucid, Script, UTxO } from 'lucid';
-import { CollectionState, CollectionStateMetadataShape, SEQUENCE_MAX_VALUE } from './collection.ts';
-import { createGenesisData, MintRedeemerShape, toCollectionState } from './mintun.ts';
+import { CollectionState, CollectionStateMetadataShape, SEQUENCE_MAX_VALUE, toCollectionState } from './collection.ts';
+import { createGenesisData, MintRedeemerShape } from './contract.ts';
 import { checkPolicyId } from './utils.ts';
 import { addCip102RoyaltyToTransaction } from './cip-102.ts';
 import { addCip27RoyaltyToTransaction } from './cip-27.ts';
 import { Royalty } from './royalty.ts';
 import { ScriptCache } from './script.ts';
 import { CollectionInfo } from './collection-info.ts';
-import { Cip88Builder, CIP_88_METADATA_LABEL } from './cip-88.ts';
+import { addCip88MetadataToTransaction, Cip88ExtraConfig } from './cip-88.ts';
 
 export class GenesisTxBuilder {
   #lucid: Lucid;
@@ -118,14 +118,14 @@ export class GenesisTxBuilder {
   }
 
   // When called the builder will include a null token and CIP-27 transaction metadata, if royalties are set
-  useCip27() {
-    this.#useCip27 = true;
+  useCip27(useCip27: boolean) {
+    this.#useCip27 = useCip27;
     return this;
   }
 
   // When called the builder will include CIP-88 data in transaction metadta
-  useCip88() {
-    this.#useCip88 = true;
+  useCip88(useCip88: boolean) {
+    this.#useCip88 = useCip88;
     return this;
   }
 
@@ -172,8 +172,7 @@ export class GenesisTxBuilder {
     }
 
     // Create a script cache from seed utxo so that after build it can be reused if needed
-    const seed = { hash: this.#seed.txHash, index: this.#seed.outputIndex };
-    const cache = ScriptCache.cold(this.#lucid, seed);
+    const cache = ScriptCache.cold(this.#lucid, this.#seed);
     const mint = cache.mint();
     const spend = cache.spend();
     const unit = cache.unit();
@@ -203,31 +202,32 @@ export class GenesisTxBuilder {
     const royalties = Object.values(this.#royalties);
     if (royalties.length > 0) {
       if (this.#useCip27) {
+        if (royalties.length > 1) {
+          throw new Error('Cannot use cip-27 royalty when there is more than one royalty recipient');
+        }
         // TODO: Maybe send this to an always fail but at least if it goes to recipient it's burnable.
         recipientAssets[mint.policyId] = 1n;
 
-        addCip27RoyaltyToTransaction(tx, mint.policyId, royalties, redeemer);
+        addCip27RoyaltyToTransaction(tx, mint.policyId, royalties[0], redeemer);
       }
 
       const royaltyAddress = this.#royaltyTokenAddress ? this.#royaltyTokenAddress : await this.#lucid.wallet.address();
       addCip102RoyaltyToTransaction(tx, mint.policyId, royaltyAddress, royalties, redeemer);
     }
 
-    // Add CIP-88 metadata to transaction
+    // Add CIP-88 metadata to transaction if flag is set
     if (this.#useCip88) {
-      const builder = Cip88Builder
-        .register(mint.script)
-        .validateWithbeacon(unit.owner);
+      const config: Cip88ExtraConfig = {
+        name: this.#state.name,
+        info: this.#state.info,
+        cip102Royalties: royalties,
+      };
+
       if (this.#useCip27 && royalties.length === 1) {
-        builder.cip27Royalty(royalties[0]);
+        config.cip27Royalty = royalties[0];
       }
 
-      if (this.#state.name && this.#state.info) {
-        builder.cip68Info(this.#state.name, this.#state.info);
-      }
-
-      const cip88Metadata = await builder.build(this.#lucid);
-      tx.attachMetadataWithConversion(CIP_88_METADATA_LABEL, cip88Metadata);
+      addCip88MetadataToTransaction(this.#lucid, tx, mint.script, unit.owner, config);
     }
 
     tx

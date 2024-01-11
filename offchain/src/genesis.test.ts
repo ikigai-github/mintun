@@ -1,25 +1,7 @@
 import { assert, assertThrows } from 'std/assert/mod.ts';
-import { submit } from './utils.ts';
 import { GenesisTxBuilder } from './genesis.ts';
-import { createEmulatorLucid } from './support.test.ts';
-import { extractCollectionState } from './mintun.ts';
-import { ScriptCache } from './script.ts';
-import { Lucid, Tx } from 'lucid';
+import { applyTx, createEmulatorLucid } from './support.test.ts';
 import { TEST_COLLECTION_INFO } from './fixtures.test.ts';
-
-async function run(lucid: Lucid, tx: Tx, cache: ScriptCache) {
-  const txHash = await submit(tx);
-  await lucid.awaitTx(txHash);
-
-  // Use cache utils to check to tokens were distributed as expected
-  const reference = await cache.fetchManageReferenceUtxo();
-  assert(reference.utxo && !reference.wallet);
-
-  const owner = await cache.fetchManageOwnerUtxo();
-  assert(owner.utxo);
-
-  return { txHash, referenceUtxo: reference.utxo, ownerUtxo: owner.utxo };
-}
 
 Deno.test('Minimal minting policy genesis transaction', async () => {
   const { lucid, seedUtxo } = await createEmulatorLucid();
@@ -29,10 +11,8 @@ Deno.test('Minimal minting policy genesis transaction', async () => {
     .seed(seedUtxo)
     .build();
 
-  const { referenceUtxo } = await run(lucid, tx, cache);
-
   // Check the state is on the datum as expected
-  const state = await extractCollectionState(lucid, referenceUtxo);
+  const { state } = await applyTx(lucid, tx, cache);
   assert(state.name === 'No Constraints');
   assert(state.group === undefined);
   assert(state.mintWindow === undefined);
@@ -63,15 +43,13 @@ Deno.test('All configuration genesis transaction', async () => {
     .royaltyTokenAddress(royaltyTokenAddress)
     .ownerAddress(ownerAddress)
     .info(TEST_COLLECTION_INFO)
-    .useCip27()
-    .useCip88()
+    .useCip27(true)
+    .useCip88(true)
     .royalty(accounts[0].address, 4.3)
     .build();
 
-  const { referenceUtxo } = await run(lucid, tx, cache);
-
   // Check the state is on the datum as expected
-  const state = await extractCollectionState(lucid, referenceUtxo);
+  const { state } = await applyTx(lucid, tx, cache);
   assert(state.name === 'Kitchen Sink');
   assert(state.mintWindow && state.mintWindow.startMs === 0 && state.mintWindow.endMs === endMs);
   assert(state.maxNfts === 1);

@@ -39,7 +39,7 @@ pub type Reference222TokenData {
   /// Version of the reference token metadata
   version: Int,
   /// Any custom data not defined in base standard (ie royalty_included flag from cip-102)
-  extra: Dict<ByteArray, Data>,
+  extra: Data,
 }
 
 /// Splits the asset name into label and name without converting to int since usually just 

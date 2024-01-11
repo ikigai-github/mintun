@@ -1,6 +1,9 @@
 import { assert } from 'std/assert/mod.ts';
-import { Assets, Emulator, generateSeedPhrase, Lucid } from 'lucid';
-
+import { Assets, Emulator, generateSeedPhrase, Lucid, Tx } from 'lucid';
+import { submit } from './utils.ts';
+import { fetchManageOwnerUtxo, fetchManageReferenceUtxo, ScriptCache } from './script.ts';
+import { extractCollectionState } from './collection.ts';
+import { MintunNft } from './nft.ts';
 /// Creates a new emulator account with the given assets, if any.
 export async function generateEmulatorAccount(assets: Assets = {}) {
   const seedPhrase = generateSeedPhrase();
@@ -31,5 +34,45 @@ export async function createEmulatorLucid() {
     lucid,
     accounts: [ACCOUNT_0, ACCOUNT_1, ACCOUNT_2, ACCOUNT_3],
     seedUtxo,
+  };
+}
+
+export async function applyTx(lucid: Lucid, tx: Tx, cache: ScriptCache) {
+  const txHash = await submit(tx);
+  await lucid.awaitTx(txHash);
+
+  // Use cache utils to check to tokens were distributed as expected
+  const referenceUtxo = await fetchManageReferenceUtxo(cache);
+  assert(referenceUtxo);
+
+  const { utxo: ownerUtxo } = await fetchManageOwnerUtxo(cache);
+  assert(ownerUtxo, 'Must have found the owner utxo');
+
+  const state = await extractCollectionState(lucid, referenceUtxo);
+
+  return { txHash, referenceUtxo, ownerUtxo, state };
+}
+
+let nftId = 0;
+export function generateNft(): MintunNft {
+  const id = '#' + nftId.toString().padStart(4, '0');
+  nftId += 1;
+
+  return {
+    name: `Generated ${id}`,
+    image: `https://picsum.photos/200`,
+    description: 'This is a generated test NFT',
+    id,
+    files: [{
+      name: `Image ${id}`,
+      mediaType: 'image/jpeg',
+      src: 'https://picsum.photos/200',
+      dimension: { width: 200, height: 200 },
+      purpose: 'General',
+    }],
+    attributes: {
+      test: 1,
+    },
+    tags: ['generated', 'test'],
   };
 }

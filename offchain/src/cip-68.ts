@@ -17,27 +17,28 @@ export function createReferenceTokenSchema<T extends TSchema>(metadata: T) {
 }
 
 /// Creates reference data from given metadata. Any strings will be hex encoded unless they start with 0x
-export function createReferenceData<T>(metadata: T) {
+export function createReferenceData<T>(metadata: T, extra: Data = '') {
   return {
     metadata: metadata,
     version: REFERENCE_DATA_VERSION,
-    extra: Data.void(),
+    extra: extra,
   };
 }
 
 export type CollectionReferenceData<T> = ReturnType<typeof createReferenceData<T>>;
 
-const NftMetadataFileSchema = Data.Map(Data.Bytes(), Data.Any());
+export const NftMetadataFileSchema = Data.Map(Data.Bytes(), Data.Any());
+export type NftMetadataFileType = Data.Static<typeof NftMetadataFileSchema>;
+export const NftMetadataFileShape = NftMetadataFileSchema as unknown as NftMetadataFileType;
 
-export type NftMetadataFile = Data.Static<typeof NftMetadataFileSchema>;
-export const NftMetadataFileShape = NftMetadataFileSchema as unknown as NftMetadataFile;
+export const NftMetadataSchema = Data.Map(Data.Bytes(), Data.Any());
+export type NftMetadataType = Data.Static<typeof NftMetadataSchema>;
+export const NftMetadataShape = NftMetadataSchema as unknown as NftMetadataType;
 
-const NftMetadataSchema = Data.Map(Data.Bytes(), Data.Any());
+export const NftMetadataWrappedSchema = createReferenceTokenSchema(NftMetadataSchema);
+export type NftMetadataWrappedType = Data.Static<typeof NftMetadataWrappedSchema>;
+export const NftMetadataWrappedShape = NftMetadataWrappedSchema as unknown as NftMetadataWrappedType;
 
-export type NftMetadata = Data.Static<typeof NftMetadataSchema>;
-export const NftMetdataShape = NftMetadataSchema as unknown as NftMetadata;
-
-// Todo: Actually use this for the mints.  Add custom bit to schema for traits/attributes of the NFT
 export const NftSchema = createReferenceTokenSchema(NftMetadataSchema);
-export type NftData = Data.Static<typeof NftSchema>;
-export const NftShape = NftSchema as unknown as NftData;
+export type NftDataType = Data.Static<typeof NftSchema>;
+export const NftShape = NftSchema as unknown as NftDataType;

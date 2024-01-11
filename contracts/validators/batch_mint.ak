@@ -1,5 +1,4 @@
 use aiken/bytearray
-use aiken/cbor
 use aiken/dict
 use aiken/list
 use aiken/option
@@ -51,7 +50,7 @@ fn validate_genesis(
 ) -> Bool {
   let Transaction { inputs, outputs, mint, .. } = tx
   trace @"Genesis: checking seed UTxO is spent"
-  trace cbor.diagnostic(mint)
+
   expect Some(_spent_utxo) = transaction.find_input(inputs, seed)
   let tokens = mint |> value.from_minted_value() |> value.tokens(mint_policy_id)
   // Must be exactly one (111)(Managment) token minted
@@ -146,7 +145,7 @@ fn pair_nfts(mint: MintedValue, mint_policy_id: PolicyId) {
   let num_assets = list.length(assets)
   let even_number_assets = num_assets % 2 == 0
   let num_nfts = num_assets / 2
-  let mints_at_least_one_nft = num_nfts > 1
+  let mints_at_least_one_nft = num_nfts > 0
   expect even_number_assets && mints_at_least_one_nft?
   // Sort so we end up with a list like [100A, 100B, 222A, 222B]
   // Then up the tokens into tuple pairs: [100A, 100B, 222A, 222B] -> [(100A, 222A), (100B, 222B)]
@@ -180,6 +179,7 @@ fn validate_mint(transaction: Transaction, mint_policy_id: PolicyId) {
   // Make sure each pair has tokens matching the patterns:
   let tokens_valid = validate_mint_recursive(nfts, next_sequence)
 
+  trace @"Checking the datum is valid"
   // Make sure each reference token includes a datum in the 222 shape
   let datums_valid =
     list.all(
@@ -197,7 +197,7 @@ fn validate_mint(transaction: Transaction, mint_policy_id: PolicyId) {
         reference_data.version > 0
       },
     )
-  tokens_valid? && datums_valid
+  tokens_valid? && datums_valid?
 }
 
 /// This function takes the first pair in the list and validates it matches CIP-68 

@@ -12,7 +12,7 @@ import {
   TokenProjectDetailField,
 } from './cip-88.ts';
 import { TEST_COLLECTION_INFO } from './fixtures.test.ts';
-import { paramaterizeMintingPolicy } from './mintun.ts';
+import { paramaterizeMintingPolicy } from './contract.ts';
 import { createEmulatorLucid } from './support.test.ts';
 
 Deno.test('Build CIP-88 metadata', async () => {

@@ -1,11 +1,19 @@
 /// CIP-88 definitions and builder
-import { fromUnit, Lucid, Script } from 'lucid';
-import { CollectionImage, CollectionInfo, IMAGE_PURPOSE } from './collection-info.ts';
+import { fromUnit, Lucid, Script, Tx } from 'lucid';
+import { CollectionImage, CollectionInfo } from './collection-info.ts';
 import { chunk } from './utils.ts';
 import { Royalty } from './royalty.ts';
-import { asChainFixedFee, asChainVariableFee } from './cip-102.ts';
+import { asChainVariableFee } from './cip-102.ts';
+import { IMAGE_PURPOSE } from './image.ts';
 
 export const CIP_88_METADATA_LABEL = 867;
+
+export type Cip88ExtraConfig = {
+  name?: string;
+  info?: CollectionInfo;
+  cip27Royalty?: Royalty;
+  cip102Royalties?: Royalty[];
+};
 
 export const RegistrationMetadataField = {
   VERSION: 0,
@@ -29,7 +37,6 @@ export const SCOPE_PLUTUS_V2 = 2;
 export type RegistrationScope = [0, [string, string[]]] | [typeof SCOPE_PLUTUS_V1 | typeof SCOPE_PLUTUS_V2, [string]];
 
 // TODO: Expand to rest of spec NFT to CIP-26, CIP-48, CIP-60, and CIP-86
-// TODO: Currently CIP-102 doesn't have a definiton in CIP-88 but could add
 // Currently supported standards for CIP-88 payload
 export type RegistrationFeatureStandard = 25 | 27 | 68 | 102;
 
@@ -105,9 +112,9 @@ export const Cip102RoyaltyDetailField = {
 
 export type Cip102RoyaltyRecipient = {
   [Cip102RoyaltyDetailField.ADDRESS]: string[];
-  [Cip102RoyaltyDetailField.VARIABLE_FEE]: bigint;
-  [Cip102RoyaltyDetailField.MIN_FEE]?: bigint;
-  [Cip102RoyaltyDetailField.MAX_FEE]?: bigint;
+  [Cip102RoyaltyDetailField.VARIABLE_FEE]: number;
+  [Cip102RoyaltyDetailField.MIN_FEE]?: number;
+  [Cip102RoyaltyDetailField.MAX_FEE]?: number;
 };
 
 export type Cip102RoyaltyDetail = {
@@ -175,9 +182,9 @@ function mapNsfw(info: CollectionInfo) {
 
 // Map social records to the chunked URI format
 function mapSocial(info: CollectionInfo) {
-  if (info.social) {
+  if (info.links) {
     const mapped: Record<string, string[]> = {};
-    for (const [label, uri] of Object.entries(info.social)) {
+    for (const [label, uri] of Object.entries(info.links)) {
       mapped[label] = cip88Uri(uri);
     }
 
@@ -225,15 +232,15 @@ export function toCip102RoyaltyRecipient(royalty: Royalty) {
   const address = chunk(royalty.address);
   const recipient: Cip102RoyaltyRecipient = {
     [Cip102RoyaltyDetailField.ADDRESS]: address,
-    [Cip102RoyaltyDetailField.VARIABLE_FEE]: asChainVariableFee(royalty.variableFee),
+    [Cip102RoyaltyDetailField.VARIABLE_FEE]: Number(asChainVariableFee(royalty.variableFee)),
   };
 
   if (royalty.maxFee !== undefined) {
-    recipient[Cip102RoyaltyDetailField.MAX_FEE] = asChainFixedFee(royalty.maxFee) ?? undefined;
+    recipient[Cip102RoyaltyDetailField.MAX_FEE] = royalty.maxFee;
   }
 
   if (royalty.minFee !== undefined) {
-    recipient[Cip102RoyaltyDetailField.MIN_FEE] = asChainFixedFee(royalty.minFee) ?? undefined;
+    recipient[Cip102RoyaltyDetailField.MIN_FEE] = royalty.minFee;
   }
 
   return recipient;
@@ -370,4 +377,33 @@ export class Cip88Builder {
 
     throw Error(`Could not determine scope. Unexpected script type ${this.#script.type}`);
   }
+}
+
+export async function addCip88MetadataToTransaction(
+  lucid: Lucid,
+  tx: Tx,
+  script: Script,
+  beaconUnit: string,
+  config: Cip88ExtraConfig | undefined = undefined,
+) {
+  const builder = Cip88Builder
+    .register(script)
+    .validateWithbeacon(beaconUnit);
+
+  if (config) {
+    if (config.cip27Royalty) {
+      builder.cip27Royalty(config.cip27Royalty);
+    }
+
+    if (config.cip102Royalties) {
+      builder.cip102Royalties(config.cip102Royalties);
+    }
+
+    if (config.name && config.info) {
+      builder.cip68Info(config.name, config.info);
+    }
+  }
+
+  const metadata = await builder.build(lucid);
+  return tx.attachMetadataWithConversion(CIP_88_METADATA_LABEL, metadata);
 }

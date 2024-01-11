@@ -2,17 +2,9 @@ import { fromText, Lucid, toText, Tx, Unit, UTxO } from 'lucid';
 
 /// Simple form of UTxO that only includes part needed to reference a transaction
 export type TxReference = {
-  hash: string;
-  index: number;
+  txHash: string;
+  outputIndex: number;
 };
-
-/// Small utility to convert a full UTxO into a transaction reference
-export function toTxReference(utxo: UTxO): TxReference {
-  return {
-    hash: utxo.txHash,
-    index: utxo.outputIndex,
-  };
-}
 
 /// Utility function for completing a transaction, signing it, and then submitting it.
 export async function submit(tx: Tx) {
@@ -82,4 +74,14 @@ export function toJoinedText(hexStrings: string | string[]) {
   } else {
     return toText(hexStrings);
   }
+}
+
+export function stringifyReplacer(_: unknown, value: unknown) {
+  if (value instanceof Map) {
+    return Object.fromEntries(value.entries());
+  } else if (typeof value == 'bigint') {
+    return value.toString();
+  }
+
+  return value;
 }

@@ -1,16 +1,6 @@
 import { Data, fromText, toText } from 'lucid';
 import { asChunkedHex, toJoinedText } from './utils.ts';
-
-/// Image purpose are hints at how the creator inteded the image to be used
-export const IMAGE_PURPOSE = {
-  Thumbnail: 'Thumbnail',
-  Banner: 'Banner',
-  Avatar: 'Avatar',
-  Gallery: 'Gallery',
-  General: 'General',
-} as const;
-
-export type ImagePurpose = keyof typeof IMAGE_PURPOSE;
+import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image.ts';
 
 /// On chain data schema for image purpose
 export const CollectionImagePurposeSchema = Data.Enum([
@@ -30,7 +20,7 @@ export const CollectionImageDimensionsSchema = Data.Object({
 // On chain data schema for a collection image with hints
 export const CollectionImageSchema = Data.Object({
   purpose: CollectionImagePurposeSchema,
-  dimensions: CollectionImageDimensionsSchema,
+  dimension: CollectionImageDimensionsSchema,
   media_type: Data.Bytes(),
   src: Data.Array(Data.Bytes()),
 });
@@ -39,33 +29,23 @@ export type CollectionImageType = Data.Static<typeof CollectionImageSchema>;
 export const CollectionImageShape = CollectionImageSchema as unknown as CollectionImageType;
 
 /// On chain schema for the collection market information.
-/// TBD: May be better left as a Map<string, Data>
 export const CollectionInfoSchema = Data.Object({
   artist: Data.Nullable(Data.Bytes()),
   project: Data.Nullable(Data.Bytes()),
   nsfw: Data.Boolean(),
   description: Data.Array(Data.Bytes()),
   images: Data.Array(CollectionImageSchema),
-  attributes: Data.Array(Data.Bytes()),
-  tags: Data.Array(Data.Bytes()),
-  website: Data.Array(Data.Bytes()),
-  social: Data.Map(Data.Bytes(), Data.Array(Data.Bytes())),
+  links: Data.Map(Data.Bytes(), Data.Array(Data.Bytes())),
   extra: Data.Any(),
 });
 
 export type CollectionInfoType = Data.Static<typeof CollectionInfoSchema>;
 export const CollectionInfoShape = CollectionInfoSchema as unknown as CollectionInfoType;
 
-/// Width height of an image in pixels
-export type ImageDimensionsType = {
-  width: number;
-  height: number;
-};
-
 /// An image with hints for its format, purpose, and dimensions
 export type CollectionImage = {
   purpose: ImagePurpose;
-  dimensions: ImageDimensionsType;
+  dimension: ImageDimension;
   mediaType: string;
   src: string;
 };
@@ -77,22 +57,19 @@ export type CollectionInfo = {
   nsfw: boolean;
   description?: string;
   images?: CollectionImage[];
-  attributes?: string[];
-  tags?: string[];
-  website?: string;
-  social?: Record<string, string>;
+  links?: Record<string, string>;
   extra?: unknown;
 };
 
 export function asChainCollectionImage(image: CollectionImage): CollectionImageType {
   const purpose = image.purpose;
-  const dimensions = { width: BigInt(image.dimensions.width), height: BigInt(image.dimensions.height) };
+  const dimension = { width: BigInt(image.dimension.width), height: BigInt(image.dimension.height) };
   const media_type = fromText(image.mediaType);
   const src = asChunkedHex(image.src);
 
   return {
     purpose,
-    dimensions,
+    dimension,
     media_type,
     src,
   };
@@ -100,13 +77,13 @@ export function asChainCollectionImage(image: CollectionImage): CollectionImageT
 
 export function toCollectionImage(chainImage: CollectionImageType): CollectionImage {
   const purpose = chainImage.purpose;
-  const dimensions = { width: Number(chainImage.dimensions.width), height: Number(chainImage.dimensions.height) };
+  const dimension = { width: Number(chainImage.dimension.width), height: Number(chainImage.dimension.height) };
   const mediaType = toText(chainImage.media_type);
   const src = toJoinedText(chainImage.src);
 
   return {
     purpose,
-    dimensions,
+    dimension,
     mediaType,
     src,
   };
@@ -118,13 +95,13 @@ export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoType 
   const nsfw = info.nsfw ? true : false;
   const description = info.description ? asChunkedHex(info.description) : [];
   const images = info.images ? info.images.map(asChainCollectionImage) : [];
-  const attributes = info.attributes ? info.attributes.map(fromText) : [];
-  const tags = info.tags ? info.tags.map(fromText) : [];
-  const website = info.website ? asChunkedHex(info.website) : [];
-  const social = new Map<string, string[]>();
-  if (info.social) {
-    for (const [key, value] of Object.entries(info.social)) {
-      social.set(fromText(key), asChunkedHex(value));
+  const links = new Map<string, string[]>();
+  if (info.links) {
+    // Note: When this goes from plutus -> cbor will the order be consistent?
+    //       because we check basically the info field bytes from prev matches current state
+    //       in the spending validator and if the order of emitted map data changes then that could fail when it shouldn't
+    for (const [key, value] of Object.entries(info.links)) {
+      links.set(fromText(key), asChunkedHex(value));
     }
   }
 
@@ -136,10 +113,7 @@ export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoType 
     nsfw,
     description,
     images,
-    attributes,
-    tags,
-    website,
-    social,
+    links,
     extra,
   };
 }
@@ -150,20 +124,17 @@ export function toCollectionInfo(chainInfo: CollectionInfoType): CollectionInfo 
   const nsfw = chainInfo.nsfw;
   const description = chainInfo.description.length ? toJoinedText(chainInfo.description) : undefined;
   const images = chainInfo.images.length ? chainInfo.images.map(toCollectionImage) : undefined;
-  const attributes = chainInfo.attributes.length ? chainInfo.attributes.map(toText) : undefined;
-  const tags = chainInfo.tags ? chainInfo.tags.map(toText) : undefined;
-  const website = chainInfo.website.length ? toJoinedText(chainInfo.website) : undefined;
 
-  let social: Record<string, string> | undefined = undefined;
-  if (chainInfo.social) {
-    social = {};
+  let links: Record<string, string> | undefined = undefined;
+  if (chainInfo.links) {
+    links = {};
 
-    for (const [key, value] of Object.entries(chainInfo.social)) {
-      social[toText(key)] = toJoinedText(value);
+    for (const [key, value] of chainInfo.links) {
+      links[toText(key)] = toJoinedText(value);
     }
   }
 
-  const extra = Data.to(Data.void());
+  const extra = '';
 
   return {
     artist,
@@ -171,10 +142,7 @@ export function toCollectionInfo(chainInfo: CollectionInfoType): CollectionInfo 
     nsfw,
     description,
     images,
-    attributes,
-    tags,
-    website,
-    social,
+    links,
     extra,
   };
 }

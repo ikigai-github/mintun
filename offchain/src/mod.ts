@@ -4,6 +4,6 @@ export * from './cip-88.ts';
 export * from './cip-102.ts';
 export * from './collection.ts';
 export * from './genesis.ts';
-export * from './mintun.ts';
+export * from './contract.ts';
 export * from './utils.ts';
 export * from './validators.ts';

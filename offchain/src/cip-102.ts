@@ -77,7 +77,7 @@ export function toCip102RoyaltyDatum(royalties: Royalty[]) {
   const info: RoyaltyInfoType = {
     metadata,
     version: BigInt(1),
-    extra: Data.void(),
+    extra: '',
   };
 
   return Data.to(info, RoyaltyInfoShape);
