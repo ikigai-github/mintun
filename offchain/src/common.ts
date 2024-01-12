@@ -1,3 +1,6 @@
+/// Well defined Cardano policy id length in bytes
+export const POLICY_ID_BYTE_LENGTH = 28;
+
 export type TimeWindow = {
   startMs: number;
   endMs: number;

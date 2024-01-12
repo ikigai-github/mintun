@@ -1,5 +1,5 @@
-import { Address, Assets, Data } from 'lucid';
-import { createReferenceData, NftMetadataType, NftMetadataWrappedType } from './cip-68.ts';
+import { Address, Assets, Data, fromText } from 'lucid';
+import { createReferenceData, NftMetadataShape, NftMetadataType, NftMetadataWrappedType } from './cip-68.ts';
 import { toNftReferenceAssetName, toNftUserAssetName } from './collection.ts';
 import { TxMetadataPrimitive } from './common.ts';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image.ts';
@@ -127,12 +127,19 @@ export function prepareAssets(
   policyId: string,
   sequence: number,
   defaultRecipientAddress: Address,
+  hasRoyalty: boolean,
   referenceAddress?: Address,
 ): PreparedAssets {
   const mints: Assets = {};
   const userPayouts: UserPayouts = {};
   const cip25Metadata: Cip25Metadata = {};
   const referencePayouts: ReferencePayout[] = [];
+  let extra: Data = '';
+  if (hasRoyalty) {
+    extra = new Map<string, Data>();
+    extra.set(fromText('royalty_included'), 1n);
+  }
+
   for (const nft of nfts) {
     const { metadata, recipient } = nft;
     const userAssetName = toNftUserAssetName(sequence, metadata.name);
@@ -141,14 +148,12 @@ export function prepareAssets(
     const referenceAssetName = toNftReferenceAssetName(sequence, metadata.name);
     const referenceUnit = policyId + referenceAssetName;
 
-    // FIXME: utf8 strings cannot be > 64 so like description: string => description: string[]
-    const chainMetadata = Data.fromJson(metadata) as NftMetadataType;
-
-    // FIXME: need to add a royalty_flag when creating reference data if the collection has royalties
-    const chainData = createReferenceData(chainMetadata);
+    // FIXME: This doesn't seem to cause problems in my test but I think utf8 strings cannot be > 64
+    //        so like description: string => description: string[]
+    const chainMetadata = Data.castFrom<NftMetadataType>(Data.fromJson(metadata), NftMetadataShape);
+    const chainData = createReferenceData(chainMetadata, extra);
     const recipientAdress = recipient ? recipient : defaultRecipientAddress;
     const referencePayoutAddress = referenceAddress ? referenceAddress : recipientAdress;
-    console.log(`reference payout address: ${referencePayoutAddress}`);
     const userPayout = userPayouts[recipientAdress] || [];
 
     userPayout.push(userUnit);

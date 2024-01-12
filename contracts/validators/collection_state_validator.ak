@@ -18,46 +18,37 @@ type Endpoint {
 }
 
 validator(mint_policy_id: PolicyId) {
-  /// Validates that collection state is updated to new sequence and token count when there is a mint
-  /// Note: May update to validate only mutable parts of collection state are updated in a non-minting transaction. 
-  /// Note: Right now all other collection state is made immutable by this validator but could allow for updating colleciton info.
+  /// Validates changes to mutable parts of state datum: current nfts, sequence, and locked.
+  /// Allows spending anything that is not a state token.
   fn spend(_datum, endpoint: Endpoint, context: ScriptContext) {
     let ScriptContext { transaction, purpose } = context
 
-    expect Spend(spent_utxo_reference) = purpose
-    expect Some(spent_utxo_input) =
-      transaction.find_input(transaction.inputs, spent_utxo_reference)
+    expect Spend(output_reference) = purpose
+    expect Some(state_input) =
+      transaction.find_input(transaction.inputs, output_reference)
     trace @"Confirmed this is being invoked as a spending validator"
 
-    // Double check the input we are spending is the reference token for the minting policy
-    let maybe_found_token_input =
-      in.find_nft(
-        transaction.inputs,
+    let spends_state =
+      value.quantity_of(
+        state_input.output.value,
         mint_policy_id,
-        collection.reference_asset_name,
-      )
+        collection.state_asset_name,
+      ) == 1
 
-    // Only validate spend if it is the reference token. If it is anything else we
-    // don't care just let it be spent.
-    when maybe_found_token_input is {
-      Some(found_token_input) ->
-        spent_utxo_input == found_token_input && validate_spend(
-          endpoint,
-          transaction,
-          mint_policy_id,
-          spent_utxo_input,
-        )
-      None -> True
+    // Only validate spend if it is the state token. If it is anything else we
+    // don't care and let it be spent.
+    when spends_state is {
+      True -> validate_spend(endpoint, transaction, mint_policy_id, state_input)
+      False -> True
     }
   }
 }
 
-// TODO: Allow updating of CollectionInfo object in a non-minting transaction that spends the owner token
 fn validate_spend(
   endpoint: Endpoint,
   transaction: Transaction,
   mint_policy_id: PolicyId,
-  spent_utxo_input: Input,
+  state_input: Input,
 ) {
   let Transaction { inputs, outputs, mint, .. } = transaction
   // Make sure the (111)(Management)Collection token for that minting policy is also spent 
@@ -66,7 +57,7 @@ fn validate_spend(
   expect spends_owner_token?
   // Previous state should be stored on the datum of the state reference input
   let input_data =
-    collection.from_datum(transaction, spent_utxo_input.output.datum)
+    collection.state_from_datum(transaction, state_input.output.datum)
 
   // Ensure that the state tokens validity range constraint is met, if that constraint exists.
   let mint_window_valid =
@@ -81,10 +72,11 @@ fn validate_spend(
 
   // Verify it is spent back to this spending validator
   let spends_back_to_validator =
-    spent_utxo_input.output.address == spent_utxo_output.address
+    state_input.output.address == spent_utxo_output.address
 
   // Finally we can verify the datum
-  let output_data = collection.from_datum(transaction, spent_utxo_output.datum)
+  let output_data =
+    collection.state_from_datum(transaction, spent_utxo_output.datum)
 
   expect and {
       spends_owner_token?,
@@ -189,23 +181,18 @@ fn count_mints(mint: MintedValue, mint_policy_id: PolicyId) {
 
 /// Make certain the parts of the state datum that should never change remain unchanged in new state
 fn validate_immutable_parts(prev: CollectionState, next: CollectionState) {
+  // Note: Might be less work to replace next mutable fields with the prev value and then check equality.
   // Give each validation a name for easier tracing
-  let name_unchanged = prev.name == next.name
   let group_unchanged = prev.group == next.group
   let mint_window_unchanged = prev.mint_window == next.mint_window
   let max_nfts_unchanged = prev.max_nfts == next.max_nfts
   let reference_address_unchanged =
     prev.reference_address == next.reference_address
-  let info_unchanged = prev.info == next.info
-  let extra_unchanged = prev.extra == next.extra
   // Validate the output state has only mutated the token count and updated the next sequence
   and {
-    name_unchanged?,
     group_unchanged?,
     mint_window_unchanged?,
     max_nfts_unchanged?,
     reference_address_unchanged?,
-    info_unchanged?,
-    extra_unchanged?,
   }
 }

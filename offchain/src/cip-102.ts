@@ -23,10 +23,6 @@ export const RoyaltyInfoSchema = Data.Object({
 export type RoyaltyInfoType = Data.Static<typeof RoyaltyInfoSchema>;
 export const RoyaltyInfoShape = RoyaltyInfoSchema as unknown as RoyaltyInfoType;
 
-export const RoyaltyFlagSchema = Data.Object({ royalty_included: Data.Integer() });
-export type RoyaltyFlagType = Data.Static<typeof RoyaltyFlagSchema>;
-export const RoyaltyFlagShape = RoyaltyFlagSchema as unknown as RoyaltyFlagType;
-
 export function toRoyaltyUnit(policyId: string) {
   return toUnit(policyId, ROYALTY_TOKEN_NAME, ROYALTY_TOKEN_LABEL);
 }

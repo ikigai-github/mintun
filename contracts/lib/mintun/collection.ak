@@ -10,12 +10,15 @@ use aiken/transaction/value.{AssetName, PolicyId}
 use mintun/cip68.{ReferenceTokenData}
 use mintun/int
 
-/// Collection State token name and datum used by stateful minting contracts to track mint count
+/// (600)Collection State token used by stateful minting contract to track mint count
+pub const state_asset_name = #"00258a50436f6c6c656374696f6e"
+
+/// Collection managmenent reference token that holds collection metadata in its datum
 /// (100)(Management)Collection reference token asset name
 pub const reference_asset_name = #"000643b000436f6c6c656374696f6e"
 
 /// (111)(Management)Collection owner/beacon token asset name
-/// Note: Picked 111 to indicate non-standard user token (vs 222, 444, 333, 500)
+/// Note: Picked 111 to indicate new standard user token (vs 222, 444, 333, 500)
 pub const owner_asset_name = #"0006f0a000436f6c6c656374696f6e"
 
 /// The sequence number is 3 bytes so any sequence >= 256^3 will overflow.
@@ -58,6 +61,8 @@ pub type CollectionImage {
 
 /// Datum containing collection information to be used by markets when displaying the collection
 pub type CollectionInfo {
+  /// The display name of the collection 
+  name: ByteArray,
   /// The name of the artist that created the collection
   artist: Option<ByteArray>,
   /// The name of a project that created the collection. Sometimes used in place of a specific artist
@@ -71,7 +76,7 @@ pub type CollectionInfo {
   /// Links to social media and website associated with the project or artist
   links: Dict<ByteArray, List<ByteArray>>,
   /// Anything else not defined in the standard
-  extra: Data,
+  extra: Dict<ByteArray, Data>,
 }
 
 // NOTE: Collection group idea is pretty simple. A two way pointer between the group and the collection make
@@ -82,8 +87,6 @@ pub type CollectionInfo {
 // 
 /// State used by the spending validator on the reference token created by collection minting policy 
 pub type CollectionState {
-  /// The display name of the collection 
-  name: ByteArray,
   /// The group that this collection claims to be a part of.
   group: Option<PolicyId>,
   /// The time range in which mints are possible for this collection
@@ -98,10 +101,6 @@ pub type CollectionState {
   next_sequence: Int,
   /// The address all minted reference tokens must be sent to
   reference_address: Option<Address>,
-  /// Details about the collection to be used by marketplaces
-  info: Option<CollectionInfo>,
-  /// Any additional data not defined by standard
-  extra: Data,
 }
 
 /// Mostly just to give collection management token its own namespace so
@@ -129,14 +128,27 @@ pub type CollectionName {
   content: ByteArray,
 }
 
-/// Extracts the data from the given datum and trys to cast it to the reference token shape
-/// and then cast the metadata field of that shape into the collection state shape.
-pub fn from_datum(transaction: Transaction, datum: Datum) -> CollectionState {
+/// Extracts the data from the given datum and trys to cast it to the reference token shape.
+/// Then cast the metadata field of that shape into the collection state shape.
+pub fn state_from_datum(
+  transaction: Transaction,
+  datum: Datum,
+) -> CollectionState {
   let reference_token_data =
     cip68.from_general_reference_datum(transaction, datum)
   expect collection_state_data: CollectionState = reference_token_data.metadata
 
   collection_state_data
+}
+
+/// Extracts the data from the given datum and trys to cast it to the reference token shape
+/// Then cast the metadata field of that shape into the collection information shape.
+pub fn info_from_datum(transaction: Transaction, datum: Datum) -> CollectionInfo {
+  let reference_token_data =
+    cip68.from_general_reference_datum(transaction, datum)
+  expect collection_info_data: CollectionInfo = reference_token_data.metadata
+
+  collection_info_data
 }
 
 /// Convert an asset name into its constiuent parts which are the label, sequence number, and content name

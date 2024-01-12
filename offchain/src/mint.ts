@@ -1,16 +1,18 @@
 import { Address, Assets, Data, Lucid, UTxO } from 'lucid';
-import { stringifyReplacer, TxReference } from './utils.ts';
-import {
-  addMintsToCollectionState,
-  asChainState,
-  CollectionState,
-  CollectionStateMetadataShape,
-  extractCollectionState,
-} from './collection.ts';
+import { TxReference } from './utils.ts';
+
 import { AddressedNft, MintunNft, prepareAssets } from './nft.ts';
 import { fetchManageOwnerUtxo, fetchManageReferenceUtxo, ScriptCache } from './script.ts';
 import { MintRedeemerShape, ValidatorRedeemerShape } from './contract.ts';
 import { NftMetadataWrappedShape } from './cip-68.ts';
+import { toRoyaltyUnit } from './cip-102.ts';
+import {
+  addMintsToCollectionState,
+  asChainStateData,
+  CollectionState,
+  CollectionStateMetadataShape,
+  extractCollectionState,
+} from './collection-state.ts';
 
 // Don't have a dedicated cip-27.ts so just putting this here
 export const CIP_25_METADATA_LABEL = 721;
@@ -24,7 +26,6 @@ export class MintTxBuilder {
   #manageOwnerUtxo?: UTxO;
   #currentState?: CollectionState;
   #nfts: AddressedNft[] = [];
-
   #useCip25 = false;
 
   private constructor(lucid: Lucid) {
@@ -99,9 +100,10 @@ export class MintTxBuilder {
     }
 
     const mint = cache.mint();
-    const spend = cache.spend();
+    const spend = cache.state();
     const unit = cache.unit();
 
+    // Fetch the manage reference reference token
     const manageReferenceUtxo = this.#manageReferenceUtxo
       ? this.#manageReferenceUtxo
       : await fetchManageReferenceUtxo(cache);
@@ -110,6 +112,7 @@ export class MintTxBuilder {
       throw new Error('Could not find the management reference utxo that must be spent to mint');
     }
 
+    // Fetch the owner UTxO, should be in the selected wallet otherwise we can't spend it.
     let manageOwnerUtxo = this.#manageOwnerUtxo;
     if (!manageOwnerUtxo) {
       const { utxo, wallet } = await fetchManageOwnerUtxo(cache);
@@ -124,6 +127,12 @@ export class MintTxBuilder {
       manageOwnerUtxo = utxo;
     }
 
+    // Check if there is the royalty token because we need to add a royalty flag if there is one
+    const royaltyUnit = toRoyaltyUnit(mint.policyId);
+    const royaltyFindResult = await this.#lucid.utxoByUnit(royaltyUnit);
+    const hasRoyalty = royaltyFindResult !== undefined;
+
+    // Compute the updated state
     const currentState = this.#currentState
       ? this.#currentState
       : await extractCollectionState(this.#lucid, manageReferenceUtxo);
@@ -133,9 +142,7 @@ export class MintTxBuilder {
 
     // Update state to reflect the new mitns
     const nextState = addMintsToCollectionState(currentState, numMints);
-    const chainState = asChainState(nextState);
-
-    // TODO: Need to check if this collection has royalties and if so add the royalty_flag to the extra data.
+    const chainState = asChainStateData(nextState);
 
     // Get user and reference token names for each nft as well as its on chain representation
     const prepared = prepareAssets(
@@ -143,6 +150,7 @@ export class MintTxBuilder {
       mint.policyId,
       currentState.nextSequence,
       defaultRecipientAddress,
+      hasRoyalty,
       referenceAddress,
     );
 

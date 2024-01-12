@@ -1,6 +1,7 @@
 import { Data, fromText, toText } from 'lucid';
 import { asChunkedHex, toJoinedText } from './utils.ts';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image.ts';
+import { createReferenceTokenSchema } from './cip-68.ts';
 
 /// On chain data schema for image purpose
 export const CollectionImagePurposeSchema = Data.Enum([
@@ -30,17 +31,22 @@ export const CollectionImageShape = CollectionImageSchema as unknown as Collecti
 
 /// On chain schema for the collection market information.
 export const CollectionInfoSchema = Data.Object({
+  name: Data.Bytes(),
   artist: Data.Nullable(Data.Bytes()),
   project: Data.Nullable(Data.Bytes()),
   nsfw: Data.Boolean(),
   description: Data.Array(Data.Bytes()),
   images: Data.Array(CollectionImageSchema),
   links: Data.Map(Data.Bytes(), Data.Array(Data.Bytes())),
-  extra: Data.Any(),
+  extra: Data.Map(Data.Bytes(), Data.Any()),
 });
 
 export type CollectionInfoType = Data.Static<typeof CollectionInfoSchema>;
 export const CollectionInfoShape = CollectionInfoSchema as unknown as CollectionInfoType;
+
+export const CollectionInfoMetadataSchema = createReferenceTokenSchema(CollectionInfoSchema);
+export type CollectionInfoMetadataType = Data.Static<typeof CollectionInfoMetadataSchema>;
+export const CollectionInfoMetadataShape = CollectionInfoMetadataSchema as unknown as CollectionInfoMetadataType;
 
 /// An image with hints for its format, purpose, and dimensions
 export type CollectionImage = {
@@ -52,13 +58,14 @@ export type CollectionImage = {
 
 /// The collection information in offchain format.
 export type CollectionInfo = {
+  name: string;
   artist?: string;
   project?: string;
   nsfw: boolean;
   description?: string;
   images?: CollectionImage[];
   links?: Record<string, string>;
-  extra?: unknown;
+  extra?: Record<string, unknown>;
 };
 
 export function asChainCollectionImage(image: CollectionImage): CollectionImageType {
@@ -90,6 +97,7 @@ export function toCollectionImage(chainImage: CollectionImageType): CollectionIm
 }
 
 export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoType {
+  const name = fromText(info.name);
   const artist = info.artist ? fromText(info.artist) : null;
   const project = info.project ? fromText(info.project) : null;
   const nsfw = info.nsfw ? true : false;
@@ -97,17 +105,15 @@ export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoType 
   const images = info.images ? info.images.map(asChainCollectionImage) : [];
   const links = new Map<string, string[]>();
   if (info.links) {
-    // Note: When this goes from plutus -> cbor will the order be consistent?
-    //       because we check basically the info field bytes from prev matches current state
-    //       in the spending validator and if the order of emitted map data changes then that could fail when it shouldn't
     for (const [key, value] of Object.entries(info.links)) {
       links.set(fromText(key), asChunkedHex(value));
     }
   }
 
-  const extra = '';
+  const extra = new Map<string, Data>();
 
   return {
+    name,
     artist,
     project,
     nsfw,
@@ -119,6 +125,7 @@ export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoType 
 }
 
 export function toCollectionInfo(chainInfo: CollectionInfoType): CollectionInfo {
+  const name = toText(chainInfo.name);
   const artist = chainInfo.artist ? toText(chainInfo.artist) : undefined;
   const project = chainInfo.project ? toText(chainInfo.project) : undefined;
   const nsfw = chainInfo.nsfw;
@@ -134,9 +141,17 @@ export function toCollectionInfo(chainInfo: CollectionInfoType): CollectionInfo 
     }
   }
 
-  const extra = '';
+  let extra: Record<string, Data> | undefined = undefined;
+  if (chainInfo.extra) {
+    extra = {};
+
+    for (const [key, value] of chainInfo.extra) {
+      extra[toText(key)] = value;
+    }
+  }
 
   return {
+    name,
     artist,
     project,
     nsfw,

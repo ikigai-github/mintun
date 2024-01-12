@@ -1,21 +1,29 @@
 import { Address, Data, Lucid, Script, UTxO } from 'lucid';
-import { CollectionState, CollectionStateMetadataShape, SEQUENCE_MAX_VALUE, toCollectionState } from './collection.ts';
-import { createGenesisData, MintRedeemerShape } from './contract.ts';
+
+import { MintRedeemerShape } from './contract.ts';
 import { checkPolicyId } from './utils.ts';
 import { addCip102RoyaltyToTransaction } from './cip-102.ts';
 import { addCip27RoyaltyToTransaction } from './cip-27.ts';
 import { Royalty } from './royalty.ts';
 import { ScriptCache } from './script.ts';
-import { CollectionInfo } from './collection-info.ts';
+import { asChainCollectionInfo, CollectionInfo, CollectionInfoMetadataShape } from './collection-info.ts';
 import { addCip88MetadataToTransaction, Cip88ExtraConfig } from './cip-88.ts';
+import {
+  CollectionState,
+  CollectionStateMetadataShape,
+  createGenesisStateData,
+  toCollectionState,
+} from './collection-state.ts';
+import { SEQUENCE_MAX_VALUE } from './collection.ts';
+import { createReferenceData } from './cip-68.ts';
 
 export class GenesisTxBuilder {
   #lucid: Lucid;
   #seed?: UTxO;
+  #info?: CollectionInfo;
   #state: Partial<CollectionState> = {};
   #useCip27 = false;
   #useCip88 = false;
-  #infoInDatum = true;
   #royalties: Record<string, Royalty> = {};
   #royaltyTokenAddress?: Address;
   #ownerAddress?: string;
@@ -111,9 +119,8 @@ export class GenesisTxBuilder {
   }
 
   // Don't bother translating till build step
-  info(info: CollectionInfo, includeInDatum = true) {
-    this.#state.info = info;
-    this.#infoInDatum = includeInDatum;
+  info(info: CollectionInfo) {
+    this.#info = info;
     return this;
   }
 
@@ -171,15 +178,24 @@ export class GenesisTxBuilder {
       throw new Error('Missing required field seed. Did you forget to call `seed(utxo)`?');
     }
 
+    if (!this.#info) {
+      throw new Error('Missing required collection information. Did you call `info(info)`?');
+    }
+
     // Create a script cache from seed utxo so that after build it can be reused if needed
     const cache = ScriptCache.cold(this.#lucid, this.#seed);
     const mint = cache.mint();
-    const spend = cache.spend();
+    const spend = cache.state();
     const unit = cache.unit();
 
     // Build out the genesis data given the builder collection state
-    const genesisData = createGenesisData(this.#state, this.#infoInDatum); // Plutus Data
-    const genesisDatum = Data.to(genesisData, CollectionStateMetadataShape); // Serialized CBOR
+    const genesisStateData = createGenesisStateData(this.#state); // Plutus Data
+    const genesisStateDatum = Data.to(genesisStateData, CollectionStateMetadataShape); // Serialized CBOR
+
+    const collectionInfoMetadata = asChainCollectionInfo(this.#info);
+    const collectionInfoData = createReferenceData(collectionInfoMetadata);
+    const collectionInfoDatum = Data.to(collectionInfoData, CollectionInfoMetadataShape);
+
     const recipient = this.#ownerAddress ? this.#ownerAddress : await this.#lucid.wallet.address();
 
     // Declare minimum managment token assets here may add royalties depending on builder config
@@ -219,7 +235,7 @@ export class GenesisTxBuilder {
     if (this.#useCip88) {
       const config: Cip88ExtraConfig = {
         name: this.#state.name,
-        info: this.#state.info,
+        info: this.#info,
         cip102Royalties: royalties,
       };
 
@@ -233,13 +249,13 @@ export class GenesisTxBuilder {
     tx
       .mintAssets(assets, redeemer)
       .payToAddressWithData(spend.address, {
-        inline: genesisDatum,
+        inline: genesisStateDatum,
       }, {
         [unit.reference]: 1n,
       })
       .payToAddress(recipient, recipientAssets);
 
-    const state = toCollectionState(this.#lucid, genesisData);
+    const state = toCollectionState(this.#lucid, genesisStateData);
     return { cache, tx, state, recipient };
   }
 

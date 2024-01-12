@@ -13,7 +13,10 @@ use mintun/output as out
 /// The redeemer indicates if this is a genesis transaction, mint, or burn.  
 type Endpoint {
   /// The genesis transaction must spend the seed UTxO to guarantee it can only be called once.
-  EndpointGenesis { validator_policy_id: PolicyId }
+  EndpointGenesis {
+    state_validator_policy_id: PolicyId,
+    info_validator_policy_id: PolicyId,
+  }
   /// Indicates will mint one or more (222, 100) token pairs
   EndpointMint
   /// Indicates will burn one or more tokens under policy
@@ -31,8 +34,14 @@ validator(seed: OutputReference) {
 
     // Branch evaluation based on endpoint being called
     when endpoint is {
-      EndpointGenesis(validator_policy_id) ->
-        validate_genesis(seed, transaction, mint_policy_id, validator_policy_id)
+      EndpointGenesis(state_validator_policy_id, info_validator_policy_id) ->
+        validate_genesis(
+          seed,
+          transaction,
+          mint_policy_id,
+          state_validator_policy_id,
+          info_validator_policy_id,
+        )
       EndpointMint -> validate_mint(transaction, mint_policy_id)
       EndpointBurn -> validate_burn(transaction, mint_policy_id)
     }
@@ -46,22 +55,28 @@ fn validate_genesis(
   seed: OutputReference,
   tx: Transaction,
   mint_policy_id: PolicyId,
-  validator_policy_id: PolicyId,
+  state_validator_policy_id: PolicyId,
+  info_validator_policy_id: PolicyId,
 ) -> Bool {
   let Transaction { inputs, outputs, mint, .. } = tx
   trace @"Genesis: checking seed UTxO is spent"
 
   expect Some(_spent_utxo) = transaction.find_input(inputs, seed)
   let tokens = mint |> value.from_minted_value() |> value.tokens(mint_policy_id)
-  // Must be exactly one (111)(Managment) token minted
+  // Must be exactly one (111)(Management)Collection owner token minted
   expect Some(owner_token_quantity) =
     dict.get(tokens, collection.owner_asset_name)
   let mints_owner_token = owner_token_quantity == 1
 
-  // Must be exactly one (100)State token minted
+  // Must be exactly one (100)(Managment)Collection reference token minted
   expect Some(reference_token_quantity) =
     dict.get(tokens, collection.reference_asset_name)
   let mints_reference_token = reference_token_quantity == 1
+
+  // Must be exactly one (600)State token minted
+  expect Some(state_token_quantity) =
+    dict.get(tokens, collection.state_asset_name)
+  let mints_state_token = state_token_quantity == 1
 
   let cip_27_token_quantity = tokens |> dict.get("") |> option.or_else(0)
 
@@ -74,52 +89,79 @@ fn validate_genesis(
   let mints_at_most_one_cip_102_token =
     cip_102_token_quantity == 0 || cip_102_token_quantity == 1
 
-  let total_expected_mints = 2 + cip_27_token_quantity + cip_102_token_quantity
+  let total_expected_mints = 3 + cip_27_token_quantity + cip_102_token_quantity
 
-  // Don't allow minting anything else during genesis besides the management token pair and royalty tokens
+  // Don't allow minting anything else during genesis besides the state token, management token pair, and royalty tokens
   let only_expected_mints = dict.size(tokens) == total_expected_mints
 
-  // There must be exactly one output UTxO to the reference token address
-  expect [reference_token_output] =
-    transaction.find_script_outputs(outputs, validator_policy_id)
+  let state_token_ouput =
+    get_token_output(
+      outputs,
+      state_validator_policy_id,
+      collection.state_asset_name,
+    )
 
-  // There should be exactly one asset sent to the validator
-  expect [(_, output_asset_name, output_asset_quantity)] =
-    reference_token_output.value |> value.without_lovelace() |> value.flatten()
-
-  // That one asset sent to the validator must be the reference token of quantity 1
-  let validator_receives_reference =
-    output_asset_name == collection.reference_asset_name && output_asset_quantity == 1
-
-  // Confirm the datum matches the mint state structure 
-  let state = collection.from_datum(tx, reference_token_output.datum)
+  // Confirm the datum matches the collection state structure 
+  let state = collection.state_from_datum(tx, state_token_output.datum)
 
   // Current NFTs and sequence number must always start at zero 
   let valid_initial_state = state.current_nfts == 0 && state.next_sequence == 0
 
-  // Other collection state can be initialized to any value as far as gensis transaction is concerned.  
+  let info_token_output =
+    get_token_output(
+      outputs,
+      info_validator_policy_id,
+      collection.reference_asset_name,
+    )
+
+  // Confirm the datum matches the collection info structure 
+  let info = collection.info_from_datum(tx, info_token_output.datum)
+
+  let non_empty_name = bytearray.length(info.name) > 0
+
+  // TODO: After adding `collection_info_validator.ak` ensure that the info token is sent there and maybe also validate it's initial state
+  // Other collection state can be initialized to any value as far as genesis transaction is concerned.  
   // Bad states could be minted such as a validity_range in the distant past, negative max tokens, force_locked flag set to true.
   // But those will cause the spending validator to fail subsequent transactions. 
   and {
     mints_reference_token?,
     mints_owner_token?,
+    mints_state_token?,
     mints_at_most_one_cip_27_token?,
     mints_at_most_one_cip_102_token?,
     only_expected_mints?,
-    validator_receives_reference?,
     valid_initial_state?,
+    non_empty_name?,
   }
 }
 
+fn get_token_output(
+  outputs: List<Output>,
+  validator_policy_id: PolicyId,
+  asset_name: ByteArray,
+) {
+  // There must be exactly one output UTxO to the reference token address
+  expect [token_output] =
+    transaction.find_script_outputs(outputs, validator_policy_id)
+
+  // There should be exactly one asset sent to the validator
+  expect [(_, output_asset_name, output_asset_quantity)] =
+    token_output.value |> value.without_lovelace() |> value.flatten()
+
+  // That one asset sent to the validator must be the reference token of quantity 1
+  expect output_asset_name == asset_name && output_asset_quantity == 1
+  token_output
+}
+
 /// Validates the management user and reference token are spent the returns the reference input
-fn validate_management_input(inputs: List<Input>, mint_policy_id: PolicyId) {
+fn validate_witness_input(inputs: List<Input>, mint_policy_id: PolicyId) {
   // Make sure the (111)Collection token is spent in the inputs 
   let spends_owner_token =
     in.has_nft(inputs, mint_policy_id, collection.owner_asset_name)
 
   expect spends_owner_token?
-  // Make sure the (100)Collection token is also spent in the inputs
-  in.find_nft(inputs, mint_policy_id, collection.reference_asset_name)
+  // Make sure the (600)Collection token is also spent in the inputs
+  in.find_nft(inputs, mint_policy_id, collection.state_asset_name)
 }
 
 /// Flattens and groups assets into a list of tuple pairs. 
@@ -165,12 +207,11 @@ fn pair_nfts(mint: MintedValue, mint_policy_id: PolicyId) {
 fn validate_mint(transaction: Transaction, mint_policy_id: PolicyId) {
   let Transaction { mint, inputs, .. } = transaction
 
-  expect Some(reference_input) =
-    validate_management_input(inputs, mint_policy_id)
+  expect Some(state_input) = validate_witness_input(inputs, mint_policy_id)
 
   // Get the next_sequence number from state datum. 
   let CollectionState { next_sequence, .. } =
-    collection.from_datum(transaction, reference_input.output.datum)
+    collection.state_from_datum(transaction, state_input.output.datum)
 
   // Can only mint (222) and (100) pairs in batch mint any other tokens must be minted during genesis
   let (nfts, remainder) = pair_nfts(mint, mint_policy_id)
@@ -251,62 +292,32 @@ fn validate_mint_recursive(
   }
 }
 
-/// This function validates batch burn transactions.
-/// Currently only the holder of the management token can burn tokens.
-/// The other requirement is tokens pairs are burned in pairs. 
-/// Tokens like CIP-27 or Royalty token can also be burned.
-/// The managment tokens cannot be burned currently.
-/// Note: 
-///  * Could make this more permisive and allow burning of pairs without management token.
-///  * Could allow the 222 to be burned without the 100 token but not vice versa to be even more permissive.
-///  * Would need to update spending validator to count only burns of 222 tokens against total token count
+/// Currently only the holder of the owner token can burn because we need to update the NFT count state
+/// and don't want to get weird with allowing spending of the state without the owner token present.
+/// Otherwise this just makes certain the only thing included in the mints are burn
 fn validate_burn(transaction: Transaction, mint_policy_id: PolicyId) {
   let Transaction { mint, inputs, .. } = transaction
 
   // Just verify reference input is included so that spending validator tracks state but don't need to grab anything from it for burn
-  expect Some(_reference_input) =
-    validate_management_input(inputs, mint_policy_id)
+  // Make sure the (111)Collection token is spent in the inputs 
+  let spends_owner_token =
+    in.has_nft(inputs, mint_policy_id, collection.owner_asset_name)
 
-  // Can only burn (222) and (100) pairs in batch mint any other tokens must be minted during genesis
-  let (nfts, _remainder) = pair_nfts(mint, mint_policy_id)
+  // Make sure the (600)Collection token is also spent in the inputs
+  let spends_state_token =
+    in.has_nft(inputs, mint_policy_id, collection.state_asset_name)
 
-  // Make sure all quantitys are -1
-  validate_burn_recursive(nfts)
-  // Allow burning of any other tokens in the policy such as the CIP-27 null token and 500 Royalty token.
-  //
-  // Currently the managment tokens can't burn because spending validator requires the reference token is returned
-  // and the owner token alone will fail the pair check.  If we do allow burns of that token it should probably be
-  // on it's own with nothing else so we can do one 
-}
+  // Make sure we only have burns
+  let only_burns =
+    mint
+      |> value.from_minted_value()
+      |> value.tokens(mint_policy_id)
+      |> dict.values()
+      |> list.all(fn(quantity) { quantity == -1 })
 
-/// Verifies each NFT is burned with its paired reference token. Not sure it has to be this way.
-/// I could allow burning separately and in state only track token count by 222 burns.  That might be
-/// better because whatever validator the reference token got sent to might not let it be burned.
-fn validate_burn_recursive(nfts: List<((ByteArray, Int), (ByteArray, Int))>) {
-  when nfts is {
-    [(reference_token_asset, user_token_asset), ..rest] -> {
-      let reference_token_name = cip68.parse_name(reference_token_asset.1st)
-      let user_token_name = cip68.parse_name(user_token_asset.1st)
-
-      // Just for traceability we pull these each into a bool
-      let burns_single_reference_token = reference_token_asset.2nd == 1
-      let reference_token_has_valid_label =
-        reference_token_name.label == cip68.reference_token_label
-      let user_token_has_valid_label =
-        user_token_name.label == cip68.nft_user_token_label
-      let user_token_content_matches_reference =
-        reference_token_name.content == user_token_name.content
-      let user_token_quantity_matches_reference = user_token_asset.2nd == -1
-
-      expect and {
-          burns_single_reference_token?,
-          reference_token_has_valid_label?,
-          user_token_has_valid_label?,
-          user_token_content_matches_reference?,
-          user_token_quantity_matches_reference?,
-        }
-      validate_burn_recursive(rest)
-    }
-    [] -> True
+  and {
+    spends_owner_token?,
+    spends_state_token?,
+    only_burns,
   }
 }

@@ -3,7 +3,7 @@
 
 import { applyDoubleCborEncoding, Credential, Lucid, Script } from 'lucid';
 import { findUtxo, TxReference } from './utils.ts';
-import { ManageUnitLookup, toManageOwnerUnit, toManageReferenceUnit } from './collection.ts';
+import { toManageOwnerUnit, toManageReferenceUnit } from './collection.ts';
 import { paramaterizeMintingPolicy, paramaterizeValidator } from './contract.ts';
 import contracts from '../contracts.json' assert { type: 'json' };
 
@@ -13,6 +13,12 @@ export type ScriptInfo = {
   policyId: string;
   credential: Credential;
   address: string;
+};
+
+/// Commonly paired reference and owner unit names
+export type ManageUnitLookup = {
+  reference: string;
+  owner: string;
 };
 
 // Utility function for fetching a validator from the generated plutus.json
@@ -46,7 +52,7 @@ export function getScriptInfo(lucid: Lucid, paramaterizedScript: string): Script
 
 export type ScriptCacheWarmer = {
   mint?: ScriptInfo;
-  spend?: ScriptInfo;
+  state?: ScriptInfo;
   unit?: ManageUnitLookup;
 };
 
@@ -56,7 +62,7 @@ export class ScriptCache {
   #lucid: Lucid;
   #seed: TxReference;
   #mint?: ScriptInfo;
-  #spend?: ScriptInfo;
+  #state?: ScriptInfo;
   #unit?: ManageUnitLookup;
 
   private constructor(lucid: Lucid, seed: TxReference) {
@@ -71,7 +77,7 @@ export class ScriptCache {
   static warm(lucid: Lucid, seed: TxReference, warmer: ScriptCacheWarmer) {
     const cache = new ScriptCache(lucid, seed);
     cache.#mint = warmer.mint;
-    cache.#spend = warmer.spend;
+    cache.#state = warmer.state;
     cache.#unit = warmer.unit;
 
     return cache;
@@ -80,7 +86,7 @@ export class ScriptCache {
   static copy(lucid: Lucid, cache: ScriptCache) {
     const copy = new ScriptCache(lucid, cache.#seed);
     copy.#mint = cache.#mint;
-    copy.#spend = cache.#spend;
+    copy.#state = cache.#state;
     copy.#unit = cache.#unit;
 
     return copy;
@@ -99,13 +105,13 @@ export class ScriptCache {
     return this.#mint;
   }
 
-  spend() {
-    if (!this.#spend) {
+  state() {
+    if (!this.#state) {
       const mint = this.mint();
-      this.#spend = paramaterizeValidator(this.#lucid, mint.policyId);
+      this.#state = paramaterizeValidator(this.#lucid, mint.policyId);
     }
 
-    return this.#spend;
+    return this.#state;
   }
 
   unit() {
@@ -123,7 +129,7 @@ export class ScriptCache {
 
 /// Fetches the UTxO that holds the management reference token
 export async function fetchManageReferenceUtxo(cache: ScriptCache) {
-  const spend = cache.spend();
+  const spend = cache.state();
   const unit = cache.unit();
   const utxos = await cache.lucid().utxosAt(spend.address);
   const utxo = utxos.find((utxo) => utxo.assets[unit.reference]);

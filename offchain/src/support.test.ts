@@ -2,8 +2,8 @@ import { assert } from 'std/assert/mod.ts';
 import { Assets, Emulator, generateSeedPhrase, Lucid, Tx } from 'lucid';
 import { submit } from './utils.ts';
 import { fetchManageOwnerUtxo, fetchManageReferenceUtxo, ScriptCache } from './script.ts';
-import { extractCollectionState } from './collection.ts';
 import { MintunNft } from './nft.ts';
+import { extractCollectionState } from './collection-state.ts';
 /// Creates a new emulator account with the given assets, if any.
 export async function generateEmulatorAccount(assets: Assets = {}) {
   const seedPhrase = generateSeedPhrase();
