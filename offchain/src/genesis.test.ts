@@ -19,16 +19,14 @@ Deno.test('Minimal minting policy genesis transaction', async () => {
   assert(state.currentNfts === 0);
   assert(state.locked === false);
   assert(state.nextSequence === 0);
-  assert(state.nftReferenceTokenAddress === undefined);
+  assert(state.nftValidatorAddress === undefined);
   assert(info.name === 'No Constraints');
 });
 
 Deno.test('All configuration genesis transaction', async () => {
   const { lucid, seedUtxo, accounts } = await createEmulatorLucid();
-
   // Use different address than selected wallet (account 0)
   const ownerAddress = accounts[1].address;
-  const referenceTokenAddress = accounts[2].address;
   const royaltyTokenAddress = accounts[3].address;
   const endMs = Date.now() + 1_000_000;
   const groupPolicyId = 'de2340edc45629456bf695200e8ea32f948a653b21ada10bc6f0c554';
@@ -38,8 +36,8 @@ Deno.test('All configuration genesis transaction', async () => {
     .group(groupPolicyId)
     .maxNfts(1)
     .mintWindow(0, endMs)
-    .nftReferenceTokenAddress(referenceTokenAddress)
-    .royaltyTokenAddress(royaltyTokenAddress)
+    .useImmutableNftValidator(true)
+    .royaltyValidatorAddress(royaltyTokenAddress)
     .ownerAddress(ownerAddress)
     .info(TEST_COLLECTION_INFO)
     .useCip27(true)

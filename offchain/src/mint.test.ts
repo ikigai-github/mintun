@@ -14,6 +14,7 @@ export async function genesis() {
     .seed(seedUtxo)
     .maxNfts(1)
     .mintWindow(0, endMs)
+    .useImmutableNftValidator(true)
     .info(TEST_COLLECTION_INFO)
     .useCip27(true)
     .useCip88(true)

@@ -4,7 +4,11 @@
 import { applyDoubleCborEncoding, Credential, Lucid, Script } from 'lucid';
 import { findUtxo, TxReference } from './utils.ts';
 import { toInfoUnit, toOwnerUnit } from './collection.ts';
-import { paramaterizeMintingPolicy, paramaterizeStateValidator } from './contract.ts';
+import {
+  paramaterizeImmutableNftValidator,
+  paramaterizeMintingPolicy,
+  paramaterizeStateValidator,
+} from './contract.ts';
 import contracts from '../contracts.json' with { type: 'json' };
 import { paramaterizeImmutableInfoValidator } from './mod.ts';
 import { toStateUnit } from './collection-state.ts';
@@ -68,7 +72,8 @@ export class ScriptCache {
   #seed: TxReference;
   #mint?: ScriptInfo;
   #state?: ScriptInfo;
-  #info?: ScriptInfo;
+  #immutableInfo?: ScriptInfo;
+  #immutableNft?: ScriptInfo;
   #unit?: ManageUnitLookup;
 
   private constructor(lucid: Lucid, seed: TxReference) {
@@ -121,13 +126,22 @@ export class ScriptCache {
   }
 
   // TODO: Currently only one info validator but will add mutable validator
-  info(name = 'immutable_info_validator.spend') {
-    if (!this.#info || this.#info.name !== name) {
+  immutableInfo() {
+    if (!this.#immutableInfo) {
       const mint = this.mint();
-      this.#info = paramaterizeImmutableInfoValidator(this.#lucid, mint.policyId);
+      this.#immutableInfo = paramaterizeImmutableInfoValidator(this.#lucid, mint.policyId);
     }
 
-    return this.#info;
+    return this.#immutableInfo;
+  }
+
+  immutableNft() {
+    if (!this.#immutableNft) {
+      const mint = this.mint();
+      this.#immutableNft = paramaterizeImmutableNftValidator(this.#lucid, mint.policyId);
+    }
+
+    return this.#immutableNft;
   }
 
   unit() {
@@ -157,7 +171,7 @@ export async function fetchStateUtxo(cache: ScriptCache) {
 
 /// Fetches the UTxO that holds the collection info token
 export async function fetchInfoUtxo(cache: ScriptCache) {
-  return await fetchUtxo(cache.lucid(), cache.info().address, cache.unit().info);
+  return await fetchUtxo(cache.lucid(), cache.immutableInfo().address, cache.unit().info);
 }
 
 /// Fetches the UTxO that holds the collection owner token.

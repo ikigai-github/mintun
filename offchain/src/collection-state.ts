@@ -43,7 +43,7 @@ export type CollectionState = {
   locked: boolean;
   currentNfts: number;
   nextSequence: number;
-  nftReferenceTokenAddress?: string;
+  nftValidatorAddress?: string;
 };
 
 export function toStateUnit(policyId: string) {
@@ -65,7 +65,7 @@ export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetad
   const currentNfts = Number(metadata.current_nfts);
   const nextSequence = Number(metadata.next_sequence);
   const locked = metadata.force_locked;
-  const nftReferenceTokenAddress = metadata.reference_address
+  const nftValidatorAddress = metadata.reference_address
     ? toBech32Address(lucid, metadata.reference_address)
     : undefined;
   return {
@@ -75,7 +75,7 @@ export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetad
     locked,
     currentNfts,
     nextSequence,
-    nftReferenceTokenAddress,
+    nftValidatorAddress,
   };
 }
 
@@ -84,7 +84,7 @@ export function createGenesisStateData(state: Partial<CollectionState>) {
   const group = state.group ?? null;
   const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.startMs, state.mintWindow.endMs) : null;
   const max_nfts = state.maxNfts ? BigInt(state.maxNfts) : null;
-  const reference_address = state.nftReferenceTokenAddress ? asChainAddress(state.nftReferenceTokenAddress) : null;
+  const reference_address = state.nftValidatorAddress ? asChainAddress(state.nftValidatorAddress) : null;
 
   const metadata: CollectionStateType = {
     group,
@@ -107,7 +107,7 @@ export function asChainStateData(state: CollectionState) {
   const force_locked = state.locked;
   const current_nfts = BigInt(state.currentNfts);
   const next_sequence = BigInt(state.nextSequence);
-  const reference_address = state.nftReferenceTokenAddress ? asChainAddress(state.nftReferenceTokenAddress) : null;
+  const reference_address = state.nftValidatorAddress ? asChainAddress(state.nftValidatorAddress) : null;
 
   const metadata: CollectionStateType = {
     group,

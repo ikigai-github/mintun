@@ -22,8 +22,9 @@ export class GenesisTxBuilder {
   #state: Partial<CollectionState> = {};
   #useCip27 = false;
   #useCip88 = false;
+  #useImmutableNftValidator = false;
   #royalties: Record<string, Royalty> = {};
-  #royaltyTokenAddress?: Address;
+  #royaltyValidatorAddress?: Address;
   #ownerAddress?: string;
 
   private constructor(lucid: Lucid) {
@@ -65,31 +66,36 @@ export class GenesisTxBuilder {
     throw new Error(`If using maxNfts it must be between 0 and ${SEQUENCE_MAX_VALUE}`);
   }
 
-  nftReferenceTokenAddress(address: string) {
+  nftValidatorAddress(address: string) {
     if (address.startsWith('addr')) {
-      this.#state.nftReferenceTokenAddress = address;
+      this.#state.nftValidatorAddress = address;
       return this;
     }
 
     throw new Error('reference token validator address must be bech32 encoded string');
   }
 
-  nftReferenceValidator(validator: Script) {
-    this.#state.nftReferenceTokenAddress = this.#lucid.utils.validatorToAddress(validator);
+  nftValidator(validator: Script) {
+    this.#state.nftValidatorAddress = this.#lucid.utils.validatorToAddress(validator);
     return this;
   }
 
-  royaltyTokenAddress(address: string) {
+  useImmutableNftValidator(useImmutableNftValidator: boolean) {
+    this.#useImmutableNftValidator = useImmutableNftValidator;
+    return this;
+  }
+
+  royaltyValidatorAddress(address: string) {
     if (address.startsWith('addr')) {
-      this.#royaltyTokenAddress = address;
+      this.#royaltyValidatorAddress = address;
       return this;
     }
 
     throw new Error('royalty address must be bech32 encoded string');
   }
 
-  royaltyTokenValidator(validator: Script) {
-    this.#royaltyTokenAddress = this.#lucid.utils.validatorToAddress(validator);
+  royaltyValidator(validator: Script) {
+    this.#royaltyValidatorAddress = this.#lucid.utils.validatorToAddress(validator);
     return this;
   }
 
@@ -175,7 +181,7 @@ export class GenesisTxBuilder {
     const cache = ScriptCache.cold(this.#lucid, this.#seed);
     const mintScript = cache.mint();
     const stateScript = cache.state();
-    const infoScript = cache.info();
+    const infoScript = cache.immutableInfo();
     const unit = cache.unit();
     const recipient = this.#ownerAddress ? this.#ownerAddress : await this.#lucid.wallet.address();
 
@@ -210,7 +216,9 @@ export class GenesisTxBuilder {
         addCip27RoyaltyToTransaction(tx, mintScript.policyId, royalties[0], redeemer);
       }
 
-      const royaltyAddress = this.#royaltyTokenAddress ? this.#royaltyTokenAddress : await this.#lucid.wallet.address();
+      const royaltyAddress = this.#royaltyValidatorAddress
+        ? this.#royaltyValidatorAddress
+        : await this.#lucid.wallet.address();
       addCip102RoyaltyToTransaction(tx, mintScript.policyId, royaltyAddress, royalties, redeemer);
     }
 
@@ -226,6 +234,12 @@ export class GenesisTxBuilder {
       }
 
       addCip88MetadataToTransaction(this.#lucid, tx, mintScript.script, unit.owner, config);
+    }
+
+    // If the validator address wasn't explicitly and the use immutable validator flag was then use
+    // that validator for the address
+    if (!this.#state.nftValidatorAddress && this.#useImmutableNftValidator) {
+      this.#state.nftValidatorAddress = cache.immutableNft().address;
     }
 
     // Build out the gensis state and info datum

@@ -133,7 +133,7 @@ export class MintTxBuilder {
     // Compute the updated state
     const currentState = this.#currentState ? this.#currentState : await extractCollectionState(this.#lucid, stateUtxo);
     const defaultRecipientAddress = this.#recipient || await this.#lucid.wallet.address();
-    const referenceAddress = currentState.nftReferenceTokenAddress;
+    const referenceAddress = currentState.nftValidatorAddress;
 
     // Update state to reflect the new mitns
     const nextState = addMintsToCollectionState(currentState, numMints);

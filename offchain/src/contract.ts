@@ -72,3 +72,13 @@ export function paramaterizeImmutableInfoValidator(lucid: Lucid, mintingPolicyId
   );
   return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
 }
+
+/// Given a minting policy, parameterizes the nft reference token spending validator and returns its info
+export function paramaterizeImmutableNftValidator(lucid: Lucid, mintingPolicyId: string) {
+  const script = getScript('immutable_nft.spend');
+  const paramertizedMintingPolicy = applyParamsToScript<StateValidatorParameterType>(
+    script.compiledCode,
+    [mintingPolicyId],
+  );
+  return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
+}
