@@ -2,7 +2,7 @@ use aiken/bytearray
 use aiken/dict
 use aiken/list
 use aiken/option
-use aiken/transaction.{Input, Mint, OutputReference, ScriptContext, Transaction}
+use aiken/transaction.{Input, Mint, Output, OutputReference, ScriptContext, Transaction}
 use aiken/transaction/value.{MintedValue, PolicyId}
 use mintun/cip102
 use mintun/cip68
@@ -94,8 +94,8 @@ fn validate_genesis(
   // Don't allow minting anything else during genesis besides the state token, management token pair, and royalty tokens
   let only_expected_mints = dict.size(tokens) == total_expected_mints
 
-  let state_token_ouput =
-    get_token_output(
+  let state_token_output =
+    get_reference_token_output(
       outputs,
       state_validator_policy_id,
       collection.state_asset_name,
@@ -108,7 +108,7 @@ fn validate_genesis(
   let valid_initial_state = state.current_nfts == 0 && state.next_sequence == 0
 
   let info_token_output =
-    get_token_output(
+    get_reference_token_output(
       outputs,
       info_validator_policy_id,
       collection.reference_asset_name,
@@ -117,9 +117,9 @@ fn validate_genesis(
   // Confirm the datum matches the collection info structure 
   let info = collection.info_from_datum(tx, info_token_output.datum)
 
+  // Mostly just so the structure check doesn't get optimized out actually use it
   let non_empty_name = bytearray.length(info.name) > 0
 
-  // TODO: After adding `collection_info_validator.ak` ensure that the info token is sent there and maybe also validate it's initial state
   // Other collection state can be initialized to any value as far as genesis transaction is concerned.  
   // Bad states could be minted such as a validity_range in the distant past, negative max tokens, force_locked flag set to true.
   // But those will cause the spending validator to fail subsequent transactions. 
@@ -135,11 +135,14 @@ fn validate_genesis(
   }
 }
 
-fn get_token_output(
+/// Searches the output for a reference token.
+/// Reference token has it's own datum so it must be in its own output
+/// Also constrain nothing else goes to that output with the token.
+fn get_reference_token_output(
   outputs: List<Output>,
   validator_policy_id: PolicyId,
   asset_name: ByteArray,
-) {
+) -> Output {
   // There must be exactly one output UTxO to the reference token address
   expect [token_output] =
     transaction.find_script_outputs(outputs, validator_policy_id)
@@ -150,6 +153,7 @@ fn get_token_output(
 
   // That one asset sent to the validator must be the reference token of quantity 1
   expect output_asset_name == asset_name && output_asset_quantity == 1
+
   token_output
 }
 

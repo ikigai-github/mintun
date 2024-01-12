@@ -1,5 +1,4 @@
 import { Address, Data, Lucid, Script, UTxO } from 'lucid';
-
 import { MintRedeemerShape } from './contract.ts';
 import { checkPolicyId } from './utils.ts';
 import { addCip102RoyaltyToTransaction } from './cip-102.ts';
@@ -15,7 +14,6 @@ import {
   toCollectionState,
 } from './collection-state.ts';
 import { SEQUENCE_MAX_VALUE } from './collection.ts';
-import { createReferenceData } from './cip-68.ts';
 
 export class GenesisTxBuilder {
   #lucid: Lucid;
@@ -35,15 +33,6 @@ export class GenesisTxBuilder {
   seed(seed: UTxO) {
     this.#seed = seed;
     return this;
-  }
-
-  name(name: string) {
-    if (name.length <= 64) {
-      this.#state.name = name;
-      return this;
-    }
-
-    throw new Error('Name length must be <= 64 characters');
   }
 
   group(policyId: string) {
@@ -184,34 +173,28 @@ export class GenesisTxBuilder {
 
     // Create a script cache from seed utxo so that after build it can be reused if needed
     const cache = ScriptCache.cold(this.#lucid, this.#seed);
-    const mint = cache.mint();
-    const spend = cache.state();
+    const mintScript = cache.mint();
+    const stateScript = cache.state();
+    const infoScript = cache.info();
     const unit = cache.unit();
-
-    // Build out the genesis data given the builder collection state
-    const genesisStateData = createGenesisStateData(this.#state); // Plutus Data
-    const genesisStateDatum = Data.to(genesisStateData, CollectionStateMetadataShape); // Serialized CBOR
-
-    const collectionInfoMetadata = asChainCollectionInfo(this.#info);
-    const collectionInfoData = createReferenceData(collectionInfoMetadata);
-    const collectionInfoDatum = Data.to(collectionInfoData, CollectionInfoMetadataShape);
-
     const recipient = this.#ownerAddress ? this.#ownerAddress : await this.#lucid.wallet.address();
 
     // Declare minimum managment token assets here may add royalties depending on builder config
-    const validatorAssets = { [unit.reference]: 1n };
+    const stateValidatorAssets = { [unit.state]: 1n };
+    const infoValidatorAssets = { [unit.info]: 1n };
     const recipientAssets = { [unit.owner]: 1n };
-    const assets = { ...validatorAssets, ...recipientAssets };
+    const assets = { ...stateValidatorAssets, ...infoValidatorAssets, ...recipientAssets };
 
     const redeemer = Data.to({
       'EndpointGenesis': {
-        validator_policy_id: spend.policyId,
+        state_validator_policy_id: stateScript.policyId,
+        info_validator_policy_id: infoScript.policyId,
       },
     }, MintRedeemerShape);
 
     // Start building tx
     const tx = this.#lucid.newTx()
-      .attachMintingPolicy(mint.script)
+      .attachMintingPolicy(mintScript.script)
       .collectFrom([this.#seed]);
 
     // Add royalties to minted assets, if they are included
@@ -222,19 +205,18 @@ export class GenesisTxBuilder {
           throw new Error('Cannot use cip-27 royalty when there is more than one royalty recipient');
         }
         // TODO: Maybe send this to an always fail but at least if it goes to recipient it's burnable.
-        recipientAssets[mint.policyId] = 1n;
+        recipientAssets[mintScript.policyId] = 1n;
 
-        addCip27RoyaltyToTransaction(tx, mint.policyId, royalties[0], redeemer);
+        addCip27RoyaltyToTransaction(tx, mintScript.policyId, royalties[0], redeemer);
       }
 
       const royaltyAddress = this.#royaltyTokenAddress ? this.#royaltyTokenAddress : await this.#lucid.wallet.address();
-      addCip102RoyaltyToTransaction(tx, mint.policyId, royaltyAddress, royalties, redeemer);
+      addCip102RoyaltyToTransaction(tx, mintScript.policyId, royaltyAddress, royalties, redeemer);
     }
 
     // Add CIP-88 metadata to transaction if flag is set
     if (this.#useCip88) {
       const config: Cip88ExtraConfig = {
-        name: this.#state.name,
         info: this.#info,
         cip102Royalties: royalties,
       };
@@ -243,16 +225,23 @@ export class GenesisTxBuilder {
         config.cip27Royalty = royalties[0];
       }
 
-      addCip88MetadataToTransaction(this.#lucid, tx, mint.script, unit.owner, config);
+      addCip88MetadataToTransaction(this.#lucid, tx, mintScript.script, unit.owner, config);
     }
+
+    // Build out the gensis state and info datum
+    const genesisStateData = createGenesisStateData(this.#state); // Plutus Data
+    const genesisStateDatum = Data.to(genesisStateData, CollectionStateMetadataShape); // Serialized CBOR
+    const infoData = asChainCollectionInfo(this.#info);
+    const infoDatum = Data.to(infoData, CollectionInfoMetadataShape);
 
     tx
       .mintAssets(assets, redeemer)
-      .payToAddressWithData(spend.address, {
+      .payToAddressWithData(stateScript.address, {
         inline: genesisStateDatum,
-      }, {
-        [unit.reference]: 1n,
-      })
+      }, stateValidatorAssets)
+      .payToAddressWithData(infoScript.address, {
+        inline: infoDatum,
+      }, infoValidatorAssets)
       .payToAddress(recipient, recipientAssets);
 
     const state = toCollectionState(this.#lucid, genesisStateData);

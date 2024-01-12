@@ -1,9 +1,10 @@
 import { assert } from 'std/assert/mod.ts';
 import { Assets, Emulator, generateSeedPhrase, Lucid, Tx } from 'lucid';
 import { submit } from './utils.ts';
-import { fetchManageOwnerUtxo, fetchManageReferenceUtxo, ScriptCache } from './script.ts';
+import { fetchInfoUtxo, fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script.ts';
 import { MintunNft } from './nft.ts';
 import { extractCollectionState } from './collection-state.ts';
+import { extractCollectionInfo } from './collection-info.ts';
 /// Creates a new emulator account with the given assets, if any.
 export async function generateEmulatorAccount(assets: Assets = {}) {
   const seedPhrase = generateSeedPhrase();
@@ -42,15 +43,20 @@ export async function applyTx(lucid: Lucid, tx: Tx, cache: ScriptCache) {
   await lucid.awaitTx(txHash);
 
   // Use cache utils to check to tokens were distributed as expected
-  const referenceUtxo = await fetchManageReferenceUtxo(cache);
-  assert(referenceUtxo);
+  const stateUtxo = await fetchStateUtxo(cache);
+  assert(stateUtxo);
 
-  const { utxo: ownerUtxo } = await fetchManageOwnerUtxo(cache);
+  const infoUtxo = await fetchInfoUtxo(cache);
+  assert(infoUtxo);
+
+  const { utxo: ownerUtxo } = await fetchOwnerUtxo(cache);
   assert(ownerUtxo, 'Must have found the owner utxo');
 
-  const state = await extractCollectionState(lucid, referenceUtxo);
+  const state = await extractCollectionState(lucid, stateUtxo);
 
-  return { txHash, referenceUtxo, ownerUtxo, state };
+  const info = await extractCollectionInfo(lucid, infoUtxo);
+
+  return { txHash, stateUtxo, ownerUtxo, infoUtxo, state, info };
 }
 
 let nftId = 0;

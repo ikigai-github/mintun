@@ -1,7 +1,7 @@
-import { Data, fromText, toText } from 'lucid';
+import { Data, fromText, Lucid, toText, UTxO } from 'lucid';
 import { asChunkedHex, toJoinedText } from './utils.ts';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image.ts';
-import { createReferenceTokenSchema } from './cip-68.ts';
+import { createReferenceData, createReferenceTokenSchema } from './cip-68.ts';
 
 /// On chain data schema for image purpose
 export const CollectionImagePurposeSchema = Data.Enum([
@@ -96,7 +96,7 @@ export function toCollectionImage(chainImage: CollectionImageType): CollectionIm
   };
 }
 
-export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoType {
+export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoMetadataType {
   const name = fromText(info.name);
   const artist = info.artist ? fromText(info.artist) : null;
   const project = info.project ? fromText(info.project) : null;
@@ -112,7 +112,7 @@ export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoType 
 
   const extra = new Map<string, Data>();
 
-  return {
+  const metadata = {
     name,
     artist,
     project,
@@ -122,21 +122,24 @@ export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoType 
     links,
     extra,
   };
+
+  return createReferenceData(metadata);
 }
 
-export function toCollectionInfo(chainInfo: CollectionInfoType): CollectionInfo {
-  const name = toText(chainInfo.name);
-  const artist = chainInfo.artist ? toText(chainInfo.artist) : undefined;
-  const project = chainInfo.project ? toText(chainInfo.project) : undefined;
-  const nsfw = chainInfo.nsfw;
-  const description = chainInfo.description.length ? toJoinedText(chainInfo.description) : undefined;
-  const images = chainInfo.images.length ? chainInfo.images.map(toCollectionImage) : undefined;
+export function toCollectionInfo(chainInfo: CollectionInfoMetadataType): CollectionInfo {
+  const { metadata } = chainInfo;
+  const name = toText(metadata.name);
+  const artist = metadata.artist ? toText(metadata.artist) : undefined;
+  const project = metadata.project ? toText(metadata.project) : undefined;
+  const nsfw = metadata.nsfw;
+  const description = metadata.description.length ? toJoinedText(metadata.description) : undefined;
+  const images = metadata.images.length ? metadata.images.map(toCollectionImage) : undefined;
 
   let links: Record<string, string> | undefined = undefined;
-  if (chainInfo.links) {
+  if (metadata.links) {
     links = {};
 
-    for (const [key, value] of chainInfo.links) {
+    for (const [key, value] of metadata.links) {
       links[toText(key)] = toJoinedText(value);
     }
   }
@@ -145,7 +148,7 @@ export function toCollectionInfo(chainInfo: CollectionInfoType): CollectionInfo 
   if (chainInfo.extra) {
     extra = {};
 
-    for (const [key, value] of chainInfo.extra) {
+    for (const [key, value] of metadata.extra) {
       extra[toText(key)] = value;
     }
   }
@@ -160,4 +163,10 @@ export function toCollectionInfo(chainInfo: CollectionInfoType): CollectionInfo 
     links,
     extra,
   };
+}
+
+// Decode CBOR datum of passed in UTxO and then convert the plutus data into offchain data
+export async function extractCollectionInfo(lucid: Lucid, utxo: UTxO) {
+  const chainInfo = await lucid.datumOf(utxo, CollectionInfoMetadataShape);
+  return toCollectionInfo(chainInfo);
 }

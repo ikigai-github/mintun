@@ -2,8 +2,8 @@ import { Address, Assets, Data, Lucid, UTxO } from 'lucid';
 import { TxReference } from './utils.ts';
 
 import { AddressedNft, MintunNft, prepareAssets } from './nft.ts';
-import { fetchManageOwnerUtxo, fetchManageReferenceUtxo, ScriptCache } from './script.ts';
-import { MintRedeemerShape, ValidatorRedeemerShape } from './contract.ts';
+import { fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script.ts';
+import { MintRedeemerShape, StateValidatorRedeemerShape } from './contract.ts';
 import { NftMetadataWrappedShape } from './cip-68.ts';
 import { toRoyaltyUnit } from './cip-102.ts';
 import {
@@ -14,7 +14,7 @@ import {
   extractCollectionState,
 } from './collection-state.ts';
 
-// Don't have a dedicated cip-27.ts so just putting this here
+// Don't have a dedicated cip-25.ts so just putting this here
 export const CIP_25_METADATA_LABEL = 721;
 
 export class MintTxBuilder {
@@ -22,8 +22,8 @@ export class MintTxBuilder {
   #seed?: TxReference;
   #cache?: ScriptCache;
   #recipient?: Address;
-  #manageReferenceUtxo?: UTxO;
-  #manageOwnerUtxo?: UTxO;
+  #stateUtxo?: UTxO;
+  #ownerUtxo?: UTxO;
   #currentState?: CollectionState;
   #nfts: AddressedNft[] = [];
   #useCip25 = false;
@@ -47,17 +47,17 @@ export class MintTxBuilder {
     return this;
   }
 
-  manageReferenceUtxo(utxo: UTxO) {
-    this.#manageReferenceUtxo = utxo;
+  stateUtxo(utxo: UTxO) {
+    this.#stateUtxo = utxo;
     return this;
   }
 
-  manageOwnerUtxo(utxo: UTxO) {
-    this.#manageOwnerUtxo = utxo;
+  ownerUtxo(utxo: UTxO) {
+    this.#ownerUtxo = utxo;
     return this;
   }
 
-  currentState(state: CollectionState) {
+  state(state: CollectionState) {
     this.#currentState = state;
     return this;
   }
@@ -103,28 +103,26 @@ export class MintTxBuilder {
     const spend = cache.state();
     const unit = cache.unit();
 
-    // Fetch the manage reference reference token
-    const manageReferenceUtxo = this.#manageReferenceUtxo
-      ? this.#manageReferenceUtxo
-      : await fetchManageReferenceUtxo(cache);
+    // Fetch the state token utxo
+    const stateUtxo = this.#stateUtxo ? this.#stateUtxo : await fetchStateUtxo(cache);
 
-    if (!manageReferenceUtxo) {
-      throw new Error('Could not find the management reference utxo that must be spent to mint');
+    if (!stateUtxo) {
+      throw new Error('Could not find the utxo holding state. It must be spent to mint');
     }
 
     // Fetch the owner UTxO, should be in the selected wallet otherwise we can't spend it.
-    let manageOwnerUtxo = this.#manageOwnerUtxo;
-    if (!manageOwnerUtxo) {
-      const { utxo, wallet } = await fetchManageOwnerUtxo(cache);
+    let ownerUtxo = this.#ownerUtxo;
+    if (!ownerUtxo) {
+      const { utxo, wallet } = await fetchOwnerUtxo(cache);
       if (!utxo) {
-        throw new Error('Could not find the manage owner token UTxO');
+        throw new Error('Could not find the utxo holding the owner token');
       }
 
       if (!wallet) {
-        throw new Error('Cannot spend manage owner token because it is not in the current selected lucid walllet');
+        throw new Error('Cannot spend owner token because it is not in the current selected lucid wallet');
       }
 
-      manageOwnerUtxo = utxo;
+      ownerUtxo = utxo;
     }
 
     // Check if there is the royalty token because we need to add a royalty flag if there is one
@@ -133,10 +131,7 @@ export class MintTxBuilder {
     const hasRoyalty = royaltyFindResult !== undefined;
 
     // Compute the updated state
-    const currentState = this.#currentState
-      ? this.#currentState
-      : await extractCollectionState(this.#lucid, manageReferenceUtxo);
-
+    const currentState = this.#currentState ? this.#currentState : await extractCollectionState(this.#lucid, stateUtxo);
     const defaultRecipientAddress = this.#recipient || await this.#lucid.wallet.address();
     const referenceAddress = currentState.nftReferenceTokenAddress;
 
@@ -155,27 +150,27 @@ export class MintTxBuilder {
     );
 
     const mintRedeemer = Data.to('EndpointMint', MintRedeemerShape);
-    const validatorRedeemer = Data.to('EndpointMint', ValidatorRedeemerShape);
+    const validatorRedeemer = Data.to('EndpointMint', StateValidatorRedeemerShape);
 
-    const managementUserAsset = { [unit.owner]: 1n };
-    const managementReferenceAsset = { [unit.reference]: 1n };
-    const managementOutput = { inline: Data.to(chainState, CollectionStateMetadataShape) };
+    const ownerAsset = { [unit.owner]: 1n };
+    const stateAsset = { [unit.state]: 1n };
+    const stateOutput = { inline: Data.to(chainState, CollectionStateMetadataShape) };
 
     // TODO: See if it is possible for genesis to output a script ref of the minting policy to leave room for minting more NFTs in a single batch
     const tx = this.#lucid.newTx()
-      .collectFrom([manageOwnerUtxo])
+      .collectFrom([ownerUtxo])
       .attachSpendingValidator(spend.script)
-      .collectFrom([manageReferenceUtxo], validatorRedeemer)
+      .collectFrom([stateUtxo], validatorRedeemer)
       .attachMintingPolicy(mint.script)
       .mintAssets(prepared.mints, mintRedeemer)
-      .payToAddress(defaultRecipientAddress, managementUserAsset)
-      .payToAddressWithData(spend.address, managementOutput, managementReferenceAsset);
+      .payToAddress(defaultRecipientAddress, ownerAsset)
+      .payToAddressWithData(spend.address, stateOutput, stateAsset);
 
     for (const payout of prepared.referencePayouts) {
       // TODO: Add flag so can choose to inline or not
       const outputData = { inline: Data.to(payout.chainData, NftMetadataWrappedShape) };
-      const asset = { [payout.unit]: 1n };
-      tx.payToAddressWithData(payout.address, outputData, asset);
+      const referenceaAsset = { [payout.unit]: 1n };
+      tx.payToAddressWithData(payout.address, outputData, referenceaAsset);
     }
 
     for (const [address, units] of Object.entries(prepared.userPayouts)) {

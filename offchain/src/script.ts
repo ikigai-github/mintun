@@ -3,12 +3,15 @@
 
 import { applyDoubleCborEncoding, Credential, Lucid, Script } from 'lucid';
 import { findUtxo, TxReference } from './utils.ts';
-import { toManageOwnerUnit, toManageReferenceUnit } from './collection.ts';
-import { paramaterizeMintingPolicy, paramaterizeValidator } from './contract.ts';
-import contracts from '../contracts.json' assert { type: 'json' };
+import { toInfoUnit, toOwnerUnit } from './collection.ts';
+import { paramaterizeMintingPolicy, paramaterizeStateValidator } from './contract.ts';
+import contracts from '../contracts.json' with { type: 'json' };
+import { paramaterizeImmutableInfoValidator } from './mod.ts';
+import { toStateUnit } from './collection-state.ts';
 
 /// All the parts commonly used when dealing with a paramaterized script
 export type ScriptInfo = {
+  name: string;
   script: Script;
   policyId: string;
   credential: Credential;
@@ -17,8 +20,9 @@ export type ScriptInfo = {
 
 /// Commonly paired reference and owner unit names
 export type ManageUnitLookup = {
-  reference: string;
+  info: string;
   owner: string;
+  state: string;
 };
 
 // Utility function for fetching a validator from the generated plutus.json
@@ -32,7 +36,7 @@ export function getScript(title: string) {
 }
 
 /// Utility function for grabbing commonly needed information about a validator (or minting policy)
-export function getScriptInfo(lucid: Lucid, paramaterizedScript: string): ScriptInfo {
+export function getScriptInfo(lucid: Lucid, name: string, paramaterizedScript: string): ScriptInfo {
   const script: Script = {
     type: 'PlutusV2',
     script: applyDoubleCborEncoding(paramaterizedScript),
@@ -43,6 +47,7 @@ export function getScriptInfo(lucid: Lucid, paramaterizedScript: string): Script
   const address = lucid.utils.credentialToAddress(credential);
 
   return {
+    name,
     script,
     policyId,
     credential,
@@ -63,6 +68,7 @@ export class ScriptCache {
   #seed: TxReference;
   #mint?: ScriptInfo;
   #state?: ScriptInfo;
+  #info?: ScriptInfo;
   #unit?: ManageUnitLookup;
 
   private constructor(lucid: Lucid, seed: TxReference) {
@@ -108,35 +114,54 @@ export class ScriptCache {
   state() {
     if (!this.#state) {
       const mint = this.mint();
-      this.#state = paramaterizeValidator(this.#lucid, mint.policyId);
+      this.#state = paramaterizeStateValidator(this.#lucid, mint.policyId);
     }
 
     return this.#state;
   }
 
+  // TODO: Currently only one info validator but will add mutable validator
+  info(name = 'immutable_info_validator.spend') {
+    if (!this.#info || this.#info.name !== name) {
+      const mint = this.mint();
+      this.#info = paramaterizeImmutableInfoValidator(this.#lucid, mint.policyId);
+    }
+
+    return this.#info;
+  }
+
   unit() {
     if (!this.#unit) {
       const mint = this.mint();
-      const reference = toManageReferenceUnit(mint.policyId);
-      const owner = toManageOwnerUnit(mint.policyId);
+      const info = toInfoUnit(mint.policyId);
+      const owner = toOwnerUnit(mint.policyId);
+      const state = toStateUnit(mint.policyId);
 
-      this.#unit = { reference, owner };
+      this.#unit = { info, owner, state };
     }
 
     return this.#unit;
   }
 }
 
-/// Fetches the UTxO that holds the management reference token
-export async function fetchManageReferenceUtxo(cache: ScriptCache) {
-  const spend = cache.state();
-  const unit = cache.unit();
-  const utxos = await cache.lucid().utxosAt(spend.address);
-  const utxo = utxos.find((utxo) => utxo.assets[unit.reference]);
+async function fetchUtxo(lucid: Lucid, address: string, unit: string) {
+  const utxos = await lucid.utxosAt(address);
+  const utxo = utxos.find((utxo) => utxo.assets[unit]);
   return utxo;
 }
 
-export async function fetchManageOwnerUtxo(cache: ScriptCache) {
+/// Fetches the UTxO that holds the state token
+export async function fetchStateUtxo(cache: ScriptCache) {
+  return await fetchUtxo(cache.lucid(), cache.state().address, cache.unit().state);
+}
+
+/// Fetches the UTxO that holds the collection info token
+export async function fetchInfoUtxo(cache: ScriptCache) {
+  return await fetchUtxo(cache.lucid(), cache.info().address, cache.unit().info);
+}
+
+/// Fetches the UTxO that holds the collection owner token.
+export async function fetchOwnerUtxo(cache: ScriptCache) {
   const unit = cache.unit();
   return await findUtxo(cache.lucid(), unit.owner);
 }

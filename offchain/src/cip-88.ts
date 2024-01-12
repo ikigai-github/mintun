@@ -9,7 +9,6 @@ import { IMAGE_PURPOSE } from './image.ts';
 export const CIP_88_METADATA_LABEL = 867;
 
 export type Cip88ExtraConfig = {
-  name?: string;
   info?: CollectionInfo;
   cip27Royalty?: Royalty;
   cip102Royalties?: Royalty[];
@@ -200,13 +199,13 @@ function mapDescription(info: CollectionInfo) {
 }
 
 /// Converts a collection info object into a token detail object
-export function toTokenProjectDetail(name: string, info: CollectionInfo): TokenProjectDetail {
+export function toTokenProjectDetail(info: CollectionInfo): TokenProjectDetail {
   const { profile, banner } = mapImages(info);
 
   return {
     [FEATURE_VERSION_FIELD]: 1,
     [FEATURE_DETAIL_FIELD]: {
-      [TokenProjectDetailField.NAME]: name,
+      [TokenProjectDetailField.NAME]: info.name,
       [TokenProjectDetailField.DESCRIPTION]: mapDescription(info),
       [TokenProjectDetailField.PROJECT_IMAGE]: profile,
       [TokenProjectDetailField.PROJECT_BANNER]: banner,
@@ -268,13 +267,13 @@ export class Cip88Builder {
     return new Cip88Builder(script);
   }
 
-  cip68Info(name: string, info: CollectionInfo) {
-    const detail = toTokenProjectDetail(name, info);
+  cip68Info(info: CollectionInfo) {
+    const detail = toTokenProjectDetail(info);
     return this.tokenProject(68, detail);
   }
 
-  cip25Info(name: string, info: CollectionInfo) {
-    const detail = toTokenProjectDetail(name, info);
+  cip25Info(info: CollectionInfo) {
+    const detail = toTokenProjectDetail(info);
     return this.tokenProject(25, detail);
   }
 
@@ -399,8 +398,8 @@ export async function addCip88MetadataToTransaction(
       builder.cip102Royalties(config.cip102Royalties);
     }
 
-    if (config.name && config.info) {
-      builder.cip68Info(config.name, config.info);
+    if (config.info) {
+      builder.cip68Info(config.info);
     }
   }
 

@@ -12,7 +12,6 @@ export async function genesis() {
   const { tx, cache } = await GenesisTxBuilder
     .create(lucid)
     .seed(seedUtxo)
-    .name('Test')
     .maxNfts(1)
     .mintWindow(0, endMs)
     .info(TEST_COLLECTION_INFO)
@@ -21,22 +20,22 @@ export async function genesis() {
     .royalty(accounts[0].address, 1.0)
     .build();
 
-  const { ownerUtxo, referenceUtxo, state } = await applyTx(lucid, tx, cache);
+  const { ownerUtxo, stateUtxo, state } = await applyTx(lucid, tx, cache);
 
-  return { cache, lucid, accounts, referenceUtxo, ownerUtxo, state };
+  return { cache, lucid, accounts, stateUtxo, ownerUtxo, state };
 }
 
 Deno.test('Mint a token', async () => {
-  const { cache, lucid, referenceUtxo, ownerUtxo, state: genesisState } = await genesis();
+  const { cache, lucid, stateUtxo, ownerUtxo, state: genesisState } = await genesis();
 
   const nft = generateNft();
 
   const { tx } = await MintTxBuilder
     .create(lucid)
     .cache(cache)
-    .manageReferenceUtxo(referenceUtxo)
-    .manageOwnerUtxo(ownerUtxo)
-    .currentState(genesisState)
+    .stateUtxo(stateUtxo)
+    .ownerUtxo(ownerUtxo)
+    .state(genesisState)
     .nft(nft)
     .build();
 

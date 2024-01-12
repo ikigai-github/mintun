@@ -26,7 +26,6 @@ validator(mint_policy_id: PolicyId) {
     expect Spend(output_reference) = purpose
     expect Some(state_input) =
       transaction.find_input(transaction.inputs, output_reference)
-    trace @"Confirmed this is being invoked as a spending validator"
 
     let spends_state =
       value.quantity_of(
@@ -68,7 +67,7 @@ fn validate_spend(
 
   // Get the output utxo where the reference token is spent
   expect [spent_utxo_output] =
-    out.find_by_asset(outputs, mint_policy_id, collection.reference_asset_name)
+    out.find_by_asset(outputs, mint_policy_id, collection.state_asset_name)
 
   // Verify it is spent back to this spending validator
   let spends_back_to_validator =

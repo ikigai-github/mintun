@@ -21,14 +21,13 @@ Deno.test('Build CIP-88 metadata', async () => {
   const mintingPolicy = paramaterizeMintingPolicy(lucid, seedUtxo.txHash, seedUtxo.outputIndex);
   const policyId = `0x${mintingPolicy.policyId}`;
   const address = await lucid.wallet.address();
-  const projectName = 'Test Name';
   const info = TEST_COLLECTION_INFO;
   const royalty = { address, variableFee: 1.2 };
   const assetName = '';
   const oracleUri = 'https://www.whatever.com';
 
   const metadata = await Cip88Builder.register(mintingPolicy.script)
-    .cip68Info(projectName, info)
+    .cip68Info(info)
     .cip27Royalty(royalty)
     .cip102Royalties([royalty])
     .oracle(oracleUri)
@@ -73,7 +72,10 @@ Deno.test('Build CIP-88 metadata', async () => {
   assert(detailWrapper[FEATURE_VERSION_FIELD] === 1, 'CIP-68 feature version field is 1');
 
   const tokenDetail = detailWrapper[FEATURE_DETAIL_FIELD];
-  assert(tokenDetail[TokenProjectDetailField.NAME] === projectName, `Token detail name is ${projectName}`);
+  assert(
+    tokenDetail[TokenProjectDetailField.NAME] === TEST_COLLECTION_INFO.name,
+    `Token detail name is ${TEST_COLLECTION_INFO.name}`,
+  );
   assert(
     tokenDetail[TokenProjectDetailField.DESCRIPTION]?.join('') === info.description,
     'Token detail description chunks rejoin into original description',

@@ -1,6 +1,6 @@
 /// On chain schema for the collection state data. For more details on the purpose of the
 
-import { Data, fromText, Lucid, toText, UTxO } from 'lucid';
+import { Data, Lucid, UTxO } from 'lucid';
 import { createReferenceData, createReferenceTokenSchema } from './cip-68.ts';
 import { POLICY_ID_BYTE_LENGTH, TimeWindow } from './common.ts';
 import {
@@ -15,7 +15,6 @@ import { SEQUENCE_MAX_VALUE } from './collection.ts';
 
 /// fields see smart contract library docs.
 const CollectionStateSchema = Data.Object({
-  name: Data.Bytes(),
   group: Data.Nullable(Data.Bytes({ minLength: POLICY_ID_BYTE_LENGTH, maxLength: POLICY_ID_BYTE_LENGTH })),
   mint_window: Data.Nullable(PosixTimeIntervalSchema),
   max_nfts: Data.Nullable(Data.Integer({ minimum: 1, maximum: SEQUENCE_MAX_VALUE })),
@@ -38,7 +37,6 @@ export const CollectionStateMetadataShape = CollectionStateMetadataSchema as unk
 
 /// The collection state in offchain format.
 export type CollectionState = {
-  name: string;
   group?: string;
   mintWindow?: TimeWindow;
   maxNfts?: number;
@@ -61,7 +59,6 @@ export async function extractCollectionState(lucid: Lucid, utxo: UTxO) {
 /// Convert from on chain plutus data to off chain data structure
 export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetadataType): CollectionState {
   const { metadata } = chainState;
-  const name = toText(metadata.name);
   const group = metadata.group ?? undefined;
   const mintWindow = metadata.mint_window ? toTimeWindow(metadata.mint_window) : undefined;
   const maxNfts = metadata.max_nfts ? Number(metadata.max_nfts) : undefined;
@@ -72,7 +69,6 @@ export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetad
     ? toBech32Address(lucid, metadata.reference_address)
     : undefined;
   return {
-    name,
     group,
     mintWindow,
     maxNfts,
@@ -85,18 +81,12 @@ export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetad
 
 // Given the initial state creates the genesis data.
 export function createGenesisStateData(state: Partial<CollectionState>) {
-  if (!state.name) {
-    throw new Error('Collection name is required to generate a new collection');
-  }
-
-  const name = fromText(state.name);
   const group = state.group ?? null;
   const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.startMs, state.mintWindow.endMs) : null;
   const max_nfts = state.maxNfts ? BigInt(state.maxNfts) : null;
   const reference_address = state.nftReferenceTokenAddress ? asChainAddress(state.nftReferenceTokenAddress) : null;
 
   const metadata: CollectionStateType = {
-    name,
     group,
     mint_window,
     max_nfts,
@@ -111,7 +101,6 @@ export function createGenesisStateData(state: Partial<CollectionState>) {
 
 // Given the initial state creates the genesis data.
 export function asChainStateData(state: CollectionState) {
-  const name = fromText(state.name);
   const group = state.group ?? null;
   const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.startMs, state.mintWindow.endMs) : null;
   const max_nfts = state.maxNfts ? BigInt(state.maxNfts) : null;
@@ -121,7 +110,6 @@ export function asChainStateData(state: CollectionState) {
   const reference_address = state.nftReferenceTokenAddress ? asChainAddress(state.nftReferenceTokenAddress) : null;
 
   const metadata: CollectionStateType = {
-    name,
     group,
     mint_window,
     max_nfts,

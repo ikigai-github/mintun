@@ -1,7 +1,10 @@
+use aiken/transaction/value.{PolicyId}
+use aiken/transaction.{ScriptContext, Spend}
+use mintun/collection
 /// Currently just locks the info token and doesn't let it be spent.  
 /// Alows spending of anything else that happens to have landed at this script address.
 validator(mint_policy_id: PolicyId) {
-  fn spend() {
+  fn spend(_datum, _redeemer, context: ScriptContext) {
     let ScriptContext { transaction, purpose } = context
 
     expect Spend(output_reference) = purpose

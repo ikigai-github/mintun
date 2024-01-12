@@ -103,11 +103,11 @@ function toManageUnit(
 }
 
 /// Construct management reference unit from policy id with (100) label
-export function toManageReferenceUnit(policyId: string) {
+export function toInfoUnit(policyId: string) {
   return toManageUnit(policyId, REFERENCE_TOKEN_LABEL);
 }
 
 /// Construct management owner unit from policy id with (111) label
-export function toManageOwnerUnit(policyId: string) {
+export function toOwnerUnit(policyId: string) {
   return toManageUnit(policyId, COLLECTION_OWNER_TOKEN_LABEL);
 }

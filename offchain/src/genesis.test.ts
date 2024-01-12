@@ -7,13 +7,12 @@ Deno.test('Minimal minting policy genesis transaction', async () => {
   const { lucid, seedUtxo } = await createEmulatorLucid();
   const { tx, cache } = await GenesisTxBuilder
     .create(lucid)
-    .name('No Constraints')
+    .info({ name: 'No Constraints', nsfw: false })
     .seed(seedUtxo)
     .build();
 
   // Check the state is on the datum as expected
-  const { state } = await applyTx(lucid, tx, cache);
-  assert(state.name === 'No Constraints');
+  const { state, info } = await applyTx(lucid, tx, cache);
   assert(state.group === undefined);
   assert(state.mintWindow === undefined);
   assert(state.maxNfts === undefined);
@@ -21,6 +20,7 @@ Deno.test('Minimal minting policy genesis transaction', async () => {
   assert(state.locked === false);
   assert(state.nextSequence === 0);
   assert(state.nftReferenceTokenAddress === undefined);
+  assert(info.name === 'No Constraints');
 });
 
 Deno.test('All configuration genesis transaction', async () => {
@@ -35,7 +35,6 @@ Deno.test('All configuration genesis transaction', async () => {
   const { tx, cache } = await GenesisTxBuilder
     .create(lucid)
     .seed(seedUtxo)
-    .name('Kitchen Sink')
     .group(groupPolicyId)
     .maxNfts(1)
     .mintWindow(0, endMs)
@@ -49,8 +48,11 @@ Deno.test('All configuration genesis transaction', async () => {
     .build();
 
   // Check the state is on the datum as expected
-  const { state } = await applyTx(lucid, tx, cache);
-  assert(state.name === 'Kitchen Sink');
+  const { state, info } = await applyTx(lucid, tx, cache);
+  assert(info.name === TEST_COLLECTION_INFO.name);
+  assert(info.artist === TEST_COLLECTION_INFO.artist);
+  assert(info.description === TEST_COLLECTION_INFO.description);
+  assert(info.images?.[0].src === TEST_COLLECTION_INFO.images?.[0].src);
   assert(state.mintWindow && state.mintWindow.startMs === 0 && state.mintWindow.endMs === endMs);
   assert(state.maxNfts === 1);
 });
@@ -61,11 +63,6 @@ Deno.test('Builder errors during build', async () => {
   // End time <= Start Time
   assertThrows(() => {
     GenesisTxBuilder.create(lucid).mintWindow(0, 0);
-  });
-
-  // Name > 64 characters
-  assertThrows(() => {
-    GenesisTxBuilder.create(lucid).name('anamethatisoversixtyfourcharacterslongsuchthatitdoesnotfittheconstraints');
   });
 
   // Invalid policy id

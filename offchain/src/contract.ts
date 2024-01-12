@@ -1,6 +1,6 @@
 import { applyParamsToScript, Data, Lucid } from 'lucid';
 import { getScript } from './validators.ts';
-import { OutputReferenceSchema } from './aiken.ts';
+import { OutputReferenceSchema, PolicyIdSchema } from './aiken.ts';
 import { getScriptInfo } from './script.ts';
 
 /// Minting policy paramaterization schema
@@ -9,14 +9,17 @@ type MintParameterType = Data.Static<typeof MintParameterSchema>;
 const MintParameterShape = MintParameterSchema as unknown as MintParameterType;
 
 /// Validator paramaterization schema
-const ValidatorParameterSchema = Data.Tuple([Data.Bytes({ minLength: 28, maxLength: 28 })]);
-type ValidatorParameterType = Data.Static<typeof ValidatorParameterSchema>;
-const ValidatorParameterShape = ValidatorParameterSchema as unknown as ValidatorParameterType;
+const StateValidatorParameterSchema = Data.Tuple([PolicyIdSchema]);
+type StateValidatorParameterType = Data.Static<typeof StateValidatorParameterSchema>;
+const StateValidatorParameterShape = StateValidatorParameterSchema as unknown as StateValidatorParameterType;
 
 /// Redeemer schema for minting
 const MintRedeemerSchema = Data.Enum([
   Data.Object({
-    'EndpointGenesis': Data.Object({ validator_policy_id: Data.Bytes({ minLength: 28, maxLength: 28 }) }),
+    'EndpointGenesis': Data.Object({
+      state_validator_policy_id: PolicyIdSchema,
+      info_validator_policy_id: PolicyIdSchema,
+    }),
   }),
   Data.Literal('EndpointMint'),
   Data.Literal('EndpointBurn'),
@@ -24,12 +27,12 @@ const MintRedeemerSchema = Data.Enum([
 export type MintRedeemerType = Data.Static<typeof MintRedeemerSchema>;
 export const MintRedeemerShape = MintRedeemerSchema as unknown as MintRedeemerType;
 
-const ValidatorRedeemerSchema = Data.Enum([
+const StateValidatorRedeemerSchema = Data.Enum([
   Data.Literal('EndpointMint'),
   Data.Literal('EndpointBurn'),
 ]);
-export type ValidatorRedeemerType = Data.Static<typeof ValidatorRedeemerSchema>;
-export const ValidatorRedeemerShape = ValidatorRedeemerSchema as unknown as ValidatorRedeemerType;
+export type StateValidatorRedeemerType = Data.Static<typeof StateValidatorRedeemerSchema>;
+export const StateValidatorRedeemerShape = StateValidatorRedeemerSchema as unknown as StateValidatorRedeemerType;
 
 /// Given a unique hash and index from the seed transaction parameterizes the minting policy and returns its info
 export function paramaterizeMintingPolicy(lucid: Lucid, hash: string, index: number) {
@@ -46,16 +49,26 @@ export function paramaterizeMintingPolicy(lucid: Lucid, hash: string, index: num
     [seed],
     MintParameterShape,
   );
-  return getScriptInfo(lucid, paramertizedMintingPolicy);
+  return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
 }
 
-/// Given a minting policyparameterizes the management token spending validator and returns its info
-export function paramaterizeValidator(lucid: Lucid, mintingPolicyId: string) {
-  const script = getScript('collection_state_validator.spend');
-  const paramertizedMintingPolicy = applyParamsToScript<ValidatorParameterType>(
+/// Given a minting policy, parameterizes the management token spending validator and returns its info
+export function paramaterizeStateValidator(lucid: Lucid, mintingPolicyId: string) {
+  const script = getScript('state_validator.spend');
+  const paramertizedMintingPolicy = applyParamsToScript<StateValidatorParameterType>(
     script.compiledCode,
     [mintingPolicyId],
-    ValidatorParameterShape,
+    StateValidatorParameterShape,
   );
-  return getScriptInfo(lucid, paramertizedMintingPolicy);
+  return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
+}
+
+/// Given a minting policy, parameterizes the collection info reference token spending validator and returns its info
+export function paramaterizeImmutableInfoValidator(lucid: Lucid, mintingPolicyId: string) {
+  const script = getScript('immutable_info_validator.spend');
+  const paramertizedMintingPolicy = applyParamsToScript<StateValidatorParameterType>(
+    script.compiledCode,
+    [mintingPolicyId],
+  );
+  return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
 }
