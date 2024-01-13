@@ -79,12 +79,6 @@ pub type CollectionInfo {
   extra: Dict<ByteArray, Data>,
 }
 
-// NOTE: Collection group idea is pretty simple. A two way pointer between the group and the collection make
-//       it verifiable that a particular collection is part of the group.  
-//       The group minting policy includes in metadata and reference token datum a list of policy ids in the group.  
-//       The child policy genesis transaction puts in metadata and mints a "collection" state token that includes in its datum the parent policy_id.
-//       -- May rework the structure below so that the rest of collection state and the grouping are not coupled.
-// 
 /// State used by the spending validator on the reference token created by collection minting policy 
 pub type CollectionState {
   /// The group that this collection claims to be a part of.
@@ -128,8 +122,8 @@ pub type CollectionName {
   content: ByteArray,
 }
 
-/// Extracts the data from the given datum and trys to cast it to the reference token shape.
-/// Then cast the metadata field of that shape into the collection state shape.
+/// Extracts the data from the given datum and casts it to the reference token shape.
+/// Then casts the metadata field of that shape into the collection state shape.
 pub fn state_from_datum(
   transaction: Transaction,
   datum: Datum,
@@ -141,8 +135,8 @@ pub fn state_from_datum(
   collection_state_data
 }
 
-/// Extracts the data from the given datum and trys to cast it to the reference token shape
-/// Then cast the metadata field of that shape into the collection information shape.
+/// Extracts the data from the given datum to casts it to the reference token shape
+/// Then casts the metadata field of that shape into the collection information shape.
 pub fn info_from_datum(transaction: Transaction, datum: Datum) -> CollectionInfo {
   let reference_token_data =
     cip68.from_general_reference_datum(transaction, datum)

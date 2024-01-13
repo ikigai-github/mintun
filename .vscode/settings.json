@@ -4,7 +4,8 @@
   "deno.lint": true,
   "deno.unstable": true,
   "deno.disablePaths": [
-    "./contracts"
+    "./contracts",
+    "./demo"
   ],
   "[aiken]": {
     "editor.defaultFormatter": "txpipe.aiken"
