@@ -3,6 +3,7 @@ import { createReferenceData, NftMetadataShape, NftMetadataType, NftMetadataWrap
 import { toNftReferenceAssetName, toNftUserAssetName } from './collection.ts';
 import { TxMetadataPrimitive } from './common.ts';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image.ts';
+import { chunk } from './utils.ts';
 
 // Expands on CIP-25/68 File with dimension and purpose fields
 type MintunFile = {
@@ -29,10 +30,23 @@ export type MintunNft = {
 
 export type AddressedNft = { metadata: MintunNft; recipient?: string };
 
-export type PreparedNft = AddressedNft & {
-  user: string;
-  reference: string;
-  chainData: NftMetadataType;
+type ReferencePayout = {
+  unit: string;
+  address: string;
+  chainData: NftMetadataWrappedType;
+};
+
+type UserPayouts = {
+  [address: string]: string[];
+};
+
+type Cip25Metadata = Record<string, MintunNft>;
+
+type PreparedAssets = {
+  mints: Assets;
+  userPayouts: UserPayouts;
+  referencePayouts: ReferencePayout[];
+  cip25Metadata: Cip25Metadata;
 };
 
 // Not sure on the usefulness of this builder but eh I made it.
@@ -102,24 +116,13 @@ export class NftBuilder {
   }
 }
 
-type ReferencePayout = {
-  unit: string;
-  address: string;
-  chainData: NftMetadataWrappedType;
-};
-
-type UserPayouts = {
-  [address: string]: string[];
-};
-
-type Cip25Metadata = Record<string, MintunNft>;
-
-type PreparedAssets = {
-  mints: Assets;
-  userPayouts: UserPayouts;
-  referencePayouts: ReferencePayout[];
-  cip25Metadata: Cip25Metadata;
-};
+// Just splits
+function asChainNftData(nft: MintunNft) {
+  const desription = nft.description ? chunk(nft.description) : [];
+  const files = nft.files ? nft.files.map((file) => ({ ...file, src: chunk(file.src) })) : [];
+  const metadata = { ...nft, desription, files };
+  return Data.castFrom<NftMetadataType>(Data.fromJson(metadata), NftMetadataShape);
+}
 
 /// Get NFT units, group them by address
 export function prepareAssets(
@@ -143,14 +146,10 @@ export function prepareAssets(
   for (const nft of nfts) {
     const { metadata, recipient } = nft;
     const userAssetName = toNftUserAssetName(sequence, metadata.name);
-
     const userUnit = policyId + userAssetName;
     const referenceAssetName = toNftReferenceAssetName(sequence, metadata.name);
     const referenceUnit = policyId + referenceAssetName;
-
-    // FIXME: This doesn't seem to cause problems in my test but I think utf8 strings cannot be > 64
-    //        so like description: string => description: string[]
-    const chainMetadata = Data.castFrom<NftMetadataType>(Data.fromJson(metadata), NftMetadataShape);
+    const chainMetadata = asChainNftData(metadata);
     const chainData = createReferenceData(chainMetadata, extra);
     const recipientAdress = recipient ? recipient : defaultRecipientAddress;
     const referencePayoutAddress = referenceAddress ? referenceAddress : recipientAdress;

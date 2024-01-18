@@ -2,7 +2,9 @@ use aiken/bytearray
 use aiken/dict
 use aiken/list
 use aiken/option
-use aiken/transaction.{Input, Mint, Output, OutputReference, ScriptContext, Transaction}
+use aiken/transaction.{
+  Input, Mint, Output, OutputReference, ScriptContext, Transaction,
+}
 use aiken/transaction/value.{MintedValue, PolicyId}
 use mintun/cip102
 use mintun/cip68
@@ -153,7 +155,6 @@ fn get_reference_token_output(
 
   // That one asset sent to the validator must be the reference token of quantity 1
   expect output_asset_name == asset_name && output_asset_quantity == 1
-
   token_output
 }
 
