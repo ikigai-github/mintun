@@ -19,4 +19,5 @@ jobs:
       - run: aiken fmt --check contracts
       - run: aiken check -D contracts
       - run: deno task build 
+      - run: deno task test
 

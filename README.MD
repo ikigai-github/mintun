@@ -4,8 +4,8 @@ This project currently consists of smart contracts for minting CIP-68 standard N
 
 ## Build Requirements
 
-* Deno 
-* Aiken
+- Deno
+- Aiken
 
 ## Build & Test
 
@@ -14,6 +14,3 @@ If you have Deno and Aiken installed then you can to run `deno task build` to co
 ## How to publish
 
 TODO: Will setup dnt so we can publish to private NPM repo. If open source would publish to denoland/x.
-
-
-

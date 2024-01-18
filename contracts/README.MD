@@ -9,3 +9,6 @@ to create a state token which has on it's datum the state of the mint.  The toke
 * Combine the state/batch mints by adding a redeemer for the gensis mint that creates the state
 * Add support for creating a collection token following the CIP-88 standard in some form
 * Add support for minting royalties to the offchain code
+* Add unique mint guarantee by requiring each mint increment a sequence number (very similar to token count)
+* Include in minting transaction metdata the cip-25 formatted data
+* Support optionally minting a CIP-27 token (it is immutable so in cases where you want mutable royalty you wouldn't want this token)

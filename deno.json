@@ -11,13 +11,14 @@
     "semiColons": true,
     "singleQuote": true,
     "proseWrap": "preserve",
-    "include": ["offchain/src/"]
+    "exclude": ["./contracts"]
   },
   "lint": {
-    "include": ["offchain/src/"]
+    "exclude": ["./contracts", "./demo"]
   },
   "tasks": {
     "build": "aiken build contracts && mv contracts/plutus.json offchain/contracts.json",
-    "test": "aiken build contracts --keep-traces && deno test --allow-read --allow-net"
+    "build-trace": "aiken build contracts --keep-traces && mv contracts/plutus.json offchain/contracts.json",
+    "test": "deno task build-trace && deno test --allow-read --allow-net"
   }
 }
