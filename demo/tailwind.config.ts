@@ -1,5 +1,6 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from 'tailwindcss';
+
+export default {
   content: ['./src/**/*.{html,js,jsx,ts,tsx}'],
   theme: {
     extend: {
@@ -8,7 +9,8 @@ module.exports = {
         'logo': ['Rubik Burned', 'sans-serif'],
       },
       backgroundImage: {
-        'gradient-280': 'linear-gradient(280deg, var(--tw-gradient-stops))',
+        'gradient-220': 'linear-gradient(220deg, var(--tw-gradient-stops))',
+        'gradient-40': 'linear-gradient(40deg, var(--tw-gradient-stops))',
       },
     },
   },

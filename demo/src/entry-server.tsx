@@ -12,8 +12,8 @@ export default createHandler(() => (
           <title>Mintun Collection Demo</title>
           {assets}
         </head>
-        <body>
-          <div id='app'>{children}</div>
+        <body class='flex justify-center min-h-screen items-center w-full bg-base-300'>
+          <div id='app' class='flex flex-col min-h-screen max-w-[1080px] w-full bg-base-100'>{children}</div>
           {scripts}
         </body>
       </html>
