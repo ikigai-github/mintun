@@ -9,7 +9,6 @@ export default function WalletSelector() {
   const [enabled, setEnabled] = createSignal(true);
 
   createEffect(() => {
-    console.log(JSON.stringify(state, undefined, 2));
     if (state.state === 'pending' || state.state === 'refreshing') {
       setLabel('Connecting...');
       setIcon('');

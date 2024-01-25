@@ -1,3 +1,5 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+input::-webkit-calendar-picker-indicator { color-scheme: dark }
