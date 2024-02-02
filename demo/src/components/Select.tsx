@@ -8,6 +8,7 @@ type Option = {
 
 type SelectProps = {
   label?: string | undefined;
+  placeholder?: string | undefined;
   options: Option[];
   value: string | undefined;
   error: string;
@@ -22,7 +23,7 @@ type SelectProps = {
 export default function Select(props: SelectProps) {
   const [otherProps, selectProps] = splitProps(
     props,
-    ['label', 'options', 'error', 'value'],
+    ['label', 'options', 'error', 'value', 'placeholder'],
     ['ref', 'onInput', 'onChange', 'onBlur', 'required', 'disabled'],
   );
 
@@ -30,9 +31,14 @@ export default function Select(props: SelectProps) {
 
   return (
     <div class='form-control'>
+      <Show when={props.label}>
+        <label class='label'>
+          <span class='label-text'>{props.label}</span>
+        </label>
+      </Show>
       <select {...selectProps} class={selectClass}>
-        <Show when={props.label}>
-          <option disabled selected>{props.label}</option>
+        <Show when={props.placeholder}>
+          <option disabled selected>{props.placeholder}</option>
         </Show>
         <For each={otherProps.options}>
           {(item) => <option selected={otherProps.value === item.value}>{item.label}</option>}

@@ -20,14 +20,14 @@ import TextField from './TextField';
 import DateField from './DateField';
 import NumberField from './NumberField';
 import Select from './Select';
-import { createSignal } from '@modular-forms/solid/dist/types/primitives';
+import { createSignal, For } from 'solid-js';
 
 const ImageSchema = object({
   purpose: picklist(['Thumbnail', 'Banner', 'Avatar', 'Gallery', 'General']),
   url: string([url('Until I add uploading the image must be a url rather than a file')]),
 });
 
-type Image = Output<typeof ImageSchema>;
+type Image = Partial<Output<typeof ImageSchema>>;
 
 // TBA: Let them pick the validator for the reference tokens for now it is just always the immutable validator
 // TBA:
@@ -77,6 +77,19 @@ type GenesisForm = Input<typeof GenesisSchema>;
 
 export function GenesisForm() {
   const [genesisForm, { Form, Field, FieldArray }] = createForm<GenesisForm>();
+  const [images, setImages] = createSignal<number[]>([]);
+  const [counter, setCounter] = createSignal(0);
+
+  const removeImage = (index: number) => {
+    const newImages = images().filter((arrayIndex) => arrayIndex !== index);
+    setImages(newImages);
+  };
+
+  const addImage = () => {
+    const count = counter();
+    setCounter(count + 1);
+    setImages([...images(), count]);
+  };
 
   const handleSubmit: SubmitHandler<GenesisForm> = (values, event) => {
     // Runs on client
@@ -139,26 +152,62 @@ export function GenesisForm() {
             )}
           </Field>
         </div>
-        <div>
+        <div class='divider'>Images</div>
+        <div class='grid grid-cols-[1fr_2fr_64px] gap-4 items-end'>
+          <For each={images()}>
+            {(index) => (
+              <>
+                <Field name={`images.${index}.purpose`}>
+                  {(field, props) => (
+                    <Select
+                      {...props}
+                      placeholder='Image Purpose'
+                      options={[
+                        { label: 'Thumbnail', value: 'Thumbnail' },
+                        { label: 'Banner', value: 'Banner' },
+                        { label: 'Avatar', value: 'Avatar' },
+                        { label: 'Gallery', value: 'Gallery' },
+                        { label: 'General', value: 'General' },
+                      ]}
+                      onChange={() => console.log('chango')}
+                      value={field.value}
+                      error={field.error}
+                      required
+                    />
+                  )}
+                </Field>
+                <Field name={`images.${index}.url`}>
+                  {(field, props) => (
+                    <TextField
+                      {...props}
+                      type='text'
+                      placeholder='ipfs://'
+                      value={field.value}
+                      error={field.error}
+                    />
+                  )}
+                </Field>
+
+                <Button.Root class='btn btn-square' onClick={() => removeImage(index)}>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    class='h-6 w-6'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </Button.Root>
+              </>
+            )}
+          </For>
         </div>
-        <Field name='images.0.purpose'>
-          {(field, props) => (
-            <Select
-              {...props}
-              label='Select an image purpose'
-              options={[
-                { label: 'Thumbnail', value: 'Thumbnail' },
-                { label: 'Banner', value: 'Banner' },
-                { label: 'Avatar', value: 'Avatar' },
-                { label: 'Gallery', value: 'Gallery' },
-                { label: 'General', value: 'General' },
-              ]}
-              value={field.value}
-              error={field.error}
-              required
-            />
-          )}
-        </Field>
+
+        <Button.Root class='btn my-6 min-w-48 self-center' onClick={addImage}>
+          Add Another Image
+        </Button.Root>
+
         <div class='divider'>Add Contract Constraints</div>
         <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-6'>
           <Field name='maxTokens' type='number'>
