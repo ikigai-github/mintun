@@ -7,4 +7,4 @@ docs/
 # Sensitive files
 .env
 # Offchain npm bundle
-offchain/npm
+npm

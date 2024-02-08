@@ -3,15 +3,21 @@ import { build, emptyDir } from 'dnt';
 await emptyDir('./npm');
 
 await build({
-  entryPoints: ['./src/mod.ts'],
-  outDir: './npm',
+  packageManager: 'pnpm',
+  compilerOptions: {
+    lib: ['ESNEXT', 'DOM'],
+  },
+  entryPoints: ['offchain/src/mod.ts'],
+  outDir: 'npm',
   shims: {
     // see JS docs for overview and more options
     deno: true,
   },
-  testPattern: '**/*.test.{ts,tsx,js,mjs,jsx}',
-  importMap: '../deno.json',
-  test: false,
+  skipSourceOutput: true,
+  testPattern: 'offchain/src/**/*.test.{ts,tsx,js,mjs,jsx}',
+  rootTestDir: 'offchain/src',
+  importMap: 'deno.json',
+  test: true,
   typeCheck: false,
   scriptModule: false,
   declaration: false,
@@ -24,7 +30,7 @@ await build({
   package: {
     // package.json properties
     name: 'mintun-offchain',
-    version: '1.0.0',
+    version: Deno.args[0],
     description: 'The offchain library used for interacting with Mintun contracts',
     repository: {
       type: 'git',
@@ -32,8 +38,7 @@ await build({
     },
   },
   postBuild() {
-    // steps to run after building and before running the tests
-    Deno.copyFileSync('LICENSE', 'npm/LICENSE');
-    Deno.copyFileSync('README.md', 'npm/README.md');
+    Deno.copyFileSync('offchain/LICENSE', 'npm/LICENSE');
+    Deno.copyFileSync('offchain/README.MD', 'npm/README.MD');
   },
 });
