@@ -1,8 +1,7 @@
 import { TextField as Kobalte } from '@kobalte/core';
 import { type JSX, Show, splitProps } from 'solid-js';
-import { minValue } from 'valibot';
 
-type TextFieldProps = {
+type NumberFieldProps = {
   name: string;
   label?: string | undefined;
   placeholder?: string | undefined;
@@ -10,7 +9,6 @@ type TextFieldProps = {
   maxValue?: number | undefined;
   value: number | undefined;
   error: string;
-  multiline?: boolean | undefined;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
   ref: (element: HTMLInputElement | HTMLTextAreaElement) => void;
@@ -19,7 +17,7 @@ type TextFieldProps = {
   onBlur: JSX.EventHandler<HTMLInputElement | HTMLTextAreaElement, FocusEvent>;
 };
 
-export default function NumberField(props: TextFieldProps) {
+export default function NumberField(props: NumberFieldProps) {
   const [rootProps, inputProps] = splitProps(
     props,
     ['name', 'required', 'disabled'],

@@ -5,6 +5,7 @@ type TextFieldProps = {
   name: string;
   type?: 'text' | 'email' | 'tel' | 'password' | 'url' | 'date' | undefined;
   label?: string | undefined;
+  class?: string | undefined;
   placeholder?: string | undefined;
   value: string | undefined;
   error: string;
@@ -20,7 +21,7 @@ type TextFieldProps = {
 export default function TextField(props: TextFieldProps) {
   const [rootProps, inputProps] = splitProps(
     props,
-    ['name', 'value', 'required', 'disabled'],
+    ['name', 'value', 'required', 'disabled', 'class'],
     ['placeholder', 'ref', 'onInput', 'onChange', 'onBlur'],
   );
   return (

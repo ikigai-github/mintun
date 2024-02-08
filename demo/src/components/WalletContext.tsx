@@ -33,7 +33,6 @@ const [Provider, useProvider] = createContextProvider(
     const [wallet, setWallet] = makePersisted(createSignal('' as WalletInfoName));
 
     const [state] = createResource(() => [lucid(), wallet()], async ([lucidValue, walletValue]) => {
-      console.log('Updating wallet state');
       if (walletValue && lucidValue && typeof walletValue === 'string' && lucidValue instanceof Lucid) {
         const api = await window?.cardano?.[walletValue]?.enable();
         if (api) {
@@ -51,7 +50,7 @@ const [Provider, useProvider] = createContextProvider(
     });
 
     return {
-      state,
+      wallet: state,
       setWallet,
     };
   },

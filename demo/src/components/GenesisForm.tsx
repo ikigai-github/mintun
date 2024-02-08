@@ -8,7 +8,6 @@ import {
   number,
   object,
   optional,
-  Output,
   picklist,
   regex,
   string,
@@ -20,17 +19,15 @@ import TextField from './TextField';
 import DateField from './DateField';
 import NumberField from './NumberField';
 import Select from './Select';
-import { createSignal, For } from 'solid-js';
+import { createSignal, For, Show } from 'solid-js';
+import { useWallet } from './WalletContext';
 
 const ImageSchema = object({
   purpose: picklist(['Thumbnail', 'Banner', 'Avatar', 'Gallery', 'General']),
   url: string([url('Until I add uploading the image must be a url rather than a file')]),
 });
 
-type Image = Partial<Output<typeof ImageSchema>>;
-
 // TBA: Let them pick the validator for the reference tokens for now it is just always the immutable validator
-// TBA:
 const GenesisSchema = object({
   // Names of things
   collection: string([
@@ -75,7 +72,11 @@ const GenesisSchema = object({
 
 type GenesisForm = Input<typeof GenesisSchema>;
 
+// TODO: Add preview of the images and support uploading local files
+// TODO: Add royalties configuration section
+// TODO: Add Social links section
 export function GenesisForm() {
+  const { wallet } = useWallet();
   const [genesisForm, { Form, Field, FieldArray }] = createForm<GenesisForm>();
   const [images, setImages] = createSignal<number[]>([]);
   const [counter, setCounter] = createSignal(0);
@@ -91,13 +92,15 @@ export function GenesisForm() {
     setImages([...images(), count]);
   };
 
-  const handleSubmit: SubmitHandler<GenesisForm> = (values, event) => {
-    // Runs on client
+  const handleSubmit: SubmitHandler<GenesisForm> = async (values, event) => {
+
+    // throw an error?
   };
+
   return (
     <div class='bg-base-300 p-4 m-4 rounded-box'>
       <h1 class='w-full flex items-center justify-center text-3xl font-logo text-secondary pb-8'>New Collection</h1>
-      <Form onSubmit={handleSubmit} class='form-control'>
+      <Form onSubmit={handleSubmit} class='form-control flex flex-col gap-6'>
         <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
           <Field name='collection'>
             {(field, props) => (
@@ -137,79 +140,78 @@ export function GenesisForm() {
           </Field>
         </div>
 
-        <div class='py-6'>
-          <Field name='description'>
-            {(field, props) => (
-              <TextField
-                {...props}
-                type='text'
-                placeholder='optional'
-                multiline={true}
-                label='Describe your collection'
-                value={field.value}
-                error={field.error}
-              />
-            )}
-          </Field>
-        </div>
-        <div class='divider'>Images</div>
-        <div class='grid grid-cols-[1fr_2fr_64px] gap-4 items-end'>
-          <For each={images()}>
-            {(index) => (
-              <>
-                <Field name={`images.${index}.purpose`}>
-                  {(field, props) => (
-                    <Select
-                      {...props}
-                      placeholder='Image Purpose'
-                      options={[
-                        { label: 'Thumbnail', value: 'Thumbnail' },
-                        { label: 'Banner', value: 'Banner' },
-                        { label: 'Avatar', value: 'Avatar' },
-                        { label: 'Gallery', value: 'Gallery' },
-                        { label: 'General', value: 'General' },
-                      ]}
-                      onChange={() => console.log('chango')}
-                      value={field.value}
-                      error={field.error}
-                      required
-                    />
-                  )}
-                </Field>
-                <Field name={`images.${index}.url`}>
-                  {(field, props) => (
-                    <TextField
-                      {...props}
-                      type='text'
-                      placeholder='ipfs://'
-                      value={field.value}
-                      error={field.error}
-                    />
-                  )}
-                </Field>
+        <Field name='description'>
+          {(field, props) => (
+            <TextField
+              {...props}
+              type='text'
+              placeholder='optional'
+              multiline={true}
+              label='Describe your collection'
+              value={field.value}
+              error={field.error}
+            />
+          )}
+        </Field>
 
-                <Button.Root class='btn btn-square' onClick={() => removeImage(index)}>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    class='h-6 w-6'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
-                  >
-                    <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 18L18 6M6 6l12 12' />
-                  </svg>
-                </Button.Root>
-              </>
-            )}
-          </For>
-        </div>
+        <Show when={images().length > 0}>
+          <div class='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+            <For each={images()}>
+              {(index) => (
+                <div class='grid grid-cols-[64px_1fr] items-end bg-base-100 rounded-md'>
+                  <Button.Root class='btn btn-square btn-ghost' onClick={() => removeImage(index)}>
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      class='h-6 w-6'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 18L18 6M6 6l12 12' />
+                    </svg>
+                  </Button.Root>
+                  <Field name={`images.${index}.purpose`}>
+                    {(field, props) => (
+                      <Select
+                        {...props}
+                        placeholder='Image Purpose'
+                        options={[
+                          { label: 'Thumbnail', value: 'Thumbnail' },
+                          { label: 'Banner', value: 'Banner' },
+                          { label: 'Avatar', value: 'Avatar' },
+                          { label: 'Gallery', value: 'Gallery' },
+                          { label: 'General', value: 'General' },
+                        ]}
+                        value={field.value}
+                        error={field.error}
+                        required
+                      />
+                    )}
+                  </Field>
+                  <Field name={`images.${index}.url`}>
+                    {(field, props) => (
+                      <TextField
+                        {...props}
+                        class='col-span-2 bg-base-200 border-t-2 border-slate-100/20'
+                        type='text'
+                        placeholder='Enter IPFS Url'
+                        value={field.value}
+                        error={field.error}
+                      />
+                    )}
+                  </Field>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
 
-        <Button.Root class='btn my-6 min-w-48 self-center' onClick={addImage}>
-          Add Another Image
+        <Button.Root class='btn min-w-80' onClick={addImage}>
+          Add an Image
         </Button.Root>
 
-        <div class='divider'>Add Contract Constraints</div>
-        <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-6'>
+        <div class='divider'>Contract Constraints</div>
+        <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
           <Field name='maxTokens' type='number'>
             {(field, props) => (
               <NumberField
@@ -245,7 +247,9 @@ export function GenesisForm() {
           </Field>
         </div>
 
-        <Button.Root type='submit' class='btn btn-secondary mt-6 text-lg font-bold'>Create</Button.Root>
+        <Button.Root type='submit' disabled={wallet.state !== 'ready'} class='btn btn-secondary mt-6 text-lg font-bold'>
+          Create Collection
+        </Button.Root>
       </Form>
     </div>
   );

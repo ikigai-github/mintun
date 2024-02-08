@@ -3,19 +3,18 @@ import { SupportedWallets, useWallet } from './WalletContext';
 import { DropdownMenu } from '@kobalte/core';
 
 export default function WalletSelector() {
-  const { state, setWallet } = useWallet();
+  const { wallet, setWallet } = useWallet();
   const [label, setLabel] = createSignal('Select Wallet');
   const [icon, setIcon] = createSignal('');
   const [enabled, setEnabled] = createSignal(true);
 
   createEffect(() => {
-    if (state.state === 'pending' || state.state === 'refreshing') {
+    if (wallet.state === 'pending' || wallet.state === 'refreshing') {
       setLabel('Connecting...');
       setIcon('');
       setEnabled(false);
-    } else if (state.state === 'ready') {
-      const info = state().info;
-      console.log(info);
+    } else if (wallet.state === 'ready') {
+      const info = wallet().info;
       setLabel(info.display);
       setIcon(info.icon);
     } else {
