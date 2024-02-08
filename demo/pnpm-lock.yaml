@@ -41,6 +41,9 @@ dependencies:
   lucid-cardano:
     specifier: ^0.10.7
     version: 0.10.7
+  offchain:
+    specifier: link:../offchain
+    version: link:../offchain
   postcss:
     specifier: ^8.4.26
     version: 8.4.33

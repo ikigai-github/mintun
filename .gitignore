@@ -1,8 +1,10 @@
 # Aiken compilation artifacts
 artifacts/
-# Aiken's project working directory
+# Aiken's project build directory
 build/
 # Aiken's default documentation export
 docs/
 # Sensitive files
 .env
+# Offchain npm bundle
+offchain/npm

@@ -1,7 +1,7 @@
 import { Data, fromText, Lucid, toText, UTxO } from 'lucid';
 import { asChunkedHex, toJoinedText } from './utils.ts';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image.ts';
-import { createReferenceData, createReferenceTokenSchema } from './cip-68.ts';
+import { createReferenceData } from './cip-68.ts';
 
 /// On chain data schema for image purpose
 export const CollectionImagePurposeSchema = Data.Enum([
@@ -44,7 +44,11 @@ export const CollectionInfoSchema = Data.Object({
 export type CollectionInfoType = Data.Static<typeof CollectionInfoSchema>;
 export const CollectionInfoShape = CollectionInfoSchema as unknown as CollectionInfoType;
 
-export const CollectionInfoMetadataSchema = createReferenceTokenSchema(CollectionInfoSchema);
+export const CollectionInfoMetadataSchema = Data.Object({
+  metadata: CollectionInfoSchema,
+  version: Data.Integer({ minimum: 1 }),
+  extra: Data.Any(),
+});
 export type CollectionInfoMetadataType = Data.Static<typeof CollectionInfoMetadataSchema>;
 export const CollectionInfoMetadataShape = CollectionInfoMetadataSchema as unknown as CollectionInfoMetadataType;
 

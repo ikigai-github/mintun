@@ -1,7 +1,7 @@
 /// On chain schema for the collection state data. For more details on the purpose of the
 
 import { Data, Lucid, UTxO } from 'lucid';
-import { createReferenceData, createReferenceTokenSchema } from './cip-68.ts';
+import { createReferenceData } from './cip-68.ts';
 import { POLICY_ID_BYTE_LENGTH, TimeWindow } from './common.ts';
 import {
   asChainAddress,
@@ -31,7 +31,12 @@ export type CollectionStateType = Data.Static<typeof CollectionStateSchema>;
 export const CollectionStateShape = CollectionStateSchema as unknown as CollectionStateType;
 
 // Wrap state data in CIP-68 reference token schema
-export const CollectionStateMetadataSchema = createReferenceTokenSchema(CollectionStateSchema);
+export const CollectionStateMetadataSchema = Data.Object({
+  metadata: CollectionStateSchema,
+  version: Data.Integer({ minimum: 1 }),
+  extra: Data.Any(),
+});
+
 export type CollectionStateMetadataType = Data.Static<typeof CollectionStateMetadataSchema>;
 export const CollectionStateMetadataShape = CollectionStateMetadataSchema as unknown as CollectionStateMetadataType;
 

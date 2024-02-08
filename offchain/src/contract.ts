@@ -1,7 +1,6 @@
 import { applyParamsToScript, Data, Lucid } from 'lucid';
-import { getScript } from './validators.ts';
+import { getScript, getScriptInfo } from './script.ts';
 import { OutputReferenceSchema, PolicyIdSchema } from './aiken.ts';
-import { getScriptInfo } from './script.ts';
 
 /// Minting policy paramaterization schema
 const MintParameterSchema = Data.Tuple([OutputReferenceSchema]);

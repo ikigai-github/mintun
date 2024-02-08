@@ -1,6 +1,6 @@
 {
   "prettier.printWidth": 120,
-  "deno.enable": true,
+  "deno.enable": false,
   "deno.lint": true,
   "deno.unstable": true,
   "deno.disablePaths": [
@@ -13,5 +13,9 @@
   "editor.defaultFormatter": "denoland.vscode-deno",
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
-  }
+  },
+  "deno.enablePaths": [
+    "./offchain",
+    "./integration"
+  ]
 }
