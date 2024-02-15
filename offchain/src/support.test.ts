@@ -1,10 +1,11 @@
-import { assert } from 'std/assert/mod.ts';
-import { Assets, Emulator, generateSeedPhrase, Lucid, Tx } from 'lucid';
-import { submit } from './utils.ts';
-import { fetchInfoUtxo, fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script.ts';
-import { MintunNft } from './nft.ts';
-import { extractCollectionState } from './collection-state.ts';
-import { extractCollectionInfo } from './collection-info.ts';
+import { expect } from 'vitest';
+import { Assets, Emulator, generateSeedPhrase, Lucid, Tx } from 'lucid-cardano';
+import { submit } from './utils';
+import { fetchInfoUtxo, fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script';
+import { MintunNft } from './nft';
+import { extractCollectionState } from './collection-state';
+import { extractCollectionInfo } from './collection-info';
+
 /// Creates a new emulator account with the given assets, if any.
 export async function generateEmulatorAccount(assets: Assets = {}) {
   const seedPhrase = generateSeedPhrase();
@@ -28,7 +29,7 @@ export async function createEmulatorLucid() {
   lucid.selectWalletFromSeed(ACCOUNT_0.seedPhrase);
 
   const utxos = await lucid.wallet.getUtxos();
-  assert(utxos.length > 0, 'Wallet must have at least one UTXO for this test');
+  expect(utxos.length > 0, 'Wallet must have at least one UTXO for this test');
   const seedUtxo = utxos[0];
 
   return {
@@ -44,17 +45,17 @@ export async function applyTx(lucid: Lucid, tx: Tx, cache: ScriptCache) {
 
   // Use cache utils to check to tokens were distributed as expected
   const stateUtxo = await fetchStateUtxo(cache);
-  assert(stateUtxo);
+  expect(stateUtxo, 'Must be a state utxo');
 
   const infoUtxo = await fetchInfoUtxo(cache);
-  assert(infoUtxo);
+  expect(infoUtxo, 'Must be an info utxo.');
 
   const { utxo: ownerUtxo } = await fetchOwnerUtxo(cache);
-  assert(ownerUtxo, 'Must have found the owner utxo');
+  expect(ownerUtxo, 'Must have found the owner utxo');
 
-  const state = await extractCollectionState(lucid, stateUtxo);
+  const state = await extractCollectionState(lucid, stateUtxo!);
 
-  const info = await extractCollectionInfo(lucid, infoUtxo);
+  const info = await extractCollectionInfo(lucid, infoUtxo!);
 
   return { txHash, stateUtxo, ownerUtxo, infoUtxo, state, info };
 }

@@ -1,6 +1,6 @@
-import { fromText, toLabel, toUnit } from 'lucid';
+import { fromText, toLabel, toUnit } from 'lucid-cardano';
 
-import { NFT_TOKEN_LABEL, REFERENCE_TOKEN_LABEL } from './cip-68.ts';
+import { NFT_TOKEN_LABEL, REFERENCE_TOKEN_LABEL } from './cip-68';
 
 /// Speical collection owner token label.
 /// Selected because it has similar pattern to other labels, there is no standard.

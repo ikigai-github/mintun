@@ -1,10 +1,10 @@
 /// CIP-88 definitions and builder
-import { fromUnit, Lucid, Script, Tx } from 'lucid';
-import { CollectionImage, CollectionInfo } from './collection-info.ts';
-import { chunk } from './utils.ts';
-import { Royalty } from './royalty.ts';
-import { asChainVariableFee } from './cip-102.ts';
-import { IMAGE_PURPOSE } from './image.ts';
+import { fromUnit, Lucid, Script, Tx } from 'lucid-cardano';
+import { CollectionImage, CollectionInfo } from './collection-info';
+import { chunk } from './utils';
+import { Royalty } from './royalty';
+import { asChainVariableFee } from './cip-102';
+import { IMAGE_PURPOSE } from './image';
 
 export const CIP_88_METADATA_LABEL = 867;
 
@@ -177,6 +177,8 @@ function mapNsfw(info: CollectionInfo) {
   if (info.nsfw !== undefined) {
     return info.nsfw ? 1 : 0;
   }
+
+  return undefined;
 }
 
 // Map social records to the chunked URI format
@@ -189,6 +191,8 @@ function mapSocial(info: CollectionInfo) {
 
     return mapped;
   }
+
+  return undefined;
 }
 
 // Chunk the description if it is too long
@@ -196,6 +200,8 @@ function mapDescription(info: CollectionInfo) {
   if (info.description) {
     return chunk(info.description);
   }
+
+  return undefined;
 }
 
 /// Converts a collection info object into a token detail object

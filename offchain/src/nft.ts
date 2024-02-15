@@ -1,9 +1,9 @@
-import { Address, Assets, Data, fromText } from 'lucid';
-import { createReferenceData, NftMetadataShape, NftMetadataType, NftMetadataWrappedType } from './cip-68.ts';
-import { toNftReferenceAssetName, toNftUserAssetName } from './collection.ts';
-import { TxMetadataPrimitive } from './common.ts';
-import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image.ts';
-import { chunk } from './utils.ts';
+import { Address, Assets, Data, fromText } from 'lucid-cardano';
+import { createReferenceData, NftMetadataShape, NftMetadataType, NftMetadataWrappedType } from './cip-68';
+import { toNftReferenceAssetName, toNftUserAssetName } from './collection';
+import { TxMetadataPrimitive } from './common';
+import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
+import { chunk } from './utils';
 
 // Expands on CIP-25/68 File with dimension and purpose fields
 type MintunFile = {

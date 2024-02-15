@@ -1,5 +1,5 @@
-import { CollectionInfo } from './collection-info.ts';
-import { IMAGE_PURPOSE } from './image.ts';
+import { CollectionInfo } from './collection-info';
+import { IMAGE_PURPOSE } from './image';
 
 export const TEST_COLLECTION_INFO: CollectionInfo = {
   name: 'Test Collection',

@@ -1,18 +1,18 @@
-import { Address, Assets, Data, Lucid, UTxO } from 'lucid';
-import { TxReference } from './utils.ts';
+import { Address, Assets, Data, Lucid, UTxO } from 'lucid-cardano';
+import { TxReference } from './utils';
 
-import { AddressedNft, MintunNft, prepareAssets } from './nft.ts';
-import { fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script.ts';
-import { MintRedeemerShape, StateValidatorRedeemerShape } from './contract.ts';
-import { NftMetadataWrappedShape } from './cip-68.ts';
-import { toRoyaltyUnit } from './cip-102.ts';
+import { AddressedNft, MintunNft, prepareAssets } from './nft';
+import { fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script';
+import { MintRedeemerShape, StateValidatorRedeemerShape } from './contract';
+import { NftMetadataWrappedShape } from './cip-68';
+import { toRoyaltyUnit } from './cip-102';
 import {
   addMintsToCollectionState,
   asChainStateData,
   CollectionState,
   CollectionStateMetadataShape,
   extractCollectionState,
-} from './collection-state.ts';
+} from './collection-state';
 
 // Don't have a dedicated cip-25.ts so just putting this here
 export const CIP_25_METADATA_LABEL = 721;

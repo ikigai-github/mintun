@@ -1,0 +1,4 @@
+const POLICY_ID_BYTE_LENGTH = 28;
+export {
+  POLICY_ID_BYTE_LENGTH
+};

@@ -1,6 +1,6 @@
-import { applyParamsToScript, Data, Lucid } from 'lucid';
-import { getScript, getScriptInfo } from './script.ts';
-import { OutputReferenceSchema, PolicyIdSchema } from './aiken.ts';
+import { applyParamsToScript, Data, Lucid } from 'lucid-cardano';
+import { getScript, getScriptInfo } from './script';
+import { OutputReferenceSchema, PolicyIdSchema } from './aiken';
 
 /// Minting policy paramaterization schema
 const MintParameterSchema = Data.Tuple([OutputReferenceSchema]);

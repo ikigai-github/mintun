@@ -1,19 +1,19 @@
-import { Address, Data, Lucid, Script, UTxO } from 'lucid';
-import { MintRedeemerShape } from './contract.ts';
-import { checkPolicyId } from './utils.ts';
-import { addCip102RoyaltyToTransaction } from './cip-102.ts';
-import { addCip27RoyaltyToTransaction } from './cip-27.ts';
-import { Royalty } from './royalty.ts';
-import { ScriptCache } from './script.ts';
-import { asChainCollectionInfo, CollectionInfo, CollectionInfoMetadataShape } from './collection-info.ts';
-import { addCip88MetadataToTransaction, Cip88ExtraConfig } from './cip-88.ts';
+import { Address, Data, Lucid, Script, UTxO } from 'lucid-cardano';
+import { MintRedeemerShape } from './contract';
+import { checkPolicyId } from './utils';
+import { addCip102RoyaltyToTransaction } from './cip-102';
+import { addCip27RoyaltyToTransaction } from './cip-27';
+import { Royalty } from './royalty';
+import { ScriptCache } from './script';
+import { asChainCollectionInfo, CollectionInfo, CollectionInfoMetadataShape } from './collection-info';
+import { addCip88MetadataToTransaction, Cip88ExtraConfig } from './cip-88';
 import {
   CollectionState,
   CollectionStateMetadataShape,
   createGenesisStateData,
   toCollectionState,
-} from './collection-state.ts';
-import { SEQUENCE_MAX_VALUE } from './collection.ts';
+} from './collection-state';
+import { SEQUENCE_MAX_VALUE } from './collection';
 
 export class GenesisTxBuilder {
   #lucid: Lucid;

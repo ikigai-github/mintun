@@ -1,8 +1,8 @@
 /// On chain schema for the collection state data. For more details on the purpose of the
 
-import { Data, Lucid, UTxO } from 'lucid';
-import { createReferenceData } from './cip-68.ts';
-import { POLICY_ID_BYTE_LENGTH, TimeWindow } from './common.ts';
+import { Data, Lucid, UTxO } from 'lucid-cardano';
+import { createReferenceData } from './cip-68';
+import { POLICY_ID_BYTE_LENGTH, TimeWindow } from './common';
 import {
   asChainAddress,
   asChainTimeWindow,
@@ -10,8 +10,8 @@ import {
   PosixTimeIntervalSchema,
   toBech32Address,
   toTimeWindow,
-} from './aiken.ts';
-import { SEQUENCE_MAX_VALUE } from './collection.ts';
+} from './aiken';
+import { SEQUENCE_MAX_VALUE } from './collection';
 
 /// fields see smart contract library docs.
 const CollectionStateSchema = Data.Object({

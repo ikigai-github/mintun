@@ -1,7 +1,7 @@
-import { Data, fromText, Lucid, toText, UTxO } from 'lucid';
-import { asChunkedHex, toJoinedText } from './utils.ts';
-import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image.ts';
-import { createReferenceData } from './cip-68.ts';
+import { Data, fromText, Lucid, toText, UTxO } from 'lucid-cardano';
+import { asChunkedHex, toJoinedText } from './utils';
+import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
+import { createReferenceData } from './cip-68';
 
 /// On chain data schema for image purpose
 export const CollectionImagePurposeSchema = Data.Enum([

@@ -1,6 +1,14 @@
 {
   "name": "mintun",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A batch minting contract and integration with Lucid for interacting with that contract",
-  "author": "Clifford Garvis"
+  "author": "Genun Games",
+  "scripts": {
+    "build:offchain": "pnpm --filter {offchain} build",
+    "build:aiken": "aiken build contracts && mv contracts/plutus.json offchain/contracts.json",
+    "build:aiken:trace": "aiken build contracts --keep-traces && mv contracts/plutus.json offchain/contracts.json",
+    "build": "pnpm build:aiken && pnpm build:offchain",
+    "build:trace": "pnpm build:aiken:trace && pnpm build:offchain"
+  },
+  "packageManager": "pnpm@8.15.3+sha256.fc4a49bd609550a41e14d20efbce802a4b892aa4cac877322de2f0924f122991"
 }

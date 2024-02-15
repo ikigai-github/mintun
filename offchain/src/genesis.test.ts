@@ -1,9 +1,9 @@
-import { assert, assertThrows } from 'std/assert/mod.ts';
-import { GenesisTxBuilder } from './genesis.ts';
-import { applyTx, createEmulatorLucid } from './support.test.ts';
-import { TEST_COLLECTION_INFO } from './fixtures.test.ts';
+import { expect, test } from 'vitest';
+import { GenesisTxBuilder } from './genesis';
+import { applyTx, createEmulatorLucid } from './support.test';
+import { TEST_COLLECTION_INFO } from './fixtures.test';
 
-Deno.test('Minimal minting policy genesis transaction', async () => {
+test('Minimal minting policy genesis transaction', async () => {
   const { lucid, seedUtxo } = await createEmulatorLucid();
   const { tx, cache } = await GenesisTxBuilder
     .create(lucid)
@@ -13,17 +13,17 @@ Deno.test('Minimal minting policy genesis transaction', async () => {
 
   // Check the state is on the datum as expected
   const { state, info } = await applyTx(lucid, tx, cache);
-  assert(state.group === undefined);
-  assert(state.mintWindow === undefined);
-  assert(state.maxNfts === undefined);
-  assert(state.currentNfts === 0);
-  assert(state.locked === false);
-  assert(state.nextSequence === 0);
-  assert(state.nftValidatorAddress === undefined);
-  assert(info.name === 'No Constraints');
+  expect(state.group).toBeUndefined();
+  expect(state.mintWindow).toBeUndefined();
+  expect(state.maxNfts).toBeUndefined();
+  expect(state.currentNfts).toEqual(0);
+  expect(state.locked).toEqual(false);
+  expect(state.nextSequence).toEqual(0);
+  expect(state.nftValidatorAddress).toBeUndefined();
+  expect(info.name).toEqual('No Constraints');
 });
 
-Deno.test('All configuration genesis transaction', async () => {
+test('All configuration genesis transaction', async () => {
   const { lucid, seedUtxo, accounts } = await createEmulatorLucid();
   // Use different address than selected wallet (account 0)
   const ownerAddress = accounts[1].address;
@@ -47,49 +47,49 @@ Deno.test('All configuration genesis transaction', async () => {
 
   // Check the state is on the datum as expected
   const { state, info } = await applyTx(lucid, tx, cache);
-  assert(info.name === TEST_COLLECTION_INFO.name);
-  assert(info.artist === TEST_COLLECTION_INFO.artist);
-  assert(info.description === TEST_COLLECTION_INFO.description);
-  assert(info.images?.[0].src === TEST_COLLECTION_INFO.images?.[0].src);
-  assert(state.mintWindow && state.mintWindow.startMs === 0 && state.mintWindow.endMs === endMs);
-  assert(state.maxNfts === 1);
+  expect(info.name === TEST_COLLECTION_INFO.name);
+  expect(info.artist === TEST_COLLECTION_INFO.artist);
+  expect(info.description === TEST_COLLECTION_INFO.description);
+  expect(info.images?.[0].src === TEST_COLLECTION_INFO.images?.[0].src);
+  expect(state.mintWindow && state.mintWindow.startMs === 0 && state.mintWindow.endMs === endMs);
+  expect(state.maxNfts === 1);
 });
 
-Deno.test('Builder errors during build', async () => {
+test('Builder errors during build', async () => {
   const { lucid } = await createEmulatorLucid();
 
   // End time <= Start Time
-  assertThrows(() => {
+  expect(() => {
     GenesisTxBuilder.create(lucid).mintWindow(0, 0);
-  });
+  }).toThrowError();
 
   // Invalid policy id
-  assertThrows(() => {
+  expect(() => {
     GenesisTxBuilder.create(lucid).group('This is not a 28 byte hex string');
-  });
+  }).toThrowError();
 
   // Same address twice
-  assertThrows(() => {
+  expect(() => {
     GenesisTxBuilder.create(lucid).royalty('addr1superlegit', 10).royalty('addr1superlegit', 10);
-  });
+  }).toThrowError();
 
   // Greater than 100%
-  assertThrows(() => {
+  expect(() => {
     GenesisTxBuilder.create(lucid).royalty('addr1superlegitA', 60).royalty('addr1superlegitB', 60);
-  });
+  }).toThrowError();
 
   // Less that 0.1%
-  assertThrows(() => {
+  expect(() => {
     GenesisTxBuilder.create(lucid).royalty('addr1superlegit', 0);
-  });
+  }).toThrowError();
 
   // Invalid bech32 royalty address (well more invalid)
-  assertThrows(() => {
+  expect(() => {
     GenesisTxBuilder.create(lucid).royalty('badnotsuperlegit', 0);
-  });
+  }).toThrowError();
 
   // Invalid bech32 recipient
-  assertThrows(() => {
+  expect(() => {
     GenesisTxBuilder.create(lucid).ownerAddress('badnotsuperlegit');
-  });
+  }).toThrowError();
 });
