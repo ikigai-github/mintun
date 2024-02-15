@@ -48,6 +48,9 @@ artifacts/
 # Node Modules
 node_modules/
 
+# Offchain dist folder
+dist/
+
 # Aiken's project build directory
 build/
 # Aiken's default documentation export
