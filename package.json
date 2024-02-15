@@ -8,7 +8,8 @@
     "build:aiken": "aiken build contracts && mv contracts/plutus.json offchain/contracts.json",
     "build:aiken:trace": "aiken build contracts --keep-traces && mv contracts/plutus.json offchain/contracts.json",
     "build": "pnpm build:aiken && pnpm build:offchain",
-    "build:trace": "pnpm build:aiken:trace && pnpm build:offchain"
+    "build:trace": "pnpm build:aiken:trace && pnpm build:offchain",
+    "test": ""
   },
   "packageManager": "pnpm@8.15.3+sha256.fc4a49bd609550a41e14d20efbce802a4b892aa4cac877322de2f0924f122991"
 }

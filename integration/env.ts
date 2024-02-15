@@ -1,14 +1,12 @@
-import { load } from 'std/dotenv/mod.ts';
-import { Network } from 'lucid';
-
-const env = await load();
+import "dotenv/config";
+import { Network } from "lucid-cardano";
 
 export function getBlockfrostId() {
-  return env['BLOCKFROST_PROJECT_ID'];
+  return process.env["BLOCKFROST_PROJECT_ID"];
 }
 
 export function getCardanoNetwork() {
-  return env['CARDANO_NETWORK'] as Network;
+  return process.env["CARDANO_NETWORK"] as Network;
 }
 
 export function getBlockfrostUrl() {
@@ -17,5 +15,5 @@ export function getBlockfrostUrl() {
 }
 
 export function getWalletSigningKey() {
-  return env['WALLET_SIGNING_KEY'];
+  return process.env["WALLET_SIGNING_KEY"];
 }
