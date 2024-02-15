@@ -1,8 +1,8 @@
 /// Schema for aiken stdlib types added here as needed.
 /// Some schema definitions were liberally taken from
 /// https://github.com/spacebudz/nebula/blob/main/common/utils.ts
-import { Address, Constr, Data, fromText, getAddressDetails, Lucid } from 'lucid';
-import { TimeWindow } from './common.ts';
+import { Address, Constr, Data, fromText, getAddressDetails, Lucid } from 'lucid-cardano';
+import { TimeWindow } from './common';
 
 export const PolicyIdSchema = Data.Bytes({ minLength: 28, maxLength: 28 });
 

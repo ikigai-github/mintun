@@ -1,8 +1,8 @@
-import { assert } from 'std/assert/assert.ts';
-import { TEST_COLLECTION_INFO } from './fixtures.test.ts';
-import { GenesisTxBuilder } from './genesis.ts';
-import { MintTxBuilder } from './mint.ts';
-import { applyTx, createEmulatorLucid, generateNft } from './support.test.ts';
+import { expect, test } from 'vitest';
+import { TEST_COLLECTION_INFO } from './fixtures.test';
+import { GenesisTxBuilder } from './genesis';
+import { MintTxBuilder } from './mint';
+import { applyTx, createEmulatorLucid, generateNft } from './support.test';
 
 export async function genesis() {
   const { lucid, seedUtxo, accounts } = await createEmulatorLucid();
@@ -26,7 +26,7 @@ export async function genesis() {
   return { cache, lucid, accounts, stateUtxo, ownerUtxo, state };
 }
 
-Deno.test('Mint a token', async () => {
+test('Mint a token', async () => {
   const { cache, lucid, stateUtxo, ownerUtxo, state: genesisState } = await genesis();
 
   const nft = generateNft();
@@ -34,13 +34,13 @@ Deno.test('Mint a token', async () => {
   const { tx } = await MintTxBuilder
     .create(lucid)
     .cache(cache)
-    .stateUtxo(stateUtxo)
-    .ownerUtxo(ownerUtxo)
+    .stateUtxo(stateUtxo!)
+    .ownerUtxo(ownerUtxo!)
     .state(genesisState)
     .nft(nft)
     .build();
 
   const { state } = await applyTx(lucid, tx, cache);
-  assert(state.currentNfts == 1);
-  assert(state.nextSequence == 1);
+  expect(state.currentNfts).toEqual(1);
+  expect(state.nextSequence).toEqual(1);
 });

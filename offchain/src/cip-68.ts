@@ -1,5 +1,5 @@
 // Schema for cip-68 reference token metadata
-import { Data } from 'lucid';
+import { Data } from 'lucid-cardano';
 
 export const REFERENCE_DATA_VERSION = 1n;
 export const REFERENCE_TOKEN_LABEL = 100;

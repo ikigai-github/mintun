@@ -1,6 +1,6 @@
-import { Tx } from 'lucid';
-import { Royalty } from './royalty.ts';
-import { chunk } from './utils.ts';
+import { Tx } from 'lucid-cardano';
+import { Royalty } from './royalty';
+import { chunk } from './utils';
 
 export const CIP_27_METADATA_LABEL = 777;
 

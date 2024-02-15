@@ -1,6 +1,6 @@
-import { Data, fromText, toUnit, Tx } from 'lucid';
-import { asChainAddress, ChainAddressSchema } from './aiken.ts';
-import { Royalty } from './royalty.ts';
+import { Data, fromText, toUnit, Tx } from 'lucid-cardano';
+import { asChainAddress, ChainAddressSchema } from './aiken';
+import { Royalty } from './royalty';
 
 export const ROYALTY_TOKEN_LABEL = 500;
 export const ROYALTY_TOKEN_NAME = fromText('Royalty');

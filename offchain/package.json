@@ -1,0 +1,43 @@
+{
+  "name": "mintun-offchain",
+  "version": "0.1.0",
+  "description": "An offchain library for interacting with Mintun smart contracts",
+  "author": "Genun Games",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ikigai-github/mintun.git"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "type": "module",
+  "files": [
+    "dist/**/*",
+    "LICENSE",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsup",
+    "watch": "tsup --watch",
+    "format": "prettier --write .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "prettier": "^3.2.5",
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3",
+    "vitest": "^0.34.6"
+  },
+  "dependencies": {
+    "lucid-cardano": "^0.10.7"
+  }
+}
