@@ -1,19 +1,5 @@
 {
-  "deno.enable": false,
-  "deno.lint": true,
-  "deno.unstable": true,
-  "deno.disablePaths": [
-    "./contracts",
-    "./demo"
-  ],
   "[aiken]": {
     "editor.defaultFormatter": "txpipe.aiken"
-  },
-  "editor.defaultFormatter": "denoland.vscode-deno",
-  "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
-  },
-  "deno.enablePaths": [
-    "./integration"
-  ]
+  }
 }

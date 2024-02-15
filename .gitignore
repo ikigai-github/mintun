@@ -1,5 +1,53 @@
+# Build generated directories
+build/
+dist/
+docs/
+
+# Dependency directories
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# dotenv environment variables file
+.env
+.env.test
+
+# Next.js build output
+.next
+
+# macOS
+.DS_Store
+
 # Aiken compilation artifacts
 artifacts/
+
+# Windows Zone Identifier
+:Zone.Identifier
+
+# Node Modules
+node_modules/
+
 # Aiken's project build directory
 build/
 # Aiken's default documentation export
