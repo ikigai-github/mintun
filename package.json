@@ -4,12 +4,19 @@
   "description": "A batch minting contract and integration with Lucid for interacting with that contract",
   "author": "Genun Games",
   "scripts": {
+    "build:dapp": "pnpm --filter {web} build",
     "build:offchain": "pnpm --filter {offchain} build",
     "build:aiken": "aiken build contracts && mv contracts/plutus.json offchain/contracts.json",
     "build:aiken:trace": "aiken build contracts --keep-traces && mv contracts/plutus.json offchain/contracts.json",
-    "build": "pnpm build:aiken && pnpm build:offchain",
-    "build:trace": "pnpm build:aiken:trace && pnpm build:offchain",
-    "test": ""
+    "build": "pnpm build:aiken && pnpm build:offchain && pnpm build:web",
+    "build:trace": "pnpm build:aiken:trace && pnpm build:offchain && pnpm build:web",
+    "dev": "pnpm --filter {web} dev",
+    "test": "pnpm build:aiken:trace && pnpm --filter {offchain} test"
   },
-  "packageManager": "pnpm@8.15.3+sha256.fc4a49bd609550a41e14d20efbce802a4b892aa4cac877322de2f0924f122991"
+  "packageManager": "pnpm@8.15.3+sha256.fc4a49bd609550a41e14d20efbce802a4b892aa4cac877322de2f0924f122991",
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
+    "prettier": "^3",
+    "prettier-plugin-tailwindcss": "^0.5.11"
+  }
 }
