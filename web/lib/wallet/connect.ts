@@ -1,6 +1,6 @@
 import { type Lucid } from 'lucid-cardano';
 
-import { WalletContextSetters } from './provider';
+import { WalletContextSetters } from './context';
 import { waitforWalletExtension } from './util';
 import { getBalanceAda, getStakeAddress, getWalletApi } from './wallet';
 
@@ -20,7 +20,7 @@ export async function initWallet(lastSelectedWallet: string, setters: WalletCont
     }
   }
 
-  console.log("I'm real");
+  // TODO: Figure out if this is the best way to do this
   const { Lucid } = await import('lucid-cardano');
 
   const lucid = await Lucid.new(undefined, undefined);
@@ -33,7 +33,7 @@ export async function initWallet(lastSelectedWallet: string, setters: WalletCont
   setters.setInitialized(true);
 }
 
-export async function disconnect(setters: WalletContextSetters) {
+export function disconnect(setters: WalletContextSetters) {
   setters.setLucid(null);
   setters.setApi(null);
   setters.setEnabled(false);
