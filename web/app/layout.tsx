@@ -3,11 +3,12 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 import { Dosis as FontBase, Glory as FontHeading } from 'next/font/google';
+import { Toaster } from 'sonner';
 
 import { cn } from '@/lib/utils';
 import { SiteHeader } from '@/components/site-header';
 import { ThemeProvider } from '@/components/theme-provider';
-import { WalletProvider } from '@/components/wallet/provider';
+import { WalletProvider } from '@/components/wallet-provider';
 
 const fontBase = FontBase({
   subsets: ['latin'],
@@ -37,6 +38,7 @@ export default function RootLayout({
             <SiteHeader />
             {children}
           </WalletProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

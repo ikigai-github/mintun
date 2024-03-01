@@ -1,4 +1,4 @@
-import { WalletButton } from '@/components/wallet/button';
+import { WalletButton } from '@/components/wallet-button';
 
 export function SiteHeader() {
   return (
