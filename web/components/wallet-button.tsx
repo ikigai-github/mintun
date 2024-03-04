@@ -1,25 +1,75 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { ReloadIcon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 
-import { useWallet } from '@/lib/wallet';
+import { getWalletDisplayName, getWalletIcon, useWallet, WalletApiError } from '@/lib/wallet';
 import { Button } from '@/components/ui/button';
 
-export function WalletButton() {
-  const { connect } = useWallet();
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
-  const handleClick = useCallback(async () => {
-    try {
-      await connect('nami');
-    } catch (e) {
-      if (e instanceof Error) toast.error(e.message);
-    }
-  }, [connect]);
+export function WalletButton() {
+  const { connect, disconnect, isInitializing, isConnected, isConnecting, selectedWallet, installedExtensions } =
+    useWallet();
+
+  const handleClick = useCallback(
+    async (extension: string) => {
+      try {
+        await connect(extension);
+      } catch (e) {
+        if (e instanceof WalletApiError) {
+          if (e.code === 'Refused') {
+            toast.info('Wallet connection canceled per your request');
+          } else {
+            toast.error(e.message);
+          }
+        } else if (e instanceof Error) {
+          toast.error(e.message);
+        }
+      }
+    },
+    [connect]
+  );
 
   return (
-    <Button variant="ghost" onClick={handleClick}>
-      Connect Wallet
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" disabled={isConnecting || isInitializing}>
+          {isConnecting || isInitializing ? (
+            <ReloadIcon className="size-6 animate-spin" />
+          ) : isConnected ? (
+            <img src={getWalletIcon(selectedWallet)} className="h-6" alt={`${selectedWallet} Icon`} />
+          ) : (
+            'Connect Wallet'
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        {installedExtensions.map((extension, key) => (
+          <DropdownMenuItem key={key} disabled={extension === selectedWallet} onClick={() => handleClick(extension)}>
+            <div className="flex w-full items-center gap-4 font-bold">
+              <img src={getWalletIcon(extension)} className="h-5" />
+
+              {getWalletDisplayName(extension)}
+            </div>
+          </DropdownMenuItem>
+        ))}
+        {isConnected ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="font-heading flex items-center justify-center font-bold" onClick={disconnect}>
+              Disconnect
+            </DropdownMenuItem>
+          </>
+        ) : undefined}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

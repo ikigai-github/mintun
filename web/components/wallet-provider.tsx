@@ -2,13 +2,13 @@
 
 import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Lucid, Network, WalletApi } from 'lucid-cardano';
+import { toast } from 'sonner';
 import { useLocalStorage } from 'usehooks-ts';
 
 import {
   connect as connectInternal,
   disconnect as disconnectInternal,
   initWallet,
-  KnownWalletName,
   WalletContext,
   WalletContextSetters,
   WalletContextType,
@@ -17,7 +17,7 @@ import {
 export function WalletProvider({ children }: PropsWithChildren) {
   const [lucid, setLucid] = useState<Lucid | null>(null);
   const [api, setApi] = useState<WalletApi | null>(null);
-  const [isInitializing, setInitializing] = useState(true);
+  const [isInitializing, setInitializing] = useState(false);
   const [isInitialized, setInitialized] = useState(false);
   const [isEnabled, setEnabled] = useState(false);
   const [isConnecting, setConnecting] = useState(false);
@@ -63,9 +63,12 @@ export function WalletProvider({ children }: PropsWithChildren) {
   );
 
   const connect = useCallback(
-    async (wallet: KnownWalletName) => {
+    async (wallet: string) => {
       if (lucid) {
         await connectInternal(lucid, wallet, setters);
+      } else {
+        await disconnectInternal(setters);
+        toast.error('State was invalid while connecting. The state has been reset. Please try again.');
       }
     },
     [lucid, setters]
@@ -111,10 +114,10 @@ export function WalletProvider({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
-    initWallet(lastSelectedWallet, setters)
-      .then(() => setInitializing(false))
-      .catch(() => setInitializing(false));
-  }, [setters, lastSelectedWallet]);
+    if (!isInitialized && !isInitializing) {
+      initWallet(lastSelectedWallet, setters);
+    }
+  }, [isInitialized, isInitializing, lastSelectedWallet, setters]);
 
   return <WalletContext.Provider value={context}>{children}</WalletContext.Provider>;
 }

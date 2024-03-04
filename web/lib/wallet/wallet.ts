@@ -1,6 +1,7 @@
 import { WalletApi } from '@/global';
 import { decode as decodeCbor } from 'cborg';
 
+import { knownWalletExtensions, KnownWalletName } from '.';
 import {
   ServerWalletNotSupported,
   WalletExtensionNotFoundError,
@@ -18,27 +19,30 @@ export function getInstalledWalletExtensions(supportedWallets?: string[]) {
 
   const { cardano } = window;
   const installedExtensions = Object.keys(cardano)
-    .filter((walletExtension) => typeof cardano[walletExtension].enable === 'function')
+    .filter((walletExtension) => walletExtension !== 'typhon' && typeof cardano[walletExtension].enable === 'function')
     .map((walletExtension) => walletExtension.toLowerCase());
 
   if (supportedWallets) {
     const lowerCaseNames = supportedWallets.map((walletName) => walletName.toLowerCase());
 
     return installedExtensions.filter((wallet) => lowerCaseNames.includes(wallet));
+  } else {
+    return installedExtensions;
   }
 }
 
-export function getWalletApi(walletName: string) {
+export function getWalletApi(wallet: string) {
+  const displayName = knownWalletExtensions[wallet as KnownWalletName]?.display ?? wallet;
   if (typeof window === 'undefined') {
     throw new ServerWalletNotSupported();
   } else if (typeof window.cardano === 'undefined') {
-    throw new WalletExtensionNotFoundError(walletName);
-  } else if (typeof window.cardano[walletName] === 'undefined') {
-    throw new WalletNotInstalledError(walletName);
-  } else if (typeof window.cardano[walletName].enable !== 'function') {
-    throw new WalletNotCip30CompatibleError(walletName);
+    throw new WalletExtensionNotFoundError(displayName);
+  } else if (typeof window.cardano[wallet] === 'undefined') {
+    throw new WalletNotInstalledError(displayName);
+  } else if (typeof window.cardano[wallet].enable !== 'function') {
+    throw new WalletNotCip30CompatibleError(displayName);
   } else {
-    return window.cardano[walletName].enable();
+    return window.cardano[wallet].enable();
   }
 }
 

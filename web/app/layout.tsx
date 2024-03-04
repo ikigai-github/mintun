@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 import { Dosis as FontBase, Glory as FontHeading } from 'next/font/google';
-import { Toaster } from 'sonner';
 
 import { cn } from '@/lib/utils';
+import { Toaster } from '@/components/ui/sonner';
 import { SiteHeader } from '@/components/site-header';
 import { ThemeProvider } from '@/components/theme-provider';
 import { WalletProvider } from '@/components/wallet-provider';
@@ -31,9 +31,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={cn('flex min-h-screen flex-col font-sans antialiased', fontBase.variable, fontHeading.variable)}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" enableSystem>
           <WalletProvider>
             <SiteHeader />
             {children}

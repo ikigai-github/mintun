@@ -1,40 +1,55 @@
 import { type Lucid } from 'lucid-cardano';
 
+import { apiError} from './errors';
 import { WalletContextSetters } from './context';
 import { waitforWalletExtension } from './util';
-import { getBalanceAda, getStakeAddress, getWalletApi } from './wallet';
+import { getBalanceAda, getInstalledWalletExtensions, getStakeAddress, getWalletApi } from './wallet';
 
-export async function initWallet(lastSelectedWallet: string, setters: WalletContextSetters) {
-  // Wait for the wallet extension to be injected on the page if the user has previously selected a wallet.
-  if (lastSelectedWallet) {
-    setters.setSelectedWallet(lastSelectedWallet);
-    setters.setConnecting(true);
-    try {
-      await waitforWalletExtension(lastSelectedWallet);
-    } catch (error) {
-      // Never got injected maybe it was uninstalled. Clear it so we don't bother trying next time
-      setters.setConnecting(false);
-      setters.setSelectedWallet('');
-      setters.setLastSelectedWallet('');
-      lastSelectedWallet = '';
-    }
-  }
-
+async function createLucid() {
   // TODO: Figure out if this is the best way to do this
   const { Lucid } = await import('lucid-cardano');
-
-  const lucid = await Lucid.new(undefined, undefined);
-
-  if (lastSelectedWallet) {
-    await connect(lucid, lastSelectedWallet, setters, true);
-  }
-
-  setters.setLucid(lucid);
-  setters.setInitialized(true);
+  return await Lucid.new(undefined, undefined);
 }
 
-export function disconnect(setters: WalletContextSetters) {
-  setters.setLucid(null);
+export async function initWallet(lastSelectedWallet: string, setters: WalletContextSetters) {
+  setters.setInitializing(true);
+  try {
+    // Wait for the wallet extension to be injected on the page if the user has previously selected a wallet.
+    if (lastSelectedWallet) {
+      setters.setSelectedWallet(lastSelectedWallet);
+      setters.setConnecting(true);
+      try {
+        await waitforWalletExtension(lastSelectedWallet);
+      } catch (error) {
+        // Never got injected maybe it was uninstalled. Clear it so we don't bother trying next time
+        setters.setConnecting(false);
+        setters.setSelectedWallet('');
+        setters.setLastSelectedWallet('');
+        lastSelectedWallet = '';
+      }
+    }
+
+    const lucid = await createLucid();
+
+    if (lastSelectedWallet) {
+      await connect(lucid, lastSelectedWallet, setters, true);
+    }
+
+    // Should be all extensions have injected by now but could've waited longer
+    const extensions = getInstalledWalletExtensions();
+    setters.setInstalledExtensions(extensions);
+    setters.setLucid(lucid);
+    setters.setInitialized(true);
+  } finally {
+    setters.setInitializing(false);
+  }
+}
+
+export async function disconnect(setters: WalletContextSetters) {
+  // Only real way to fully clear state from lucid
+  const lucid = await createLucid();
+
+  setters.setLucid(lucid);
   setters.setApi(null);
   setters.setEnabled(false);
   setters.setConnecting(false);
@@ -65,11 +80,15 @@ export async function connect(lucid: Lucid, wallet: string, setters: WalletConte
     setters.setAccountBalance(await getBalanceAda(api));
     setters.setConnecting(false);
   } catch (error) {
-    setters.setLastSelectedWallet('');
-    setters.setSelectedWallet('');
+    setters.setEnabled(false);
     setters.setConnecting(false);
+    setters.setConnected(false);
+    setters.setSelectedWallet('');
+    setters.setLastSelectedWallet('');
+    setters.setStakeAddress('');
+    setters.setAccountBalance(0);
     if (!suppressErrors) {
-      throw error;
+      throw apiError('ApiError', error);
     }
   }
 }
@@ -81,7 +100,7 @@ export async function updateProvider(lucid: Lucid, networkId: number, setters: W
   if (networkId === 1) {
     if (lucid.network !== 'Mainnet') {
       const blockfrost = new Blockfrost(
-        'https://cardano-mainnet.blockfrost.io',
+        'https://cardano-mainnet.blockfrost.io/api/v0',
         process.env.NEXT_PUBLIC_BLOCKFROST_KEY_MAINNET
       );
       await lucid.switchProvider(blockfrost, 'Mainnet');
@@ -90,7 +109,7 @@ export async function updateProvider(lucid: Lucid, networkId: number, setters: W
   } else {
     if (lucid.network !== 'Preprod') {
       const blockfrost = new Blockfrost(
-        'https://cardano-preprod.blockfrost.io',
+        'https://cardano-preprod.blockfrost.io/api/v0',
         process.env.NEXT_PUBLIC_BLOCKFROST_KEY_PREPROD
       );
       await lucid.switchProvider(blockfrost, 'Preprod');
