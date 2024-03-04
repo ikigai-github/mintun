@@ -19,7 +19,7 @@ export type WalletContextType = {
   stakeAddress: string | null;
   installedExtensions: string[];
   accountBalance: number;
-  connect: (wallet: KnownWalletName) => Promise<void>;
+  connect: (wallet: string) => Promise<void>;
   disconnect: () => void;
 };
 

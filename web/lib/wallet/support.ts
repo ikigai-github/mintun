@@ -12,49 +12,41 @@ export const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/';
 export const knownWalletExtensions = {
   nami: {
     id: 'lpfcbjknijpeeillifnkikgncikgfhdo',
-    name: 'nami',
     display: 'Nami',
     icon: namiIcon,
   },
   flint: {
     id: 'hnhobjmcibchnmglfbldbfabcgaknlkj',
-    name: 'flint',
     display: 'Flint',
     icon: flintIcon,
   },
-  typhon: {
+  typhoncip30: {
     id: 'kfdniefadaanbjodldohaedphafoffoh',
-    name: 'typhoncip30',
     display: 'Typhon',
     icon: typhonIcon,
   },
   yoroi: {
     id: 'ffnbelfdoeiohenkjibnmadjiehjhajb',
-    name: 'yoroi',
     display: 'Yoroi',
     icon: yoroiIcon,
   },
   eternl: {
     id: 'kmhcihpebfmpgmihbkipmjlmmioameka',
-    name: 'eternl',
     display: 'Eternl',
     icon: eternlIcon,
   },
   gerowallet: {
     id: 'bgpipimickeadkjlklgciifhnalhdjhe',
-    name: 'gerowallet',
     display: 'GeroWallet',
     icon: geroIcon,
   },
   nufi: {
     id: 'gpnihlnnodeiiaakbikldcihojploeca',
-    name: 'nufi',
     display: 'NuFi',
     icon: nufiIcon,
   },
   lace: {
     id: 'gafhhkghbfjjkeiendhlofajokpaflmk',
-    name: 'lace',
     display: 'Lace',
     icon: laceIcon,
   },
@@ -62,15 +54,36 @@ export const knownWalletExtensions = {
 
 export type KnownWalletName = keyof typeof knownWalletExtensions;
 
-export const getWalletIcon = (walletName: KnownWalletName) => {
-  const name = knownWalletExtensions[walletName].name;
+export function getWalletIcon(wallet: string) {
+  if (wallet === '') {
+    return;
+  }
   if (
     typeof window === 'undefined' ||
     typeof window.cardano === 'undefined' ||
-    typeof window.cardano[name] === 'undefined'
+    typeof window.cardano[wallet] === 'undefined'
   ) {
-    return knownWalletExtensions[walletName].icon;
+    return knownWalletExtensions[wallet as KnownWalletName]?.icon;
   }
 
-  return window.cardano[name].icon;
-};
+  return window.cardano[wallet].icon;
+}
+
+export function getWalletDisplayName(wallet: string) {
+  if (wallet === '') {
+    return;
+  }
+  const knownName = knownWalletExtensions[wallet as KnownWalletName]?.display;
+
+  if (knownName) {
+    return knownName;
+  } else if (
+    typeof window === 'undefined' ||
+    typeof window.cardano === 'undefined' ||
+    typeof window.cardano[wallet] === 'undefined'
+  ) {
+    return 'Wallet';
+  }
+
+  return window.cardano[wallet].name;
+}
