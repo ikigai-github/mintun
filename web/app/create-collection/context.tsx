@@ -4,6 +4,7 @@ import { createContext, PropsWithChildren, useContext, useState } from 'react';
 import {
   boolean,
   date,
+  enum_,
   maxLength,
   minLength,
   number,
@@ -25,9 +26,19 @@ export const DescribeCollectionSchema = object({
   nsfw: boolean(),
 });
 
+export const DataContract = {
+  Immutable: 'IMMUTABLE',
+  Evolvable: 'MUTABLE',
+} as const;
+
 export const ConfigureContractSchema = object({
-  validFrom: optional(date()),
-  validTo: optional(date()),
+  contract: enum_(DataContract),
+  window: optional(
+    object({
+      from: date(),
+      to: date(),
+    })
+  ),
   maxTokens: optional(number()),
   group: optional(
     string('Policy ID of group must be a 28 byte (56 character) hex string', [
@@ -36,6 +47,10 @@ export const ConfigureContractSchema = object({
       regex(/[a-fA-F0-9]+/),
     ])
   ),
+});
+
+export const UploadImageSchema = object({
+  // TODO: Upload images and save the uploaded image info into state
 });
 
 export type DescribeCollectionData = ValibotInput<typeof DescribeCollectionSchema>;
@@ -55,13 +70,17 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
     nsfw: false,
   },
   setDescription: () => null,
-  configuration: {},
+  configuration: {
+    contract: DataContract.Immutable,
+  },
   setConfiguration: () => null,
 });
 
 export function CreateCollectionContextProvider(props: PropsWithChildren) {
   const [description, setDescription] = useState<DescribeCollectionData>({ collection: '', nsfw: false });
-  const [configuration, setConfiguration] = useState<ConfigureContractData>({});
+  const [configuration, setConfiguration] = useState<ConfigureContractData>({
+    contract: DataContract.Immutable,
+  });
 
   return (
     <CreateCollectionContext.Provider value={{ description, setDescription, configuration, setConfiguration }}>

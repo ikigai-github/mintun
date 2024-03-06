@@ -44,7 +44,7 @@ export function StepProgress(props: StepProgressProps) {
             </StepMarker>
           );
         } else {
-          return <Separator className="w-10 flex-1 last:hidden" />;
+          return <Separator key={key} className="w-10 flex-1 last:hidden" />;
         }
       })}
     </div>

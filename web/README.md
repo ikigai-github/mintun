@@ -1,36 +1,24 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Mintun Tool
 
-## Getting Started
+This tool is aimed at providing a creator friendly means of making blockchain assets and events. This includes things like creating and managing collections, collection groups, tickets, airdrops, and more. It will also include some guides to help explain some of the nomenclature in laymans terms.
 
-First, run the development server:
+A creator will be able to link to a collection view to display details of collections they created with the tool. This can be used to show customers the constraints they have applied to their constracts as well as all the assets in the collection. This tool will be publicly available and free to use with no plans for any form of monetization.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Current Task List
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Add remaining collection creation flow
+   - Collection Attributes
+   - Royalties
+   - Review And Mint
+2. Add manage collection page for minting NFTs
+3. Add a guides/blog section setup with MDX
+   - Basics (common nomenclature)
+   - Evolving NFTs
+   - Wallets
+4. Add collection viewer page
+5. Add more special case validators (predetermined evolution, )
+6. Add Quick Mint flow to skip the larger collection creation flow
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Other possible helper tool ideas
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Helping load wallets with Ada

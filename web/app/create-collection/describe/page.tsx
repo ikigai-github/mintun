@@ -34,7 +34,7 @@ export default function Describe() {
       <StepProgress step={1} numSteps={4} className="p-6" />
       <DescribeCollectionHeader />
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form id="create-collection-describe-form" onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="grid grid-cols-1 gap-6">
             <FormField
               control={form.control}
@@ -92,17 +92,17 @@ export default function Describe() {
               control={form.control}
               name="nsfw"
               render={({ field }) => (
-                <FormItem className="flex h-fit flex-row items-start space-x-3 space-y-0 self-center rounded-md ">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <div className="space-y-2 leading-none">
+                <FormItem>
+                  <div className="flex h-fit flex-row items-start space-x-3 space-y-0 self-center">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
                     <FormLabel>Not safe for work</FormLabel>
-                    <FormDescription>
-                      This optional flag lets markets and tools know some assets in your collection may not be safe for
-                      viewing at work.
-                    </FormDescription>
                   </div>
+                  <FormDescription>
+                    This optional flag lets markets and tools know some assets in your collection may not be safe for
+                    viewing at work.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -118,19 +118,21 @@ export default function Describe() {
                     <Textarea placeholder="Optional" {...field} />
                   </FormControl>
                   <FormDescription>
-                    A brief description of the collection might include the collection purpose, backstory, or utility.
+                    A brief description of the collection might include the collection purpose, backstory, or utility of
+                    the collection.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <div></div>
-            <Button type="submit">Next</Button>
-          </CardFooter>
         </form>
       </Form>
+      <CardFooter className="flex justify-end">
+        <Button type="submit" form="create-collection-describe-form">
+          Next
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
@@ -145,7 +147,7 @@ function DescribeCollectionHeader() {
           <TooltipTrigger>
             <span className="font-bold">policy id</span>
           </TooltipTrigger>
-          <TooltipContent className="bg-secondary shadow-foreground/10 shadow-md">
+          <TooltipContent className="bg-secondary text-foreground shadow-foreground/10 shadow-md">
             <div className="max-w-72 p-2">
               A policy id is a unique cryptographic fingerprint or hash generated from the minting script. It serves as
               a way to uniquely identify the minting script that created the token.
