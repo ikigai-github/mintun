@@ -1,19 +1,24 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { valibotResolver } from '@hookform/resolvers/valibot';
+import { CalendarIcon } from '@radix-ui/react-icons';
+import { PopoverTrigger } from '@radix-ui/react-popover';
+import { format, subDays } from 'date-fns';
 import { useForm } from 'react-hook-form';
 
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StepProgress } from '@/components/stepper';
 
-import { ConfigureContractData, ConfigureContractSchema, useCreateCollectionContext } from '../context';
+import { ConfigureContractData, ConfigureContractSchema, DataContract, useCreateCollectionContext } from '../context';
 
 export default function Configure() {
   const { configuration, setConfiguration } = useCreateCollectionContext();
@@ -32,18 +37,178 @@ export default function Configure() {
   return (
     <Card className="w-full max-w-[1024px] p-4">
       <StepProgress step={2} numSteps={4} className="p-6" />
+      <ConfigureContractHeader />
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="grid grid-cols-1 gap-6"></CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={() => router.back()}>
-              Back
-            </Button>
+        <form id="create-collection-configure" onSubmit={form.handleSubmit(onSubmit)}>
+          <CardContent className="grid grid-cols-1 gap-6">
+            <FormField
+              control={form.control}
+              name="contract"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Metadata Rule</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select the contract to use for modifying" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={DataContract.Immutable}>Static</SelectItem>
+                      <SelectItem value={DataContract.Evolvable}>Permissive Evolution</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    The <span className="font-bold">Static</span> rule means the metadata associated with the NFT cannot
+                    change. The <span className="font-bold">Permissive Evolution</span> rule allows you to change any
+                    metadata of an NFT after minting. It is most common for NFTs to have static metadata. There are
+                    other possible approaches to evolving NFTs over time that are not yet supported. You can read more
+                    about these metadata rules and other evolution appraches{' '}
+                    <Link className="font-bold" href="/" target="_blank">
+                      here
+                    </Link>
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="window"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Minting Window</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={'outline'}
+                          className={cn(
+                            'w-[240px] pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value?.from ? (
+                            field.value.to ? (
+                              <>
+                                {format(field.value.from, 'LLL dd, y')} - {format(field.value.to, 'LLL dd, y')}
+                              </>
+                            ) : (
+                              format(field.value.from, 'LLL dd, y')
+                            )
+                          ) : (
+                            <span>Optional</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="flex w-auto flex-col p-0" align="start">
+                      <Calendar
+                        mode="range"
+                        fromMonth={new Date()}
+                        numberOfMonths={2}
+                        defaultMonth={field.value?.from}
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) => date < subDays(new Date(), 1)}
+                        initialFocus
+                      />
 
-            <Button type="submit">Next</Button>
-          </CardFooter>
+                      <Button
+                        type="reset"
+                        variant="outline"
+                        className="m-2"
+                        onClick={() => form.reset({ window: undefined })}
+                      >
+                        Clear Selection
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+                  <FormDescription>
+                    The window of time where minting tokens for this collection is valid.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="maxTokens"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Max Tokens</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Optional"
+                      {...field}
+                      onChange={(event) => {
+                        const value = Number(event.target.value);
+                        if (value === 0) {
+                          field.onChange(undefined);
+                        } else if (!Number.isNaN(value)) {
+                          field.onChange(value);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The maximum number of NFTs that will be created under this collection.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="group"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Collection Group Policy Id</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Optional" type="number" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    A collection group can be used to verify multiple collections are created by the same creator. This
+                    is done by each collection referencing the group to which it belongs. The collection group also must
+                    be updated with the policy id of this new collection to completley prove the collection is in the
+                    group. If you don't have a collection group and would like one then you can{' '}
+                    <Link className="font-bold" target="_blank" href="/">
+                      {/* TODO: Rather than making them exit the flow let them check a box indicating they want to make a group policy as well.  Also, I need to actually write the contract for group policy */}
+                      create a collection group by clicking here
+                    </Link>
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
         </form>
       </Form>
+
+      <CardFooter className="flex justify-between">
+        <Button variant="outline" onClick={() => router.back()}>
+          Back
+        </Button>
+
+        <Button type="submit" form="create-collection-configure">
+          Next
+        </Button>
+      </CardFooter>
     </Card>
+  );
+}
+
+function ConfigureContractHeader() {
+  return (
+    <CardHeader>
+      <CardTitle className="font-heading pb-2">Configure Your Constraints</CardTitle>
+      <div className="font-heading">
+        Constraints provide a way to guarantee some properties of your collection to your token holders. Common
+        constraints include limiting the maximum NFTs or at the very least a time window when new NFTs can be minted for
+        the collection. Metadata rules can be used to declare how the data on the NFTs in the collection will change
+        over time. These rules are enforced by sending a token holding the data to a validator.
+      </div>
+    </CardHeader>
   );
 }
