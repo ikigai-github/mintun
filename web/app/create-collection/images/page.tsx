@@ -1,19 +1,44 @@
 'use client';
 
+import { setTimeout } from 'timers';
+import { ChangeEvent, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileButton } from '@/components/ui/file-button';
 import { StepProgress } from '@/components/stepper';
 
+import { useCreateCollectionContext } from '../context';
+
+const waitFor = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
+
+async function uploadFiles(files: FileList) {
+  await waitFor(2000);
+  console.log('yep');
+}
+
 export default function Images() {
+  const { images, setImages } = useCreateCollectionContext();
+  const [uploading, setUploading] = useState(false);
   const router = useRouter();
+
+  const handleAddFiles = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    if (event?.target?.files) {
+      setUploading(true);
+      uploadFiles(event.target.files).finally(() => setUploading(false));
+    }
+  }, []);
 
   return (
     <Card className="w-full max-w-[1024px] p-4">
       <StepProgress step={3} numSteps={4} className="p-6" />
       <ImagesHeader />
-
+      <CardContent>
+        <FileButton onChange={handleAddFiles} disabled={uploading}>
+          {uploading ? 'Uploading...' : 'Add a file'}
+        </FileButton>
+      </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={() => router.back()}>
           Back

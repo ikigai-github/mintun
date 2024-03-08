@@ -1,60 +1,11 @@
 'use client';
 
 import { createContext, PropsWithChildren, useContext, useState } from 'react';
-import {
-  boolean,
-  date,
-  enum_,
-  maxLength,
-  minLength,
-  number,
-  object,
-  optional,
-  regex,
-  string,
-  Input as ValibotInput,
-} from 'valibot';
 
-export const DescribeCollectionSchema = object({
-  collection: string([
-    minLength(3, 'The collection must have a name of at least 3 characters'),
-    maxLength(64, 'Collection name cannot be more than 64 characters'),
-  ]),
-  artist: optional(string()),
-  project: optional(string()),
-  description: optional(string()),
-  nsfw: boolean(),
-});
+import { WebImageData } from '@/lib/image';
 
-export const DataContract = {
-  Immutable: 'IMMUTABLE',
-  Evolvable: 'MUTABLE',
-} as const;
-
-export const ConfigureContractSchema = object({
-  contract: enum_(DataContract),
-  window: optional(
-    object({
-      from: date(),
-      to: date(),
-    })
-  ),
-  maxTokens: optional(number()),
-  group: optional(
-    string('Policy ID of group must be a 28 byte (56 character) hex string', [
-      minLength(56),
-      maxLength(56),
-      regex(/[a-fA-F0-9]+/),
-    ])
-  ),
-});
-
-export const UploadImageSchema = object({
-  // TODO: Upload images and save the uploaded image info into state
-});
-
-export type DescribeCollectionData = ValibotInput<typeof DescribeCollectionSchema>;
-export type ConfigureContractData = ValibotInput<typeof ConfigureContractSchema>;
+import { ConfigureContractData, DataContract } from './configure/schema';
+import { DescribeCollectionData } from './describe/schema';
 
 export type CreateCollectionContextProps = {
   description: DescribeCollectionData;
@@ -62,6 +13,9 @@ export type CreateCollectionContextProps = {
 
   configuration: ConfigureContractData;
   setConfiguration: (data: ConfigureContractData) => void;
+
+  images: WebImageData[];
+  setImages: (images: WebImageData[]) => void;
 };
 
 const CreateCollectionContext = createContext<CreateCollectionContextProps>({
@@ -74,6 +28,8 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
     contract: DataContract.Immutable,
   },
   setConfiguration: () => null,
+  images: [],
+  setImages: () => null,
 });
 
 export function CreateCollectionContextProvider(props: PropsWithChildren) {
@@ -82,8 +38,12 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
     contract: DataContract.Immutable,
   });
 
+  const [images, setImages] = useState<WebImageData[]>([]);
+
   return (
-    <CreateCollectionContext.Provider value={{ description, setDescription, configuration, setConfiguration }}>
+    <CreateCollectionContext.Provider
+      value={{ description, setDescription, configuration, setConfiguration, images, setImages }}
+    >
       {props.children}
     </CreateCollectionContext.Provider>
   );

@@ -13,7 +13,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { StepProgress } from '@/components/stepper';
 
-import { DescribeCollectionData, DescribeCollectionSchema, useCreateCollectionContext } from '../context';
+import { useCreateCollectionContext } from '../context';
+import { DescribeCollectionData, DescribeCollectionSchema } from './schema';
 
 export default function Describe() {
   const { description, setDescription } = useCreateCollectionContext();
@@ -33,9 +34,9 @@ export default function Describe() {
     <Card className="w-full max-w-[1024px] p-4">
       <StepProgress step={1} numSteps={4} className="p-6" />
       <DescribeCollectionHeader />
-      <Form {...form}>
-        <form id="create-collection-describe-form" onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="grid grid-cols-1 gap-6">
+      <CardContent>
+        <Form {...form}>
+          <form id="create-collection-describe-form" onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
               name="collection"
@@ -125,9 +126,9 @@ export default function Describe() {
                 </FormItem>
               )}
             />
-          </CardContent>
-        </form>
-      </Form>
+          </form>
+        </Form>
+      </CardContent>
       <CardFooter className="flex justify-end">
         <Button type="submit" form="create-collection-describe-form">
           Next

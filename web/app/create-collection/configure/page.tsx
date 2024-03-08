@@ -18,7 +18,8 @@ import { Popover, PopoverContent } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StepProgress } from '@/components/stepper';
 
-import { ConfigureContractData, ConfigureContractSchema, DataContract, useCreateCollectionContext } from '../context';
+import { useCreateCollectionContext } from '../context';
+import { ConfigureContractData, ConfigureContractSchema, DataContract } from './schema';
 
 export default function Configure() {
   const { configuration, setConfiguration } = useCreateCollectionContext();
@@ -38,9 +39,9 @@ export default function Configure() {
     <Card className="w-full max-w-[1024px] p-4">
       <StepProgress step={2} numSteps={4} className="p-6" />
       <ConfigureContractHeader />
-      <Form {...form}>
-        <form id="create-collection-configure" onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="grid grid-cols-1 gap-6">
+      <CardContent>
+        <Form {...form}>
+          <form id="create-collection-configure" onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
               name="contract"
@@ -141,6 +142,7 @@ export default function Configure() {
                   <FormControl>
                     <Input
                       placeholder="Optional"
+                      type="number"
                       {...field}
                       onChange={(event) => {
                         const value = Number(event.target.value);
@@ -166,7 +168,7 @@ export default function Configure() {
                 <FormItem>
                   <FormLabel>Collection Group Policy Id</FormLabel>
                   <FormControl>
-                    <Input placeholder="Optional" type="number" {...field} />
+                    <Input placeholder="Optional" {...field} />
                   </FormControl>
                   <FormDescription>
                     A collection group can be used to verify multiple collections are created by the same creator. This
@@ -182,10 +184,9 @@ export default function Configure() {
                 </FormItem>
               )}
             />
-          </CardContent>
-        </form>
-      </Form>
-
+          </form>
+        </Form>
+      </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={() => router.back()}>
           Back
