@@ -1,3 +1,5 @@
+import * as NextMdx from '@next/mdx';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   swcMinify: true,
@@ -10,6 +12,11 @@ const nextConfig = {
 
     return config;
   },
+  pageExtensions: ['jsx', 'js', 'ts', 'tsx', 'mdx'],
 };
 
-export default nextConfig;
+const withMDX = NextMdx.default({
+  extension: /\.mdx?$/,
+});
+
+export default withMDX(nextConfig);
