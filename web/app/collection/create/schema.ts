@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   enum_,
   Input,
@@ -13,6 +14,17 @@ import {
   string,
   union,
 } from 'valibot';
+
+export const DescribeCollectionSchema = object({
+  collection: string([
+    minLength(3, 'The collection must have a name of at least 3 characters'),
+    maxLength(64, 'Collection name cannot be more than 64 characters'),
+  ]),
+  artist: optional(string()),
+  project: optional(string()),
+  description: optional(string()),
+  nsfw: boolean(),
+});
 
 export const DataContract = {
   Immutable: 'IMMUTABLE',
@@ -40,4 +52,9 @@ export const ConfigureContractSchema = object({
   ),
 });
 
+export type ParentSubmitForm = {
+  handleSubmit: () => Promise<boolean>;
+};
+
+export type DescribeCollectionData = Input<typeof DescribeCollectionSchema>;
 export type ConfigureContractData = Input<typeof ConfigureContractSchema>;

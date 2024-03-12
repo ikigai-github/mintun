@@ -4,21 +4,22 @@ import { createContext, PropsWithChildren, useContext, useState } from 'react';
 
 import { WebImageData } from '@/lib/image';
 
-import { ConfigureContractData, DataContract } from './configure/schema';
-import { DescribeCollectionData } from './describe/schema';
+import { ConfigureContractData, DataContract, DescribeCollectionData } from './schema';
 
 export type CreateCollectionContextProps = {
+  tab: string;
+  setTab: (tab: string) => void;
   description: DescribeCollectionData;
   setDescription: (data: DescribeCollectionData) => void;
-
   configuration: ConfigureContractData;
   setConfiguration: (data: ConfigureContractData) => void;
-
   images: WebImageData[];
   setImages: (images: WebImageData[]) => void;
 };
 
 const CreateCollectionContext = createContext<CreateCollectionContextProps>({
+  tab: 'desribe',
+  setTab: () => null,
   description: {
     collection: '',
     nsfw: false,
@@ -33,6 +34,7 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
 });
 
 export function CreateCollectionContextProvider(props: PropsWithChildren) {
+  const [tab, setTab] = useState('describe');
   const [description, setDescription] = useState<DescribeCollectionData>({ collection: '', nsfw: false });
   const [configuration, setConfiguration] = useState<ConfigureContractData>({
     contract: DataContract.Immutable,
@@ -42,7 +44,7 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
 
   return (
     <CreateCollectionContext.Provider
-      value={{ description, setDescription, configuration, setConfiguration, images, setImages }}
+      value={{ tab, setTab, description, setDescription, configuration, setConfiguration, images, setImages }}
     >
       {props.children}
     </CreateCollectionContext.Provider>

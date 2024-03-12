@@ -9,7 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { FileButton } from '@/components/ui/file-button';
 import { StepProgress } from '@/components/stepper';
 
-import { useCreateCollectionContext } from '../context';
+import { useCreateCollectionContext } from '../create/context';
 
 const waitFor = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 
