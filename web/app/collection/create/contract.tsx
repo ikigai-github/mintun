@@ -1,5 +1,6 @@
 'use client';
 
+import { forwardRef, Ref, useCallback, useImperativeHandle } from 'react';
 import Link from 'next/link';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import { CalendarIcon } from '@radix-ui/react-icons';
@@ -19,7 +20,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 
 import { useCreateCollectionContext } from './context';
 import { ConfigureContractData, ConfigureContractSchema, DataContract, ParentSubmitForm } from './schema';
-import { Ref, forwardRef, useCallback, useImperativeHandle } from 'react';
 
 const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const { setTab, configuration, setConfiguration } = useCreateCollectionContext();
