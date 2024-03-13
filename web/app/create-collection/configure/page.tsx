@@ -36,7 +36,7 @@ export default function Configure() {
 
   return (
     <Card className="w-full max-w-[1024px] p-4">
-      <StepProgress step={2} numSteps={4} className="p-6" />
+      <StepProgress step={3} numSteps={5} className="p-6" />
       <ConfigureContractHeader />
       <Form {...form}>
         <form id="create-collection-configure" onSubmit={form.handleSubmit(onSubmit)}>
