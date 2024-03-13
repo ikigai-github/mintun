@@ -22,6 +22,7 @@ export function WalletButton() {
   const handleClick = useCallback(
     async (extension: string) => {
       try {
+        // TODO: Wrap this in a timeout after 10 seconds pop a toast telling them to try and open the extension they are connecting from the browser extension list.  After 20 seconds give up and cancel the connect.
         await connect(extension);
       } catch (e) {
         if (e instanceof WalletApiError) {

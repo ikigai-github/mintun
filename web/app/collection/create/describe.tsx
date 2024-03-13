@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { forwardRef, Ref, useCallback, useImperativeHandle } from 'react';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import { useForm } from 'react-hook-form';
 
@@ -11,31 +11,45 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { StepProgress } from '@/components/stepper';
 
-import { DescribeCollectionData, DescribeCollectionSchema, useCreateCollectionContext } from '../context';
+import { useCreateCollectionContext } from './context';
+import { DescribeCollectionData, DescribeCollectionSchema, ParentSubmitForm } from './schema';
 
-export default function Describe() {
+const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const { description, setDescription } = useCreateCollectionContext();
-  const router = useRouter();
 
   const form = useForm<DescribeCollectionData>({
     resolver: valibotResolver(DescribeCollectionSchema),
     defaultValues: description,
   });
 
-  function onSubmit(values: DescribeCollectionData) {
-    setDescription(values);
-    router.push('/create-collection/edit');
-  }
+  const { trigger, getValues } = form;
+
+  // Want to use the async form instead of form.handleSubmit(onSuccess, onError) because the callbacks
+  // are not as easy to work with in this case where we just want to know if validation failed
+  const handleSubmit = useCallback(async () => {
+    const isValid = await trigger();
+    if (isValid) {
+      setDescription(form.getValues());
+    }
+
+    return isValid;
+  }, [trigger, getValues, setDescription]);
+
+  useImperativeHandle(ref, () => ({ handleSubmit }));
+
+  const onSubmit = useCallback((values: DescribeCollectionData) => setDescription(values), [setDescription]);
 
   return (
-    <Card className="w-full max-w-[1024px] p-4">
-      <StepProgress step={1} numSteps={5} className="p-6" />
+    <Card>
       <DescribeCollectionHeader />
-      <Form {...form}>
-        <form id="create-collection-describe-form" onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="grid grid-cols-1 gap-6">
+      <CardContent>
+        <Form {...form}>
+          <form
+            className="flex flex-col gap-4"
+            id="create-collection-describe-form"
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
             <FormField
               control={form.control}
               name="collection"
@@ -125,17 +139,12 @@ export default function Describe() {
                 </FormItem>
               )}
             />
-          </CardContent>
-        </form>
-      </Form>
-      <CardFooter className="flex justify-end">
-        <Button type="submit" form="create-collection-describe-form">
-          Next
-        </Button>
-      </CardFooter>
+          </form>
+        </Form>
+      </CardContent>
     </Card>
   );
-}
+});
 
 function DescribeCollectionHeader() {
   return (
@@ -160,3 +169,5 @@ function DescribeCollectionHeader() {
     </CardHeader>
   );
 }
+
+export default DescribeContent;
