@@ -1,41 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { set } from 'date-fns';
-import { parse } from 'valibot';
-
-import { Button } from '@/components/ui/button';
-import { Card, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AvatarDropzone, BannerDropzone, ThumbnailDropzone } from '@/components/image-dropzone';
-import { StepProgress } from '@/components/stepper';
 import { MOCK_TOKEN_CARDS, TokenCardList } from '@/components/token-card';
 
-import { UploadImageSchema, useCreateCollectionContext } from '../context';
+import { useCreateCollectionContext } from './context';
 
-export default function Edit() {
+export default function Images() {
   const { images, setImages } = useCreateCollectionContext();
-  const [emptyImages, setEmptyImages] = useState(false);
-  const router = useRouter();
-
-  function onSubmit() {
-    try {
-      const imagesResult = parse(UploadImageSchema, images);
-      if (imagesResult) {
-        setEmptyImages(false);
-        router.push('/create-collection/configure');
-      }
-    } catch (error) {
-      setEmptyImages(true);
-      console.error({ error });
-    }
-  }
 
   return (
-    <Card className="w-full max-w-[1024px] overflow-scroll p-4">
-      <StepProgress step={2} numSteps={5} className="p-6" />
-
+    <Card>
       <Tabs defaultValue="desktop" className="">
         <CardHeader>
           <div className="justify-between sm:flex">
@@ -52,7 +28,7 @@ export default function Edit() {
           </div>
         </CardHeader>
 
-        <TabsContent className="w-[1024px] min-w-[1024px] max-w-[1024px]" value="desktop">
+        <TabsContent value="desktop">
           <div className="p-3">
             <div className="mb-4 flex gap-6">
               <AvatarDropzone
@@ -146,18 +122,6 @@ export default function Edit() {
           </div>
         </TabsContent>
       </Tabs>
-
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={() => router.back()}>
-          Back
-        </Button>
-        <div>
-          <Button type="submit" onClick={onSubmit}>
-            Next
-          </Button>
-          {emptyImages && <p className="text-red-500">Missing Images</p>}
-        </div>
-      </CardFooter>
     </Card>
   );
 }

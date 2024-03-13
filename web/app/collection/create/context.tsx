@@ -4,7 +4,25 @@ import { createContext, PropsWithChildren, useContext, useState } from 'react';
 
 import { WebImageData } from '@/lib/image';
 
-import { ConfigureContractData, DataContract, DescribeCollectionData } from './schema';
+import { ConfigureContractData, DataContract, DescribeCollectionData, UploadImageData } from './schema';
+
+const defaultImages = {
+  desktop: {
+    avatar: '',
+    banner: '',
+    thumbnail: '',
+  },
+  tablet: {
+    avatar: '',
+    banner: '',
+    thumbnail: '',
+  },
+  mobile: {
+    avatar: '',
+    banner: '',
+    thumbnail: '',
+  },
+};
 
 export type CreateCollectionContextProps = {
   tab: string;
@@ -13,8 +31,8 @@ export type CreateCollectionContextProps = {
   setDescription: (data: DescribeCollectionData) => void;
   configuration: ConfigureContractData;
   setConfiguration: (data: ConfigureContractData) => void;
-  images: WebImageData[];
-  setImages: (images: WebImageData[]) => void;
+  images: UploadImageData;
+  setImages: (images: UploadImageData) => void;
 };
 
 const CreateCollectionContext = createContext<CreateCollectionContextProps>({
@@ -29,7 +47,7 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
     contract: DataContract.Immutable,
   },
   setConfiguration: () => null,
-  images: [],
+  images: defaultImages,
   setImages: () => null,
 });
 
@@ -40,7 +58,7 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
     contract: DataContract.Immutable,
   });
 
-  const [images, setImages] = useState<WebImageData[]>([]);
+  const [images, setImages] = useState<UploadImageData>(defaultImages);
 
   return (
     <CreateCollectionContext.Provider

@@ -142,11 +142,6 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <Button type="submit" form="create-collection-describe-form">
-          Save Changes
-        </Button>
-      </CardFooter>
     </Card>
   );
 });

@@ -197,15 +197,6 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={() => setTab('describe')}>
-          Previous
-        </Button>
-
-        <Button type="submit" form="create-collection-configure">
-          Next
-        </Button>
-      </CardFooter>
     </Card>
   );
 });

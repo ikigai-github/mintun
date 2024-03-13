@@ -3,8 +3,11 @@ import {
   date,
   enum_,
   Input,
+  instance,
   literal,
   maxLength,
+  maxSize,
+  mimeType,
   minLength,
   minValue,
   number,
@@ -52,9 +55,58 @@ export const ConfigureContractSchema = object({
   ),
 });
 
+const ImageSchema = object({
+  banner: string('Banner not in string format', [minLength(1)]),
+  avatar: string('Avatar not in string format', [minLength(1)]),
+  thumbnail: string('Thumbnail not in string format', [minLength(1)]),
+});
+
+export const UploadImageSchema = object({
+  // TODO: Upload images and save the uploaded image info into state
+  desktop: ImageSchema,
+  tablet: ImageSchema,
+  mobile: ImageSchema,
+});
+
+/// TODO: Just import this section from offchain/image.ts  library once I have integrated it.
+/////////////////////////////
+export const ImagePurpose = {
+  Thumbnail: 'Thumbnail',
+  Banner: 'Banner',
+  Avatar: 'Avatar',
+  Gallery: 'Gallery',
+  General: 'General',
+} as const;
+
+export type ImagePurposeType = keyof typeof ImagePurpose;
+
+/// Width height of an image in pixels
+export type ImageDimension = {
+  width: number;
+  height: number;
+};
+/////////////////////////////
+
+const SupportedMimeTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/svg',
+  'image/svg+xml',
+] as const;
+
+const FileImageSchema = instance(File, [
+  mimeType(['image/jpeg', 'image/png', 'image/png', 'image/gif', 'image/webp', 'image/svg', 'image/svg+xml']),
+  maxSize(1024 * 1024 * 10),
+]);
+
 export type ParentSubmitForm = {
   handleSubmit: () => Promise<boolean>;
 };
 
 export type DescribeCollectionData = Input<typeof DescribeCollectionSchema>;
 export type ConfigureContractData = Input<typeof ConfigureContractSchema>;
+export type UploadImageData = Input<typeof UploadImageSchema>;
+export type ImageType = Input<typeof ImageSchema>;
