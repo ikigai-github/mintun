@@ -4,10 +4,15 @@ import { Client, create } from '@web3-storage/w3up-client';
 
 export async function createWebClient() {
   const client = await create();
-
-  // Fetch the delegation from the backend
-  const apiUrl = `/api/storage/delegate/${client.agent.did()}`;
-  const response = await fetch(apiUrl);
+  const did = client.agent.did();
+  const apiUrl = '/api/storage/delegate';
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ did }),
+  });
   const data = await response.arrayBuffer();
 
   // Deserialize the delegation
