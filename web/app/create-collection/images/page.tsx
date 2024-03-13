@@ -11,7 +11,7 @@ export default function Images() {
 
   return (
     <Card className="w-full max-w-[1024px] p-4">
-      <StepProgress step={3} numSteps={4} className="p-6" />
+      <StepProgress step={4} numSteps={5} className="p-6" />
       <ImagesHeader />
 
       <CardFooter className="flex justify-between">

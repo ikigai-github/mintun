@@ -49,12 +49,41 @@ export const ConfigureContractSchema = object({
   ),
 });
 
+const ImageSchema = object({
+  banner: string('Banner not in string format', [minLength(1)]),
+  avatar: string('Avatar not in string format', [minLength(1)]),
+  thumbnail: string('Thumbnail not in string format', [minLength(1)]),
+});
+
 export const UploadImageSchema = object({
   // TODO: Upload images and save the uploaded image info into state
+  desktop: ImageSchema,
+  tablet: ImageSchema,
+  mobile: ImageSchema,
 });
+
+const defaultImages = {
+  desktop: {
+    avatar: '',
+    banner: '',
+    thumbnail: '',
+  },
+  tablet: {
+    avatar: '',
+    banner: '',
+    thumbnail: '',
+  },
+  mobile: {
+    avatar: '',
+    banner: '',
+    thumbnail: '',
+  },
+};
 
 export type DescribeCollectionData = ValibotInput<typeof DescribeCollectionSchema>;
 export type ConfigureContractData = ValibotInput<typeof ConfigureContractSchema>;
+export type UploadImageData = ValibotInput<typeof UploadImageSchema>;
+export type ImageType = ValibotInput<typeof ImageSchema>;
 
 export type CreateCollectionContextProps = {
   description: DescribeCollectionData;
@@ -62,6 +91,9 @@ export type CreateCollectionContextProps = {
 
   configuration: ConfigureContractData;
   setConfiguration: (data: ConfigureContractData) => void;
+
+  images: UploadImageData;
+  setImages: (images: UploadImageData) => void;
 };
 
 const CreateCollectionContext = createContext<CreateCollectionContextProps>({
@@ -74,6 +106,9 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
     contract: DataContract.Immutable,
   },
   setConfiguration: () => null,
+
+  images: defaultImages,
+  setImages: () => null,
 });
 
 export function CreateCollectionContextProvider(props: PropsWithChildren) {
@@ -81,9 +116,12 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
   const [configuration, setConfiguration] = useState<ConfigureContractData>({
     contract: DataContract.Immutable,
   });
+  const [images, setImages] = useState<UploadImageData>(defaultImages);
 
   return (
-    <CreateCollectionContext.Provider value={{ description, setDescription, configuration, setConfiguration }}>
+    <CreateCollectionContext.Provider
+      value={{ description, setDescription, configuration, setConfiguration, images, setImages }}
+    >
       {props.children}
     </CreateCollectionContext.Provider>
   );

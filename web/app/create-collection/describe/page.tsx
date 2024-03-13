@@ -26,12 +26,12 @@ export default function Describe() {
 
   function onSubmit(values: DescribeCollectionData) {
     setDescription(values);
-    router.push('/create-collection/configure');
+    router.push('/create-collection/edit');
   }
 
   return (
     <Card className="w-full max-w-[1024px] p-4">
-      <StepProgress step={1} numSteps={4} className="p-6" />
+      <StepProgress step={1} numSteps={5} className="p-6" />
       <DescribeCollectionHeader />
       <Form {...form}>
         <form id="create-collection-describe-form" onSubmit={form.handleSubmit(onSubmit)}>
