@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { cn } from '@/lib/utils';
-import { ImageType, UploadImageData } from '@/app/create-collection/context';
+import { ImageType, UploadImageData } from '@/app/collection/create/schema';
 
 type DropzoneProps = {
   callback: (imgs: UploadImageData) => void;
@@ -168,7 +168,7 @@ export function ThumbnailDropzone({ callback, imagesState, view, className, imag
           alt="Thumbnail"
         />
       ) : (
-        <div className="px-3">
+        <div className="mt-3 h-full rounded-md border-4 border-dashed p-3 ">
           <p className=" text-center text-xl font-bold ">Add Thumbnail</p>
           <p className="text-sm opacity-70">Click to upload or drag image</p>
         </div>

@@ -5,7 +5,7 @@ import { valibotResolver } from '@hookform/resolvers/valibot';
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -150,7 +150,7 @@ function DescribeCollectionHeader() {
   return (
     <CardHeader>
       <CardTitle className="font-heading pb-2">Describe your collection</CardTitle>
-      <div className="font-heading">
+      <CardDescription className="font-heading">
         A collection is one or more NFTs (non-fungible tokens) minted under the same{' '}
         <Tooltip>
           <TooltipTrigger>
@@ -165,7 +165,7 @@ function DescribeCollectionHeader() {
         </Tooltip>
         . Below you can fill out some basic information that markets and other tools can use for displaying information
         about your collection.
-      </div>
+      </CardDescription>
     </CardHeader>
   );
 }

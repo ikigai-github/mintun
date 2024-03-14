@@ -1,4 +1,5 @@
 import {
+  array,
   boolean,
   date,
   enum_,
@@ -33,6 +34,10 @@ export const DataContract = {
   Immutable: 'IMMUTABLE',
   Evolvable: 'MUTABLE',
 } as const;
+
+export const AddTraitSchema = object({
+  trait: string('Trait must be at least one character', [minLength(0)]),
+});
 
 export const ConfigureContractSchema = object({
   contract: enum_(DataContract),
@@ -108,5 +113,6 @@ export type ParentSubmitForm = {
 
 export type DescribeCollectionData = Input<typeof DescribeCollectionSchema>;
 export type ConfigureContractData = Input<typeof ConfigureContractSchema>;
+export type AddTraitData = Input<typeof AddTraitSchema>;
 export type UploadImageData = Input<typeof UploadImageSchema>;
 export type ImageType = Input<typeof ImageSchema>;

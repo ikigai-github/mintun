@@ -11,7 +11,7 @@ import { useForm } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent } from '@/components/ui/popover';
@@ -205,7 +205,7 @@ function ContractHeader() {
   return (
     <CardHeader>
       <CardTitle className="font-heading pb-2">Configure your contracts</CardTitle>
-      <div className="font-heading">
+      <CardDescription className="font-heading">
         Contracts provide a way to guarantee some properties of your collection to your token holders.{' '}
         <Tooltip>
           <TooltipTrigger>
@@ -234,7 +234,7 @@ function ContractHeader() {
         maximum NFTs or the time window when new NFTs can be minted. Metadata rules can be used to declare how the data
         on the NFTs in the collection will change over time. These rules are enforced by sending a token holding the
         data to a validator.
-      </div>
+      </CardDescription>
     </CardHeader>
   );
 }

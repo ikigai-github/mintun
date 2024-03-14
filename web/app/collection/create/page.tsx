@@ -39,6 +39,7 @@ export default function CreateCollection() {
 
       const isValid = await handleSubmit();
       if (isValid) {
+        console.log('Swappin');
         setTab(newTab);
       }
     },

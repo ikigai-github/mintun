@@ -29,6 +29,8 @@ export type CreateCollectionContextProps = {
   setTab: (tab: string) => void;
   description: DescribeCollectionData;
   setDescription: (data: DescribeCollectionData) => void;
+  traits: string[];
+  setTraits: (data: string[]) => void;
   configuration: ConfigureContractData;
   setConfiguration: (data: ConfigureContractData) => void;
   images: UploadImageData;
@@ -36,13 +38,15 @@ export type CreateCollectionContextProps = {
 };
 
 const CreateCollectionContext = createContext<CreateCollectionContextProps>({
-  tab: 'desribe',
+  tab: 'describe',
   setTab: () => null,
   description: {
     collection: '',
     nsfw: false,
   },
   setDescription: () => null,
+  traits: [],
+  setTraits: () => null,
   configuration: {
     contract: DataContract.Immutable,
   },
@@ -54,6 +58,7 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
 export function CreateCollectionContextProvider(props: PropsWithChildren) {
   const [tab, setTab] = useState('describe');
   const [description, setDescription] = useState<DescribeCollectionData>({ collection: '', nsfw: false });
+  const [traits, setTraits] = useState<string[]>([]);
   const [configuration, setConfiguration] = useState<ConfigureContractData>({
     contract: DataContract.Immutable,
   });
@@ -62,7 +67,18 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
 
   return (
     <CreateCollectionContext.Provider
-      value={{ tab, setTab, description, setDescription, configuration, setConfiguration, images, setImages }}
+      value={{
+        tab,
+        setTab,
+        description,
+        setDescription,
+        traits,
+        setTraits,
+        configuration,
+        setConfiguration,
+        images,
+        setImages,
+      }}
     >
       {props.children}
     </CreateCollectionContext.Provider>
