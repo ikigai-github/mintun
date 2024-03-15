@@ -154,29 +154,3 @@ function countImages(images: UploadImageData) {
 
   return count;
 }
-
-function SummaryTable() {
-  const { description, images, configuration, traits } = useCreateCollectionContext();
-
-  const numImages = countImages(images);
-  const data = createReviewTableData(description, numImages);
-
-  return (
-    <Table>
-      <TableBody>
-        {data.map((row) => (
-          <TableRow key={row[0]}>
-            <TableCell className="font-medium">{row[0]}</TableCell>
-            <TableCell>{row[1]}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          <TableCell>Total Minting Cost</TableCell>
-          <TableCell className="text-right">₳2</TableCell>
-        </TableRow>
-      </TableFooter>
-    </Table>
-  );
-}

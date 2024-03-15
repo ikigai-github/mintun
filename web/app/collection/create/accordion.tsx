@@ -1,16 +1,17 @@
+import { useMemo } from 'react';
+import { format } from 'date-fns';
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { useCreateCollectionContext } from './context';
+import { DataContract, UploadImageData } from './schema';
 
 export function AccordionDemo() {
   return (
     <Accordion type="single" collapsible orientation="horizontal" className="w-full" defaultValue="describe">
       <DescribeAccordionItem />
-      <AccordionItem value="item-2">
-        <AccordionTrigger>Permissive Evolution Contract</AccordionTrigger>
-        <AccordionContent>The date range you picked. The max Tokens.</AccordionContent>
-      </AccordionItem>
+      <ContractAccordionItem />
       <AccordionItem value="item-3">
         <AccordionTrigger>3 Images</AccordionTrigger>
         <AccordionContent>Yes. It's animated by default, but you can disable it if you prefer.</AccordionContent>
@@ -29,6 +30,37 @@ export function AccordionDemo() {
       </AccordionItem>
     </Accordion>
   );
+}
+
+function toImageArray(images: UploadImageData) {
+  const { desktop, tablet, mobile } = images;
+  let imageArray = [];
+  if (desktop.avatar) imageArray.push(desktop.avatar);
+  if (desktop.banner) imageArray.push(desktop.banner);
+  if (desktop.thumbnail) imageArray.push(desktop.thumbnail);
+
+  if (tablet.avatar) imageArray.push(tablet.avatar);
+  if (tablet.banner) imageArray.push(tablet.banner);
+  if (tablet.thumbnail) imageArray.push(tablet.thumbnail);
+
+  if (mobile.avatar) imageArray.push(mobile.avatar);
+  if (mobile.banner) imageArray.push(mobile.banner);
+  if (mobile.thumbnail) imageArray.push(mobile.thumbnail);
+
+  return imageArray;
+}
+
+function ImagesAccordionItem() {
+  const { images } = useCreateCollectionContext();
+
+  //   <img
+  //   className={cn('h-[200px] w-[200px] object-cover ', imageClassName)}
+  //   height={200}
+  //   width={200}
+  //   src={'data:image/jpeg;base64, ' + img || undefined}
+  //   alt="Thumbnail"
+  // />
+  return <div>TOD</div>;
 }
 
 function DescribeAccordionItem() {
@@ -68,7 +100,52 @@ function DescribeAccordionItem() {
               </div>
             </>
           )}
-          <div className="col-span-2">Flagged as {description.nsfw && <b>NOT</b>} safe for work</div>
+          <div className="text-xs font-bold">Not Safe for work</div>
+          <div className="font-heading text-foreground font-light">{description.nsfw ? 'Yes' : 'No'}</div>
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  );
+}
+
+function ContractAccordionItem() {
+  const { configuration } = useCreateCollectionContext();
+
+  const displayContractName = useMemo(
+    () =>
+      configuration.contract === DataContract.Evolvable ? 'Permissive Evolution Data Contract' : 'Static Data Contract',
+    [configuration.contract]
+  );
+
+  const enabled = configuration.group || configuration.maxTokens || configuration.window;
+
+  return (
+    <AccordionItem value="configure">
+      <AccordionTrigger disabled={!enabled} className="font-heading text-foreground font-ligt">
+        {displayContractName}
+      </AccordionTrigger>
+      <AccordionContent>
+        <div className="bg-accent grid grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
+          {configuration.window && (
+            <>
+              <div className="text-xs font-bold">Minting Window</div>
+              <div className="font-heading text-foreground font-light">
+                {`${format(configuration.window.from, 'LLL dd, y')} - ${format(configuration.window.to, 'LLL dd, y')}`}
+              </div>
+            </>
+          )}
+          {configuration.maxTokens && (
+            <>
+              <div className="text-xs font-bold">Max NFTs</div>
+              <div className="font-heading text-foreground font-light">{configuration.maxTokens}</div>
+            </>
+          )}
+          {configuration.group && (
+            <>
+              <div className="text-xs font-bold">Group</div>
+              <div className="font-heading text-foreground font-light">{configuration.group}</div>
+            </>
+          )}
         </div>
       </AccordionContent>
     </AccordionItem>
