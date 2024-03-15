@@ -1,4 +1,5 @@
 import {
+  array,
   boolean,
   date,
   enum_,
@@ -7,6 +8,7 @@ import {
   literal,
   maxLength,
   maxSize,
+  maxValue,
   mimeType,
   minLength,
   minValue,
@@ -53,6 +55,15 @@ export const ConfigureContractSchema = object({
       literal(''),
     ])
   ),
+});
+
+const RoyaltySchema = object({
+  address: string('Address not in string format', [minLength(1)]), // TODO: Should we have a regex or min length for this?
+  percentage: number('Percentage not in number format', [maxValue(100), minValue(0.01)]),
+});
+
+export const RoyaltiesSchema = object({
+  royalties: array(RoyaltySchema),
 });
 
 const ImageSchema = object({
@@ -110,3 +121,5 @@ export type DescribeCollectionData = Input<typeof DescribeCollectionSchema>;
 export type ConfigureContractData = Input<typeof ConfigureContractSchema>;
 export type UploadImageData = Input<typeof UploadImageSchema>;
 export type ImageType = Input<typeof ImageSchema>;
+export type Royalty = Input<typeof RoyaltySchema>;
+export type RoyaltiesData = Input<typeof RoyaltiesSchema>;
