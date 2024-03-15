@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useMediaQuery } from 'usehooks-ts';
 
+import { AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,21 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
+import { Separator } from '@/components/ui/separator';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+import { AccordionDemo } from './accordion';
+import { useCreateCollectionContext } from './context';
+import { DescribeCollectionData, ImageDimension, ImagePurpose, UploadImageData } from './schema';
 
 export default function Mint() {
   return (
@@ -57,8 +73,7 @@ export function MintButton() {
           <DialogHeader>
             <DialogTitle>Mint your collection</DialogTitle>
             <DialogDescription>
-              If you have filled out as much as you want, at a minimum the collection name, and connected a wallet then
-              you are ready to mint!
+              <AccordionDemo />
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
@@ -75,9 +90,7 @@ export function MintButton() {
         <DrawerHeader className="text-left">
           <DrawerTitle>Mint your collection</DrawerTitle>
           <DrawerDescription>
-            {' '}
-            If you have filled out as much as you want, at a minimum the collection name, and connected a wallet then
-            you are ready to mint!
+            <AccordionDemo />
           </DrawerDescription>
         </DrawerHeader>
         <DrawerFooter className="pt-2">
@@ -87,5 +100,83 @@ export function MintButton() {
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+function MintInformation() {
+  const { description, images, configuration, traits } = useCreateCollectionContext();
+
+  return (
+    <div>
+      <div className="grid grid-cols-[auto_1fr] gap-x-2 pt-2">
+        <div>Collection Name:</div>
+        <div className="font-heading font-bold">{description.collection}</div>
+        {description.project ? (
+          <>
+            <div>Brand Name:</div>
+            <div className="font-bold"> {description.project}</div>
+          </>
+        ) : undefined}
+        {description.artist ? (
+          <>
+            <div>Artist Name:</div>
+            <div> {description.artist}</div>
+          </>
+        ) : undefined}
+        {description.nsfw ? (
+          <>
+            <div>Not safe for work</div>
+            <div>true</div>
+          </>
+        ) : undefined}
+        <div>Data Contract:</div>
+        <div className="font-heading font-bold">
+          {configuration.contract == 'IMMUTABLE' ? 'static' : 'permissive evolution'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function countImages(images: UploadImageData) {
+  let count = 0;
+  if (images.desktop.avatar) count++;
+  if (images.desktop.banner) count++;
+  if (images.desktop.thumbnail) count++;
+
+  if (images.tablet.avatar) count++;
+  if (images.tablet.banner) count++;
+  if (images.tablet.thumbnail) count++;
+
+  if (images.mobile.avatar) count++;
+  if (images.mobile.banner) count++;
+  if (images.mobile.thumbnail) count++;
+
+  return count;
+}
+
+function SummaryTable() {
+  const { description, images, configuration, traits } = useCreateCollectionContext();
+
+  const numImages = countImages(images);
+  const data = createReviewTableData(description, numImages);
+
+  return (
+    <Table>
+      <TableBody>
+        {data.map((row) => (
+          <TableRow key={row[0]}>
+            <TableCell className="font-medium">{row[0]}</TableCell>
+            <TableCell>{row[1]}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+      <TableFooter>
+        <TableRow>
+          <TableCell>Total Minting Cost</TableCell>
+          <TableCell className="text-right">₳2</TableCell>
+        </TableRow>
+      </TableFooter>
+    </Table>
   );
 }

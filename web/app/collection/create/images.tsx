@@ -8,7 +8,11 @@ import { MOCK_TOKEN_CARDS, TokenCardList } from '@/components/token-card';
 import { useCreateCollectionContext } from './context';
 
 export default function Images() {
-  const { images, setImages } = useCreateCollectionContext();
+  const { description, images, setImages } = useCreateCollectionContext();
+
+  const collectionName = description.collection || '<Collection Name>';
+  const brandName = description.project || '<Brand Name>';
+  const artistName = description.artist || '<Artist Name>';
 
   return (
     <Card>
@@ -54,9 +58,9 @@ export default function Images() {
                 <Card className="flex flex-col justify-center overflow-hidden rounded-md border">
                   <ThumbnailDropzone callback={setImages} imagesState={images} view="desktop" />
                   <div className="px-1">
-                    <p className="pt-2 opacity-70">Brand Name</p>
-                    <p className="mb-3">Collection Name</p>
-                    <p className="text-end opacity-70">Artist Name</p>
+                    <p className="pt-2 opacity-70">{brandName}</p>
+                    <p className="mb-3">{collectionName}</p>
+                    <p className="text-end opacity-70">{artistName}</p>
                   </div>
                 </Card>
               </div>
@@ -78,9 +82,9 @@ export default function Images() {
                 <div className="flex flex-col justify-center overflow-hidden rounded-md border">
                   <ThumbnailDropzone callback={setImages} imagesState={images} view="tablet" />
                   <div className="px-1">
-                    <p className="pt-2 opacity-70">Brand Name</p>
-                    <p className="mb-3">Collection Name</p>
-                    <p className="text-end opacity-70">Artist Name</p>
+                    <p className="pt-2 opacity-70">{brandName}</p>
+                    <p className="mb-3">{collectionName}</p>
+                    <p className="text-end opacity-70">{artistName}</p>
                   </div>
                 </div>
               </div>
@@ -113,9 +117,9 @@ export default function Images() {
                     view="mobile"
                   />
                   <div className="px-1">
-                    <p className="pt-2 opacity-70">Brand Name</p>
-                    <p className="mb-3">Collection Name</p>
-                    <p className="text-end opacity-70">Artist Name</p>
+                    <p className="pt-2 opacity-70">{brandName}</p>
+                    <p className="mb-3">{collectionName}</p>
+                    <p className="text-end opacity-70">{artistName}</p>
                   </div>
                 </div>
                 <TokenCardList tokenCards={MOCK_TOKEN_CARDS} />

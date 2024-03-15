@@ -21,8 +21,8 @@ export default function TraitsContent() {
   });
 
   function onSubmit({ trait }: AddTraitData) {
-    const traitLower = trait.toLocaleLowerCase();
-    if (!traits.includes(traitLower)) {
+    const traitLower = trait.toLowerCase();
+    if (traitLower && !traits.includes(traitLower)) {
       setTraits([...traits, traitLower]);
       form.reset({ trait: '' });
       form.setFocus('trait');
