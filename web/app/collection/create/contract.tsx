@@ -22,6 +22,7 @@ import { useCreateCollectionContext } from './context';
 import { ConfigureContractData, ConfigureContractSchema, DataContract, ParentSubmitForm } from './schema';
 
 const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
+  ContractContent.displayName = 'ContractContent';
   const { setTab, configuration, setConfiguration } = useCreateCollectionContext();
 
   const form = useForm<ConfigureContractData>({

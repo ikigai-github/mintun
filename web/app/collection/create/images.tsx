@@ -1,18 +1,27 @@
 'use client';
 
+import { forwardRef, Ref } from 'react';
+
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AvatarDropzone, BannerDropzone, ThumbnailDropzone } from '@/components/image-dropzone';
-import { MOCK_TOKEN_CARDS, TokenCardList } from '@/components/token-card';
+import { AvatarDropzone } from '@/components/dropzone/avatar-dropzone';
+import { BannerDropzone } from '@/components/dropzone/banner-dropzone';
+import { ThumbnailDropzone } from '@/components/dropzone/thumbnail-dropzone';
+import { MOCK_TOKEN_CARDS, TokenCardList } from '@/components/token-card-list';
 
 import { useCreateCollectionContext } from './context';
+import { ParentSubmitForm } from './schema';
 
-export default function Images() {
+const ImagesContent = () => {
+  // To uncomment when implementing forwardRef and submit flow
+  // ImagesContent.displayName = 'ImagesContent';
+
   const { images, setImages } = useCreateCollectionContext();
 
+  // TODO: add submit validation to make sure the images are not empty before moving to next step
   return (
     <Card>
-      <Tabs defaultValue="desktop" className="">
+      <Tabs defaultValue="desktop" className="overflow-scroll">
         <CardHeader>
           <div className="justify-between sm:flex">
             <CardTitle className="font-heading pb-2">Edit your collection</CardTitle>
@@ -28,7 +37,7 @@ export default function Images() {
           </div>
         </CardHeader>
 
-        <TabsContent value="desktop">
+        <TabsContent value="desktop" className="w-[1024px] min-w-[1024px] max-w-[1024px]">
           <div className="p-3">
             <div className="mb-4 flex gap-6">
               <AvatarDropzone
@@ -124,4 +133,6 @@ export default function Images() {
       </Tabs>
     </Card>
   );
-}
+};
+
+export default ImagesContent;

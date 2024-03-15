@@ -4,7 +4,7 @@ import { createContext, PropsWithChildren, useContext, useState } from 'react';
 
 import { WebImageData } from '@/lib/image';
 
-import { ConfigureContractData, DataContract, DescribeCollectionData, UploadImageData } from './schema';
+import { ConfigureContractData, DataContract, DescribeCollectionData, RoyaltiesData, UploadImageData } from './schema';
 
 const defaultImages = {
   desktop: {
@@ -24,6 +24,10 @@ const defaultImages = {
   },
 };
 
+const defaultRoyalties = {
+  royalties: [],
+};
+
 export type CreateCollectionContextProps = {
   tab: string;
   setTab: (tab: string) => void;
@@ -33,6 +37,8 @@ export type CreateCollectionContextProps = {
   setConfiguration: (data: ConfigureContractData) => void;
   images: UploadImageData;
   setImages: (images: UploadImageData) => void;
+  royalties: RoyaltiesData;
+  setRoyalties: (royalties: RoyaltiesData) => void;
 };
 
 const CreateCollectionContext = createContext<CreateCollectionContextProps>({
@@ -49,6 +55,8 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
   setConfiguration: () => null,
   images: defaultImages,
   setImages: () => null,
+  royalties: defaultRoyalties,
+  setRoyalties: () => null,
 });
 
 export function CreateCollectionContextProvider(props: PropsWithChildren) {
@@ -60,9 +68,22 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
 
   const [images, setImages] = useState<UploadImageData>(defaultImages);
 
+  const [royalties, setRoyalties] = useState<RoyaltiesData>(defaultRoyalties);
+
   return (
     <CreateCollectionContext.Provider
-      value={{ tab, setTab, description, setDescription, configuration, setConfiguration, images, setImages }}
+      value={{
+        tab,
+        setTab,
+        description,
+        setDescription,
+        configuration,
+        setConfiguration,
+        images,
+        setImages,
+        royalties,
+        setRoyalties,
+      }}
     >
       {props.children}
     </CreateCollectionContext.Provider>

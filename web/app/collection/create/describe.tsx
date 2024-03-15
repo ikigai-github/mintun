@@ -16,6 +16,7 @@ import { useCreateCollectionContext } from './context';
 import { DescribeCollectionData, DescribeCollectionSchema, ParentSubmitForm } from './schema';
 
 const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
+  DescribeContent.displayName = 'DescribeContent';
   const { description, setDescription } = useCreateCollectionContext();
 
   const form = useForm<DescribeCollectionData>({
