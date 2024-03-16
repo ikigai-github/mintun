@@ -28,7 +28,7 @@ export const TokenCardList = ({ tokenCards }: { tokenCards: TokenCardProps[] }) 
   return (
     <div className="flex w-full flex-wrap justify-center gap-3">
       {tokenCards.map((token, index) => {
-        return <TokenCard key={index} tokenName={token.tokenName} img={token.img} />;
+        return <TokenCard key={`token-card-${index}`} tokenName={token.tokenName} img={token.img} />;
       })}
     </div>
   );

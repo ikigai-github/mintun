@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCreateCollectionContext } from './context';
 import ContractContent from './contract';
 import DescribeContent from './describe';
-import Images from './images';
+import ImagesContent from './images';
 import Mint from './mint';
 import ReviewContent from './review';
 import RoyaltiesContent from './royalties';
@@ -19,6 +19,7 @@ export default function CreateCollection() {
   const { tab, setTab } = useCreateCollectionContext();
   const describeRef = useRef<ParentSubmitForm>(null);
   const contractRef = useRef<ParentSubmitForm>(null);
+  const royaltiesRef = useRef<ParentSubmitForm>(null);
 
   // We want to submit the part of the form they are currently viewing whenever they
   // change tabs.  So we have used a forward ref to get the submit function from each
@@ -32,6 +33,8 @@ export default function CreateCollection() {
             return await describeRef.current?.handleSubmit();
           case 'contract':
             return await contractRef.current?.handleSubmit();
+          case 'royalties':
+            return await royaltiesRef.current?.handleSubmit();
           default:
             return true;
         }
@@ -64,13 +67,13 @@ export default function CreateCollection() {
           <DescribeContent ref={describeRef} />
         </TabsContent>
         <TabsContent value="images">
-          <Images />
+          <ImagesContent />
         </TabsContent>
         <TabsContent value="contract">
           <ContractContent ref={contractRef} />
         </TabsContent>
         <TabsContent value="royalties">
-          <RoyaltiesContent />
+          <RoyaltiesContent ref={royaltiesRef} />
         </TabsContent>
         <TabsContent value="traits">
           <TraitsContent />

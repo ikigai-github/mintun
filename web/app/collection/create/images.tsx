@@ -2,8 +2,10 @@
 
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AvatarDropzone, BannerDropzone, ThumbnailDropzone } from '@/components/image-dropzone';
-import { MOCK_TOKEN_CARDS, TokenCardList } from '@/components/token-card';
+import { AvatarDropzone } from '@/components/dropzone/avatar-dropzone';
+import { BannerDropzone } from '@/components/dropzone/banner-dropzone';
+import { ThumbnailDropzone } from '@/components/dropzone/thumbnail-dropzone';
+import { MOCK_TOKEN_CARDS, TokenCardList } from '@/components/token-card-list';
 
 import { useCreateCollectionContext } from './context';
 
@@ -14,6 +16,7 @@ export default function Images() {
   const brandName = description.project || '<Brand Name>';
   const artistName = description.artist || '<Artist Name>';
 
+  // TODO: add submit validation to make sure the images are not empty before moving to next step
   return (
     <Card>
       <Tabs defaultValue="desktop">

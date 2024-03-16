@@ -8,6 +8,7 @@ import {
   literal,
   maxLength,
   maxSize,
+  maxValue,
   mimeType,
   minLength,
   minValue,
@@ -60,17 +61,33 @@ export const ConfigureContractSchema = object({
   ),
 });
 
+const RoyaltySchema = object({
+  address: string('Address not in string format', [minLength(1)]), // TODO: Should we have a regex or min length for this?
+  percentage: number('Percentage not in number format', [maxValue(100), minValue(0.01)]),
+});
+
+export const RoyaltiesSchema = object({
+  royalties: array(RoyaltySchema),
+});
+
 const ImageSchema = object({
-  banner: string('Banner not in string format', [minLength(1)]),
-  avatar: string('Avatar not in string format', [minLength(1)]),
-  thumbnail: string('Thumbnail not in string format', [minLength(1)]),
+  src: string('Image not in string format', [minLength(1)]),
+  mime: string('Mime not in string format', [minLength(1)]),
+  width: number('Width not in number format', [minValue(1)]),
+  height: number('Height not in number format', [minValue(1)]),
+});
+
+const ImageTypeSchema = object({
+  banner: ImageSchema,
+  avatar: ImageSchema,
+  thumbnail: ImageSchema,
 });
 
 export const UploadImageSchema = object({
   // TODO: Upload images and save the uploaded image info into state
-  desktop: ImageSchema,
-  tablet: ImageSchema,
-  mobile: ImageSchema,
+  desktop: ImageTypeSchema,
+  tablet: ImageTypeSchema,
+  mobile: ImageTypeSchema,
 });
 
 /// TODO: Just import this section from offchain/image.ts  library once I have integrated it.
@@ -115,4 +132,7 @@ export type DescribeCollectionData = Input<typeof DescribeCollectionSchema>;
 export type ConfigureContractData = Input<typeof ConfigureContractSchema>;
 export type AddTraitData = Input<typeof AddTraitSchema>;
 export type UploadImageData = Input<typeof UploadImageSchema>;
-export type ImageType = Input<typeof ImageSchema>;
+export type ImageType = Input<typeof ImageTypeSchema>;
+export type ImageU = Input<typeof ImageSchema>;
+export type Royalty = Input<typeof RoyaltySchema>;
+export type RoyaltiesData = Input<typeof RoyaltiesSchema>;
