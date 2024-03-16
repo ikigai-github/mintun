@@ -6,21 +6,28 @@ import { WebImageData } from '@/lib/image';
 
 import { ConfigureContractData, DataContract, DescribeCollectionData, RoyaltiesData, UploadImageData } from './schema';
 
+export const defaultImage = {
+  src: '',
+  mime: '',
+  width: 0,
+  height: 0,
+};
+
 const defaultImages = {
   desktop: {
-    avatar: '',
-    banner: '',
-    thumbnail: '',
+    banner: defaultImage,
+    avatar: defaultImage,
+    thumbnail: defaultImage,
   },
   tablet: {
-    avatar: '',
-    banner: '',
-    thumbnail: '',
+    banner: defaultImage,
+    avatar: defaultImage,
+    thumbnail: defaultImage,
   },
   mobile: {
-    avatar: '',
-    banner: '',
-    thumbnail: '',
+    banner: defaultImage,
+    avatar: defaultImage,
+    thumbnail: defaultImage,
   },
 };
 
