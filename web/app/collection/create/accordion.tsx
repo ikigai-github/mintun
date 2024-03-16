@@ -12,21 +12,18 @@ export function AccordionDemo() {
     <Accordion type="single" collapsible orientation="horizontal" className="w-full" defaultValue="describe">
       <DescribeAccordionItem />
       <ContractAccordionItem />
-      <AccordionItem value="item-3">
-        <AccordionTrigger>3 Images</AccordionTrigger>
-        <AccordionContent>Yes. It's animated by default, but you can disable it if you prefer.</AccordionContent>
-      </AccordionItem>
+      <ImagesAccordionItem />
       <AccordionItem value="item-4">
         <AccordionTrigger disabled={true}>No Royalties</AccordionTrigger>
-        <AccordionContent>Yes. It's animated by default, but you can disable it if you prefer.</AccordionContent>
+        <AccordionContent>TODO</AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-5">
         <AccordionTrigger>5 Traits</AccordionTrigger>
-        <AccordionContent>Yes. It's animated by default, but you can disable it if you prefer.</AccordionContent>
+        <AccordionContent>TODO</AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-6">
         <AccordionTrigger>3 Social Links</AccordionTrigger>
-        <AccordionContent>Yes. It's animated by default, but you can disable it if you prefer.</AccordionContent>
+        <AccordionContent>TODO</AccordionContent>
       </AccordionItem>
     </Accordion>
   );
@@ -53,14 +50,28 @@ function toImageArray(images: UploadImageData) {
 function ImagesAccordionItem() {
   const { images } = useCreateCollectionContext();
 
-  //   <img
-  //   className={cn('h-[200px] w-[200px] object-cover ', imageClassName)}
-  //   height={200}
-  //   width={200}
-  //   src={'data:image/jpeg;base64, ' + img || undefined}
-  //   alt="Thumbnail"
-  // />
-  return <div>TOD</div>;
+  const imageArray = useMemo(() => toImageArray(images), [images]);
+
+  return (
+    <AccordionItem value="images">
+      <AccordionTrigger
+        disabled={imageArray.length === 0}
+        className="font-heading text-foreground font-light"
+      >{`${imageArray.length} Images`}</AccordionTrigger>
+      <AccordionContent>
+        <div className="bg-accent flex flex-wrap items-end gap-2 rounded-[0.5rem] p-2">
+          {imageArray.map((image, index) => (
+            <img
+              key={`review-image-${index}`}
+              className="size-10 object-cover"
+              src={'data:image/jpeg;base64, ' + image}
+              alt={`Review Image ${index}`}
+            />
+          ))}
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  );
 }
 
 function DescribeAccordionItem() {
@@ -70,7 +81,7 @@ function DescribeAccordionItem() {
     <AccordionItem value="describe">
       <AccordionTrigger className="font-heading text-foreground font-light">{description.collection}</AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
+        <div className="bg-accent grid max-w-sm grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
           {description.artist && (
             <>
               <div className="text-xs font-bold">Artist</div>
@@ -125,7 +136,7 @@ function ContractAccordionItem() {
         {displayContractName}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
+        <div className="bg-accent grid max-w-sm grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
           {configuration.window && (
             <>
               <div className="text-xs font-bold">Minting Window</div>
@@ -143,7 +154,7 @@ function ContractAccordionItem() {
           {configuration.group && (
             <>
               <div className="text-xs font-bold">Group</div>
-              <div className="font-heading text-foreground font-light">{configuration.group}</div>
+              <div className="font-heading text-foreground truncate font-light">{configuration.group}</div>
             </>
           )}
         </div>
