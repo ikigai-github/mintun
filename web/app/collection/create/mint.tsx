@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useMediaQuery } from 'usehooks-ts';
 
 import { Button } from '@/components/ui/button';
@@ -18,12 +18,16 @@ import {
 
 import { ReviewAccordion } from './review';
 
-export default function Mint() {
+export type MintProps = {
+  allowOpen: () => Promise<boolean>;
+};
+
+export default function Mint({ allowOpen }: MintProps) {
   return (
     <Card className="grid grid-cols-[1fr_auto] items-center gap-4 p-4">
       <CardTitle>Create a collection</CardTitle>
       <div className="row-span-2 flex items-end justify-end pr-4">
-        <MintButton />
+        <MintButton allowOpen={allowOpen} />
       </div>
 
       <CardDescription>
@@ -34,16 +38,27 @@ export default function Mint() {
   );
 }
 
-export function MintButton() {
+export function MintButton({ allowOpen }: MintProps) {
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 768px)', {
     defaultValue: true,
     initializeWithValue: false,
   });
 
+  const handleOpen = useCallback(
+    async (open: boolean) => {
+      if (!open) {
+        setOpen(open);
+      } else if (await allowOpen()) {
+        setOpen(open);
+      }
+    },
+    [setOpen, allowOpen]
+  );
+
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpen}>
         <DialogTrigger asChild>
           <Button>Mint</Button>
         </DialogTrigger>

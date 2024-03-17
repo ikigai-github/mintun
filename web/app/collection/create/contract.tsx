@@ -221,7 +221,7 @@ function ContractHeader() {
         constrain the creation of tokens while{' '}
         <Tooltip>
           <TooltipTrigger>
-            <span className="font-bold">data contracts</span>
+            <span className="font-bold">Data Contracts</span>
           </TooltipTrigger>
           <TooltipContent className="bg-secondary text-foreground shadow-foreground/10 shadow-md">
             <div className="max-w-72 p-2">

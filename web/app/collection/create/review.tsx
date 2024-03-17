@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { format } from 'date-fns';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -46,10 +47,7 @@ export function ReviewAccordion() {
       <ContractAccordionItem />
       <ImagesAccordionItem />
       <RoyaltiesAccordionItem />
-      <AccordionItem value="item-5">
-        <AccordionTrigger>5 Traits</AccordionTrigger>
-        <AccordionContent>TODO</AccordionContent>
-      </AccordionItem>
+      <TraitsAccordionItem />
       <AccordionItem value="item-6">
         <AccordionTrigger>3 Social Links</AccordionTrigger>
         <AccordionContent>TODO</AccordionContent>
@@ -234,6 +232,37 @@ function RoyaltiesAccordionItem() {
                 {royalty.percentage}%
               </div>
             </>
+          ))}
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  );
+}
+
+function TraitsAccordionItem() {
+  const { traits } = useCreateCollectionContext();
+
+  const label = useMemo(() => {
+    if (traits.length === 0) {
+      return 'No Traits';
+    } else if (traits.length === 1) {
+      return 'One Trait';
+    } else {
+      return `${traits.length} Traits`;
+    }
+  }, [traits]);
+
+  return (
+    <AccordionItem value="traits">
+      <AccordionTrigger disabled={traits.length === 0} className="font-heading text-foreground font-light">
+        {label}
+      </AccordionTrigger>
+      <AccordionContent>
+        <div className="bg-accent flex gap-2 rounded-[0.5rem] p-2">
+          {traits.map((trait, index) => (
+            <Badge variant="outline" className="bg-background capitalize" key={`review-trait-${index}`}>
+              {trait}
+            </Badge>
           ))}
         </div>
       </AccordionContent>

@@ -25,42 +25,43 @@ export default function CreateCollection() {
   // change tabs.  So we have used a forward ref to get the submit function from each
   // form and we run it whenever a tab changes to trigger form validation.  If the
   // validation fails we don't allow the tab change.
-  const handleTabChange = useCallback(
-    async (newTab: string) => {
+  const handleViewChange = useCallback(
+    async (newTab?: string) => {
       const handleSubmit = async () => {
         switch (tab) {
           case 'describe':
-            return await describeRef.current?.handleSubmit();
+            return (await describeRef.current?.handleSubmit()) ?? true;
           case 'contract':
-            return await contractRef.current?.handleSubmit();
+            return (await contractRef.current?.handleSubmit()) ?? true;
           case 'royalties':
-            return await royaltiesRef.current?.handleSubmit();
+            return (await royaltiesRef.current?.handleSubmit()) ?? true;
           default:
             return true;
         }
       };
 
       const isValid = await handleSubmit();
-      if (isValid) {
+      if (isValid && newTab) {
         setTab(newTab);
       }
+
+      return isValid;
     },
     [tab]
   );
 
   return (
     <div className="flex w-full max-w-[1024px] flex-col gap-2">
-      <Mint />
-      <Tabs defaultValue="describe" value={tab} onValueChange={handleTabChange} className="flex-1">
+      <Mint allowOpen={handleViewChange} />
+      <Tabs defaultValue="describe" value={tab} onValueChange={handleViewChange} className="flex-1">
         {/* TODO: Maybe Put the Tab list inside a navigation menu on mobile  since it gets a bit unwieldy */}
-        <TabsList className="grid h-fit w-full grid-cols-4 sm:grid-cols-7">
+        <TabsList className="grid h-fit w-full grid-cols-3 sm:grid-cols-6">
           <TabsTrigger value="describe">Descriptions</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
           <TabsTrigger value="contract">Contract</TabsTrigger>
           <TabsTrigger value="royalties">Royalties</TabsTrigger>
           <TabsTrigger value="traits">Traits</TabsTrigger>
           <TabsTrigger value="social">Social</TabsTrigger>
-          <TabsTrigger value="review">Review</TabsTrigger>
         </TabsList>
         <TabsContent value="describe">
           <DescribeContent ref={describeRef} />
@@ -79,9 +80,6 @@ export default function CreateCollection() {
         </TabsContent>
         <TabsContent value="social">
           <SocialContent />
-        </TabsContent>
-        <TabsContent value="review">
-          <ReviewContent />
         </TabsContent>
       </Tabs>
     </div>
