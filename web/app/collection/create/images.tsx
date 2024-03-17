@@ -10,13 +10,12 @@ import { MOCK_TOKEN_CARDS, TokenCardList } from '@/components/token-card-list';
 import { useCreateCollectionContext } from './context';
 
 export default function Images() {
-  const { description, images, setImages } = useCreateCollectionContext();
+  const { describe, images, setImages } = useCreateCollectionContext();
 
-  const collectionName = description.collection || '<Collection Name>';
-  const brandName = description.project || '<Brand Name>';
-  const artistName = description.artist || '<Artist Name>';
+  const collectionName = describe.collection || '<Collection Name>';
+  const brandName = describe.project || '<Brand Name>';
+  const artistName = describe.artist || '<Artist Name>';
 
-  // TODO: add submit validation to make sure the images are not empty before moving to next step
   return (
     <Card>
       <Tabs defaultValue="desktop">

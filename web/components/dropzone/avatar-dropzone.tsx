@@ -8,7 +8,7 @@ import { readerResultToBase64, setImageByView } from '@/lib/dropzone/utils';
 import { cn } from '@/lib/utils';
 
 export function AvatarDropzone({ callback, imagesState, view, className, imageClassName }: DropzoneProps) {
-  const [img, setImg] = useState<string | null>(imagesState[view].avatar.src);
+  const [img, setImg] = useState<string | null>(imagesState[view].avatar.src || imagesState['desktop'].avatar.src);
   const onDrop = useCallback((acceptedFiles: any) => {
     acceptedFiles.forEach((file: any) => {
       const reader = new FileReader();

@@ -1,6 +1,5 @@
 'use client';
 
-import { useCallback } from 'react';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import { useForm } from 'react-hook-form';
 
@@ -93,9 +92,9 @@ function TraitsHeader() {
         <div className="font-heading">
           Technically different sets of traits can be added to each NFT in a collection but generally every NFT inside a
           collection has the same set of traits with varying values for each trait. For example two NFTs might have the
-          traits hat and shirt. But the hat and shirt of each NFT could be different. In other words, you can declare
-          what traits every NFT in the collection will have at the collection level. This helps marketplaces to more
-          easily extract data about your collection without inspecting each individual NFT.
+          traits <b>hat</b> and <b>shirt</b>. But the <b>hat</b> and <b>shirt</b> of each NFT could be different. In
+          other words, you can declare what traits every NFT in the collection will have at the collection level. This
+          helps marketplaces to more easily extract data about your collection without inspecting each individual NFT.
         </div>
       </CardDescription>
     </CardHeader>

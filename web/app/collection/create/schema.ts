@@ -40,7 +40,7 @@ export const AddTraitSchema = object({
   trait: string('Trait must be at least one character', [minLength(0)]),
 });
 
-export const ConfigureContractSchema = object({
+export const ContractSchema = object({
   contract: enum_(DataContract),
   window: optional(
     object({
@@ -77,7 +77,7 @@ const ImageSchema = object({
   height: number('Height not in number format', [minValue(1)]),
 });
 
-const ImageTypeSchema = object({
+const ImageGroupSchema = object({
   banner: ImageSchema,
   avatar: ImageSchema,
   thumbnail: ImageSchema,
@@ -85,9 +85,9 @@ const ImageTypeSchema = object({
 
 export const UploadImageSchema = object({
   // TODO: Upload images and save the uploaded image info into state
-  desktop: ImageTypeSchema,
-  tablet: ImageTypeSchema,
-  mobile: ImageTypeSchema,
+  desktop: ImageGroupSchema,
+  tablet: ImageGroupSchema,
+  mobile: ImageGroupSchema,
 });
 
 /// TODO: Just import this section from offchain/image.ts  library once I have integrated it.
@@ -128,11 +128,11 @@ export type ParentSubmitForm = {
   handleSubmit: () => Promise<boolean>;
 };
 
-export type DescribeCollectionData = Input<typeof DescribeCollectionSchema>;
-export type ConfigureContractData = Input<typeof ConfigureContractSchema>;
+export type DescribeData = Input<typeof DescribeCollectionSchema>;
+export type ContractData = Input<typeof ContractSchema>;
 export type AddTraitData = Input<typeof AddTraitSchema>;
 export type UploadImageData = Input<typeof UploadImageSchema>;
-export type ImageType = Input<typeof ImageTypeSchema>;
-export type ImageU = Input<typeof ImageSchema>;
+export type ImageGroupData = Input<typeof ImageGroupSchema>;
+export type ImageData = Input<typeof ImageSchema>;
 export type Royalty = Input<typeof RoyaltySchema>;
 export type RoyaltiesData = Input<typeof RoyaltiesSchema>;

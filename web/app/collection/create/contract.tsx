@@ -19,15 +19,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { useCreateCollectionContext } from './context';
-import { ConfigureContractData, ConfigureContractSchema, DataContract, ParentSubmitForm } from './schema';
+import { ContractData, ContractSchema, DataContract, ParentSubmitForm } from './schema';
 
 const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
-  ContractContent.displayName = 'ContractContent';
-  const { setTab, configuration, setConfiguration } = useCreateCollectionContext();
+  const { contract, setContract } = useCreateCollectionContext();
 
-  const form = useForm<ConfigureContractData>({
-    resolver: valibotResolver(ConfigureContractSchema),
-    defaultValues: configuration,
+  const form = useForm<ContractData>({
+    resolver: valibotResolver(ContractSchema),
+    defaultValues: contract,
   });
 
   const { trigger, getValues } = form;
@@ -37,15 +36,15 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const handleSubmit = useCallback(async () => {
     const isValid = await trigger();
     if (isValid) {
-      setConfiguration(form.getValues());
+      setContract(form.getValues());
     }
 
     return isValid;
-  }, [trigger, getValues, setConfiguration]);
+  }, [trigger, getValues, setContract]);
 
   useImperativeHandle(ref, () => ({ handleSubmit }));
 
-  const onSubmit = useCallback((values: ConfigureContractData) => setConfiguration(values), [setConfiguration]);
+  const onSubmit = useCallback((values: ContractData) => setContract(values), [setContract]);
 
   return (
     <Card>
@@ -239,5 +238,7 @@ function ContractHeader() {
     </CardHeader>
   );
 }
+
+ContractContent.displayName = 'ContractContent';
 
 export default ContractContent;

@@ -14,9 +14,6 @@ import { useCreateCollectionContext } from './context';
 import { ParentSubmitForm, RoyaltiesData, RoyaltiesSchema } from './schema';
 
 const RoyaltiesContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
-  // Added this on each page as it was showing lint error for whole component without it
-  RoyaltiesContent.displayName = 'RoyaltiesContent';
-
   const { royalties, setRoyalties } = useCreateCollectionContext();
 
   const form = useForm<RoyaltiesData>({
@@ -139,11 +136,13 @@ function RoyaltiesHeader() {
         require a percentage of any sale of NFTs in the collection go to the specified beneficiaries. Beneficiaries can
         be any address which may be a charity script address or personal wallet. Keep in mind large royalties can
         discourage buying and selling. For this reason it is advisable to keep the total royalties to a small
-        percentage. Also note that royalties are enforced mostly offchain and therefore are not guaranteed to be
-        enforced.
+        percentage. Royalties are enforced at the discretion of the each marketplace. Most marketplaces support
+        royalties but it is not guaranteed to be enforced.
       </div>
     </CardHeader>
   );
 }
+
+RoyaltiesContent.displayName = 'RoyaltiesContent';
 
 export default RoyaltiesContent;

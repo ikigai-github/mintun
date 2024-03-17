@@ -2,7 +2,7 @@
 
 import { createContext, PropsWithChildren, useContext, useState } from 'react';
 
-import { ConfigureContractData, DataContract, DescribeCollectionData, RoyaltiesData, UploadImageData } from './schema';
+import { ContractData, DataContract, DescribeData, RoyaltiesData, UploadImageData } from './schema';
 
 export const defaultImage = {
   src: '',
@@ -36,12 +36,12 @@ const defaultRoyalties = {
 export type CreateCollectionContextProps = {
   tab: string;
   setTab: (tab: string) => void;
-  description: DescribeCollectionData;
-  setDescription: (data: DescribeCollectionData) => void;
+  describe: DescribeData;
+  setDescribe: (data: DescribeData) => void;
   traits: string[];
   setTraits: (data: string[]) => void;
-  configuration: ConfigureContractData;
-  setConfiguration: (data: ConfigureContractData) => void;
+  contract: ContractData;
+  setContract: (data: ContractData) => void;
   images: UploadImageData;
   setImages: (images: UploadImageData) => void;
   royalties: RoyaltiesData;
@@ -51,17 +51,17 @@ export type CreateCollectionContextProps = {
 const CreateCollectionContext = createContext<CreateCollectionContextProps>({
   tab: 'describe',
   setTab: () => null,
-  description: {
+  describe: {
     collection: '',
     nsfw: false,
   },
-  setDescription: () => null,
+  setDescribe: () => null,
   traits: [],
   setTraits: () => null,
-  configuration: {
+  contract: {
     contract: DataContract.Immutable,
   },
-  setConfiguration: () => null,
+  setContract: () => null,
   images: defaultImages,
   setImages: () => null,
   royalties: defaultRoyalties,
@@ -70,9 +70,9 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
 
 export function CreateCollectionContextProvider(props: PropsWithChildren) {
   const [tab, setTab] = useState('describe');
-  const [description, setDescription] = useState<DescribeCollectionData>({ collection: '', nsfw: false });
+  const [describe, setDescribe] = useState<DescribeData>({ collection: '', nsfw: false });
   const [traits, setTraits] = useState<string[]>([]);
-  const [configuration, setConfiguration] = useState<ConfigureContractData>({
+  const [contract, setContract] = useState<ContractData>({
     contract: DataContract.Immutable,
   });
 
@@ -85,12 +85,12 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
       value={{
         tab,
         setTab,
-        description,
-        setDescription,
+        describe,
+        setDescribe,
         traits,
         setTraits,
-        configuration,
-        setConfiguration,
+        contract,
+        setContract,
         images,
         setImages,
         royalties,
