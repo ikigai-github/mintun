@@ -12,13 +12,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { useCreateCollectionContext } from './context';
-import { DescribeCollectionSchema, DescribeData, ParentSubmitForm } from './schema';
+import { DescribeData, DescribeSchema, ParentSubmitForm } from './schema';
 
 const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const { describe, setDescribe } = useCreateCollectionContext();
 
   const form = useForm<DescribeData>({
-    resolver: valibotResolver(DescribeCollectionSchema),
+    resolver: valibotResolver(DescribeSchema),
     defaultValues: describe,
   });
 

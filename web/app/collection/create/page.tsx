@@ -20,6 +20,7 @@ export default function CreateCollection() {
   const describeRef = useRef<ParentSubmitForm>(null);
   const contractRef = useRef<ParentSubmitForm>(null);
   const royaltiesRef = useRef<ParentSubmitForm>(null);
+  const socialRef = useRef<ParentSubmitForm>(null);
 
   // We want to submit the part of the form they are currently viewing whenever they
   // change tabs.  So we have used a forward ref to get the submit function from each
@@ -35,6 +36,8 @@ export default function CreateCollection() {
             return (await contractRef.current?.handleSubmit()) ?? true;
           case 'royalties':
             return (await royaltiesRef.current?.handleSubmit()) ?? true;
+          case 'social':
+            return (await socialRef.current?.handleSubmit()) ?? true;
           default:
             return true;
         }
@@ -79,7 +82,7 @@ export default function CreateCollection() {
           <TraitsContent />
         </TabsContent>
         <TabsContent value="social">
-          <SocialContent />
+          <SocialContent ref={socialRef} />
         </TabsContent>
       </Tabs>
     </div>

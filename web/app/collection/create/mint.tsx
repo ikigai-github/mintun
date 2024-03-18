@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { DialogDescription } from '@radix-ui/react-dialog';
 import { useMediaQuery } from 'usehooks-ts';
 
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
@@ -31,12 +33,16 @@ export default function Mint({ allowOpen }: MintProps) {
       </div>
 
       <CardDescription>
-        Fill out as much or as little in the tabs below. When you feel you have enough information filled out press
-        ready to mint.
+        Fill out as much or as little as you like about your colleciton in the tabs below. When you feel you have enough
+        information filled out press ready to mint.
       </CardDescription>
     </Card>
   );
 }
+
+const mintTitle = 'Ready To Mint';
+const mintButtonLabel = 'Ready To Mint';
+const mintDescription = `You can review your mint details and cost breakdown below.`;
 
 export function MintButton({ allowOpen }: MintProps) {
   const [open, setOpen] = useState(false);
@@ -60,13 +66,17 @@ export function MintButton({ allowOpen }: MintProps) {
     return (
       <Dialog open={open} onOpenChange={handleOpen}>
         <DialogTrigger asChild>
-          <Button>Mint</Button>
+          <Button>{mintButtonLabel}</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Mint your collection</DialogTitle>
+            <DialogTitle>{mintTitle}</DialogTitle>
+            <DialogDescription className="font-heading text-muted-foreground text-sm">
+              {mintDescription}
+            </DialogDescription>
           </DialogHeader>
           <ReviewAccordion />
+          <Button>Mint</Button>
         </DialogContent>
       </Dialog>
     );
@@ -75,14 +85,21 @@ export function MintButton({ allowOpen }: MintProps) {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button>Mint</Button>
+        <Button>{mintButtonLabel}</Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left">
-          <DrawerTitle>Mint your collection</DrawerTitle>
+          <DrawerTitle>{mintTitle}</DrawerTitle>
+          <DrawerDescription className="font-heading text-muted-foreground text-sm">
+            {mintDescription}
+          </DrawerDescription>
         </DrawerHeader>
-        <ReviewAccordion />
+        <div className="p-4">
+          <ReviewAccordion />
+        </div>
+
         <DrawerFooter className="pt-2">
+          <Button>Mint</Button>
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
           </DrawerClose>

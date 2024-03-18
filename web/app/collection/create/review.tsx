@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { DiscordLogoIcon, GlobeIcon, InstagramLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
 import { format } from 'date-fns';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -7,7 +8,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { useCreateCollectionContext } from './context';
-import { DataContract, UploadImageData } from './schema';
+import { DataContract } from './schema';
 
 export default function ReviewContent() {
   return (
@@ -48,74 +49,51 @@ export function ReviewAccordion() {
       <ImagesAccordionItem />
       <RoyaltiesAccordionItem />
       <TraitsAccordionItem />
-      <AccordionItem value="item-6">
-        <AccordionTrigger>3 Social Links</AccordionTrigger>
-        <AccordionContent>TODO</AccordionContent>
-      </AccordionItem>
+      <SocialAccordionItem />
     </Accordion>
   );
 }
 
-function toImageArray(images: UploadImageData) {
-  const { desktop, tablet, mobile } = images;
-  let imageArray = [];
-
-  if (desktop.avatar.src) imageArray.push(desktop.avatar);
-  if (desktop.banner.src) imageArray.push(desktop.banner);
-  if (desktop.thumbnail.src) imageArray.push(desktop.thumbnail);
-
-  if (tablet.avatar.src) imageArray.push(tablet.avatar);
-  if (tablet.banner.src) imageArray.push(tablet.banner);
-  if (tablet.thumbnail.src) imageArray.push(tablet.thumbnail);
-
-  if (mobile.avatar.src) imageArray.push(mobile.avatar);
-  if (mobile.banner.src) imageArray.push(mobile.banner);
-  if (mobile.thumbnail.src) imageArray.push(mobile.thumbnail);
-
-  return imageArray;
-}
-
 function DescribeAccordionItem() {
-  const { describe: description } = useCreateCollectionContext();
+  const { describe } = useCreateCollectionContext();
 
   return (
     <AccordionItem value="describe">
-      <AccordionTrigger className="font-heading text-foreground font-light">{description.collection}</AccordionTrigger>
+      <AccordionTrigger className="font-heading text-foreground text-lg font-light leading-none">
+        {describe.collection}
+      </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid max-w-sm grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
-          {description.artist && (
+        <div className="bg-accent grid grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
+          {describe.artist && (
             <>
               <div className="text-xs font-bold">Artist</div>
-              <div className="font-heading text-foreground font-light">{description.artist}</div>
+              <div className="font-heading text-foreground font-light">{describe.artist}</div>
             </>
           )}
-          {description.project && (
+          {describe.project && (
             <>
               <div className="text-xs font-bold">Brand</div>
-              <div className="font-heading text-foreground font-light">{description.project}</div>
+              <div className="font-heading text-foreground font-light">{describe.project}</div>
             </>
           )}
 
-          {description.description && (
+          {describe.description && (
             <>
               <div className="text-xs font-bold">Description</div>
               <div className="font-heading text-foreground truncate font-light">
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>{description.description}</span>
+                  <TooltipTrigger asChild className="cursor-pointer">
+                    <span>{describe.description}</span>
                   </TooltipTrigger>
-                  <TooltipContent
-                    align="start"
-                    className="bg-accent text-foreground shadow-foreground/10  overflow-auto whitespace-normal shadow-md"
-                  >
-                    <div className="max-w-72 p-2">{description.description}</div>
+                  <TooltipContent className="bg-accent text-foreground shadow-foreground/10  overflow-auto whitespace-normal shadow-md">
+                    <div className="max-w-72 p-2">{describe.description}</div>
                   </TooltipContent>
                 </Tooltip>
               </div>
             </>
           )}
           <div className="text-xs font-bold">Not Safe for work</div>
-          <div className="font-heading text-foreground font-light">{description.nsfw ? 'Yes' : 'No'}</div>
+          <div className="font-heading text-foreground font-light">{describe.nsfw ? 'Yes' : 'No'}</div>
         </div>
       </AccordionContent>
     </AccordionItem>
@@ -135,11 +113,11 @@ function ContractAccordionItem() {
 
   return (
     <AccordionItem value="configure">
-      <AccordionTrigger disabled={!enabled} className="font-heading text-foreground font-ligt">
+      <AccordionTrigger disabled={!enabled} className="font-heading text-foreground font-light leading-none">
         {displayContractName}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid max-w-sm grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
+        <div className="bg-accent grid grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
           {configuration.window && (
             <>
               <div className="text-xs font-bold">Minting Window</div>
@@ -169,13 +147,30 @@ function ContractAccordionItem() {
 function ImagesAccordionItem() {
   const { images } = useCreateCollectionContext();
 
-  const imageArray = useMemo(() => toImageArray(images), [images]);
+  const imageArray = useMemo(() => {
+    const { desktop, tablet, mobile } = images;
+    let imageArray = [];
+
+    if (desktop.avatar.src) imageArray.push(desktop.avatar);
+    if (desktop.banner.src) imageArray.push(desktop.banner);
+    if (desktop.thumbnail.src) imageArray.push(desktop.thumbnail);
+
+    if (tablet.avatar.src) imageArray.push(tablet.avatar);
+    if (tablet.banner.src) imageArray.push(tablet.banner);
+    if (tablet.thumbnail.src) imageArray.push(tablet.thumbnail);
+
+    if (mobile.avatar.src) imageArray.push(mobile.avatar);
+    if (mobile.banner.src) imageArray.push(mobile.banner);
+    if (mobile.thumbnail.src) imageArray.push(mobile.thumbnail);
+
+    return imageArray;
+  }, [images]);
 
   return (
     <AccordionItem value="images">
       <AccordionTrigger
         disabled={imageArray.length === 0}
-        className="font-heading text-foreground font-light"
+        className="font-heading text-foreground font-light leading-none"
       >{`${imageArray.length} Images`}</AccordionTrigger>
       <AccordionContent>
         <div className="bg-accent flex flex-wrap items-end gap-2 rounded-[0.5rem] p-2">
@@ -208,7 +203,10 @@ function RoyaltiesAccordionItem() {
 
   return (
     <AccordionItem value="royalties">
-      <AccordionTrigger disabled={royalties.royalties.length === 0} className="font-heading text-foreground font-light">
+      <AccordionTrigger
+        disabled={royalties.royalties.length === 0}
+        className="font-heading text-foreground font-light leading-none"
+      >
         {label}
       </AccordionTrigger>
       <AccordionContent>
@@ -254,7 +252,7 @@ function TraitsAccordionItem() {
 
   return (
     <AccordionItem value="traits">
-      <AccordionTrigger disabled={traits.length === 0} className="font-heading text-foreground font-light">
+      <AccordionTrigger disabled={traits.length === 0} className="font-heading text-foreground font-light leading-none">
         {label}
       </AccordionTrigger>
       <AccordionContent>
@@ -264,6 +262,65 @@ function TraitsAccordionItem() {
               {trait}
             </Badge>
           ))}
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  );
+}
+
+function SocialAccordionItem() {
+  const { social } = useCreateCollectionContext();
+
+  const label = useMemo(() => {
+    let count = 0;
+    if (social.website) count++;
+    if (social.twitter) count++;
+    if (social.instagram) count++;
+    if (social.discord) count++;
+
+    if (count === 0) {
+      return 'No Social Links';
+    } else if (count === 1) {
+      return 'One Social Link';
+    } else {
+      return `${count} Social Links`;
+    }
+  }, [social]);
+
+  return (
+    <AccordionItem value="social">
+      <AccordionTrigger
+        disabled={label === 'No Social Links'}
+        className="font-heading text-foreground font-light leading-none"
+      >
+        {label}
+      </AccordionTrigger>
+      <AccordionContent>
+        <div className="bg-accent text-foreground grid grid-cols-[auto_1fr] items-end items-center gap-4 rounded-[0.5rem] p-2">
+          {social.website ? (
+            <>
+              <GlobeIcon className="size-5" />
+              <span>{social.website}</span>
+            </>
+          ) : undefined}
+          {social.twitter ? (
+            <>
+              <TwitterLogoIcon className="size-5" />
+              <span>{social.twitter}</span>
+            </>
+          ) : undefined}
+          {social.discord ? (
+            <>
+              <DiscordLogoIcon className="size-5" />
+              <span>{social.discord}</span>
+            </>
+          ) : undefined}
+          {social.instagram ? (
+            <>
+              <InstagramLogoIcon className="size-5" />
+              <span>{social.instagram}</span>
+            </>
+          ) : undefined}
         </div>
       </AccordionContent>
     </AccordionItem>

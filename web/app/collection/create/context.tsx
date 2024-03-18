@@ -2,13 +2,28 @@
 
 import { createContext, PropsWithChildren, useContext, useState } from 'react';
 
-import { ContractData, DataContract, DescribeData, RoyaltiesData, UploadImageData } from './schema';
+import { ContractData, DataContract, DescribeData, RoyaltiesData, SocialData, UploadImageData } from './schema';
 
 export const defaultImage = {
   src: '',
   mime: '',
   width: 0,
   height: 0,
+};
+
+const defaultDescribe = {
+  collection: '',
+  artist: '',
+  project: '',
+  description: '',
+  nsfw: false,
+};
+
+const defaultContract = {
+  contract: DataContract.Immutable,
+  maxTokens: undefined,
+  window: undefined,
+  group: '',
 };
 
 const defaultImages = {
@@ -33,6 +48,13 @@ const defaultRoyalties = {
   royalties: [],
 };
 
+const defaultSocial = {
+  website: '',
+  twitter: '',
+  discord: '',
+  instagram: '',
+};
+
 export type CreateCollectionContextProps = {
   tab: string;
   setTab: (tab: string) => void;
@@ -46,15 +68,14 @@ export type CreateCollectionContextProps = {
   setImages: (images: UploadImageData) => void;
   royalties: RoyaltiesData;
   setRoyalties: (royalties: RoyaltiesData) => void;
+  social: SocialData;
+  setSocial: (social: SocialData) => void;
 };
 
 const CreateCollectionContext = createContext<CreateCollectionContextProps>({
   tab: 'describe',
   setTab: () => null,
-  describe: {
-    collection: '',
-    nsfw: false,
-  },
+  describe: defaultDescribe,
   setDescribe: () => null,
   traits: [],
   setTraits: () => null,
@@ -66,19 +87,18 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
   setImages: () => null,
   royalties: defaultRoyalties,
   setRoyalties: () => null,
+  social: defaultSocial,
+  setSocial: () => null,
 });
 
 export function CreateCollectionContextProvider(props: PropsWithChildren) {
   const [tab, setTab] = useState('describe');
-  const [describe, setDescribe] = useState<DescribeData>({ collection: '', nsfw: false });
+  const [describe, setDescribe] = useState<DescribeData>(defaultDescribe);
   const [traits, setTraits] = useState<string[]>([]);
-  const [contract, setContract] = useState<ContractData>({
-    contract: DataContract.Immutable,
-  });
-
+  const [contract, setContract] = useState<ContractData>(defaultContract);
   const [images, setImages] = useState<UploadImageData>(defaultImages);
-
   const [royalties, setRoyalties] = useState<RoyaltiesData>(defaultRoyalties);
+  const [social, setSocial] = useState<SocialData>(defaultSocial);
 
   return (
     <CreateCollectionContext.Provider
@@ -95,6 +115,8 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
         setImages,
         royalties,
         setRoyalties,
+        social,
+        setSocial,
       }}
     >
       {props.children}
