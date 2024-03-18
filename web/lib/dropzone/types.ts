@@ -1,4 +1,4 @@
-import { UploadImageData } from '@/app/create-collection/context';
+import { UploadImageData } from '@/app/collection/create/schema';
 
 export type DropzoneProps = {
   callback: (imgs: UploadImageData) => void;

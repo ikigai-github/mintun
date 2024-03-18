@@ -16,18 +16,20 @@ import {
   object,
   optional,
   regex,
+  startsWith,
   string,
   union,
+  url,
 } from 'valibot';
 
-export const DescribeCollectionSchema = object({
-  collection: string([
+export const DescribeSchema = object({
+  collection: string('The collection name is required', [
     minLength(3, 'The collection must have a name of at least 3 characters'),
     maxLength(64, 'Collection name cannot be more than 64 characters'),
   ]),
-  artist: optional(string()),
-  project: optional(string()),
-  description: optional(string()),
+  artist: union([literal(''), string([maxLength(24, 'Artist name cannot be more than 24 characters')])]),
+  project: union([literal(''), string([maxLength(24, 'Project/Brand name cannot be more than 24 characters')])]),
+  description: union([literal(''), string([maxLength(64, 'Description cannot be more than 64 characters')])]),
   nsfw: boolean(),
 });
 
@@ -36,7 +38,11 @@ export const DataContract = {
   Evolvable: 'MUTABLE',
 } as const;
 
-export const ConfigureContractSchema = object({
+export const AddTraitSchema = object({
+  trait: string('Trait must be at least one character', [minLength(0)]),
+});
+
+export const ContractSchema = object({
   contract: enum_(DataContract),
   window: optional(
     object({
@@ -66,6 +72,43 @@ export const RoyaltiesSchema = object({
   royalties: array(RoyaltySchema),
 });
 
+export const SocialSchema = object({
+  website: union([
+    literal(''),
+    string([url('Must be a complete URL'), startsWith('https://', 'Website is expected to be an https url')]),
+  ]),
+  twitter: union([
+    literal(''),
+    string([
+      url('Must be a complete URL not just the username'),
+      regex(
+        /^https:\/\/(www.)?(twitter|x).com\/\w+/,
+        'Username url must start with x or twitter domain (e.g. https://x.com/username)'
+      ),
+    ]),
+  ]),
+  discord: union([
+    literal(''),
+    string([
+      url('Must be a complete URL not just the invite code'),
+      regex(
+        /^https:\/\/(www.)?discord\.(com?|gg)\/\w+/,
+        'Invite must start with discord domain (e.g. https://discord.com/invite/abcdef)'
+      ),
+    ]),
+  ]),
+  instagram: union([
+    literal(''),
+    string([
+      url('Must be a complete URL not just the username'),
+      regex(
+        /^https:\/\/(www.)?(instagram\.com|ig\.me)\/\w+/,
+        'Username must start with an instagram domain (e.g. https//ig.me/username)'
+      ),
+    ]),
+  ]),
+});
+
 const ImageSchema = object({
   src: string('Image not in string format', [minLength(1)]),
   mime: string('Mime not in string format', [minLength(1)]),
@@ -73,7 +116,7 @@ const ImageSchema = object({
   height: number('Height not in number format', [minValue(1)]),
 });
 
-const ImageTypeSchema = object({
+const ImageGroupSchema = object({
   banner: ImageSchema,
   avatar: ImageSchema,
   thumbnail: ImageSchema,
@@ -81,9 +124,9 @@ const ImageTypeSchema = object({
 
 export const UploadImageSchema = object({
   // TODO: Upload images and save the uploaded image info into state
-  desktop: ImageTypeSchema,
-  tablet: ImageTypeSchema,
-  mobile: ImageTypeSchema,
+  desktop: ImageGroupSchema,
+  tablet: ImageGroupSchema,
+  mobile: ImageGroupSchema,
 });
 
 /// TODO: Just import this section from offchain/image.ts  library once I have integrated it.
@@ -124,10 +167,12 @@ export type ParentSubmitForm = {
   handleSubmit: () => Promise<boolean>;
 };
 
-export type DescribeCollectionData = Input<typeof DescribeCollectionSchema>;
-export type ConfigureContractData = Input<typeof ConfigureContractSchema>;
+export type DescribeData = Input<typeof DescribeSchema>;
+export type ContractData = Input<typeof ContractSchema>;
+export type AddTraitData = Input<typeof AddTraitSchema>;
 export type UploadImageData = Input<typeof UploadImageSchema>;
-export type ImageType = Input<typeof ImageTypeSchema>;
-export type ImageU = Input<typeof ImageSchema>;
+export type ImageGroupData = Input<typeof ImageGroupSchema>;
+export type ImageData = Input<typeof ImageSchema>;
 export type Royalty = Input<typeof RoyaltySchema>;
 export type RoyaltiesData = Input<typeof RoyaltiesSchema>;
+export type SocialData = Input<typeof SocialSchema>;

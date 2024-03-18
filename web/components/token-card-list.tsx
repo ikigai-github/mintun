@@ -1,5 +1,7 @@
 'use client';
 
+import { Card } from './ui/card';
+
 type TokenCardProps = {
   tokenName: string;
   img: string;
@@ -15,16 +17,16 @@ export const MOCK_TOKEN_CARDS = [
 
 const TokenCard = ({ tokenName, img }: TokenCardProps) => {
   return (
-    <div className="h-48 w-36 rounded-md border sm:w-auto">
-      <img className="h-36 w-36 rounded-md object-cover" src={img} alt={tokenName} />
-      <p className="px-3 pt-2 font-bold">{tokenName}</p>
-    </div>
+    <Card className="flex h-56 w-40 flex-col justify-between rounded-md border sm:w-auto">
+      <img className="h-36 w-40 rounded-t-md object-cover" src={img} alt={tokenName} />
+      <p className="p-4 font-bold">{tokenName}</p>
+    </Card>
   );
 };
 
 export const TokenCardList = ({ tokenCards }: { tokenCards: TokenCardProps[] }) => {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex w-full flex-wrap justify-center gap-3">
       {tokenCards.map((token, index) => {
         return <TokenCard key={`token-card-${index}`} tokenName={token.tokenName} img={token.img} />;
       })}

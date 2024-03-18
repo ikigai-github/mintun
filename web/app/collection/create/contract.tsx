@@ -11,7 +11,7 @@ import { useForm } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent } from '@/components/ui/popover';
@@ -19,15 +19,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { useCreateCollectionContext } from './context';
-import { ConfigureContractData, ConfigureContractSchema, DataContract, ParentSubmitForm } from './schema';
+import { ContractData, ContractSchema, DataContract, ParentSubmitForm } from './schema';
 
 const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
-  ContractContent.displayName = 'ContractContent';
-  const { setTab, configuration, setConfiguration } = useCreateCollectionContext();
+  const { contract, setContract } = useCreateCollectionContext();
 
-  const form = useForm<ConfigureContractData>({
-    resolver: valibotResolver(ConfigureContractSchema),
-    defaultValues: configuration,
+  const form = useForm<ContractData>({
+    resolver: valibotResolver(ContractSchema),
+    defaultValues: contract,
   });
 
   const { trigger, getValues } = form;
@@ -37,15 +36,15 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const handleSubmit = useCallback(async () => {
     const isValid = await trigger();
     if (isValid) {
-      setConfiguration(form.getValues());
+      setContract(form.getValues());
     }
 
     return isValid;
-  }, [trigger, getValues, setConfiguration]);
+  }, [trigger, getValues, setContract]);
 
   useImperativeHandle(ref, () => ({ handleSubmit }));
 
-  const onSubmit = useCallback((values: ConfigureContractData) => setConfiguration(values), [setConfiguration]);
+  const onSubmit = useCallback((values: ContractData) => setContract(values), [setContract]);
 
   return (
     <Card>
@@ -206,7 +205,7 @@ function ContractHeader() {
   return (
     <CardHeader>
       <CardTitle className="font-heading pb-2">Configure your contracts</CardTitle>
-      <div className="font-heading">
+      <CardDescription className="font-heading">
         Contracts provide a way to guarantee some properties of your collection to your token holders.{' '}
         <Tooltip>
           <TooltipTrigger>
@@ -222,7 +221,7 @@ function ContractHeader() {
         constrain the creation of tokens while{' '}
         <Tooltip>
           <TooltipTrigger>
-            <span className="font-bold">data contracts</span>
+            <span className="font-bold">Data Contracts</span>
           </TooltipTrigger>
           <TooltipContent className="bg-secondary text-foreground shadow-foreground/10 shadow-md">
             <div className="max-w-72 p-2">
@@ -235,9 +234,11 @@ function ContractHeader() {
         maximum NFTs or the time window when new NFTs can be minted. Metadata rules can be used to declare how the data
         on the NFTs in the collection will change over time. These rules are enforced by sending a token holding the
         data to a validator.
-      </div>
+      </CardDescription>
     </CardHeader>
   );
 }
+
+ContractContent.displayName = 'ContractContent';
 
 export default ContractContent;

@@ -1,9 +1,11 @@
 import filetype from 'magic-bytes.js';
 
 import { defaultImage } from '@/app/collection/create/context';
-import { ImageType, ImageU, UploadImageData } from '@/app/collection/create/schema';
+import { ImageData, ImageGroupData, UploadImageData } from '@/app/collection/create/schema';
 
-export async function readerResultToImageData(readerResult: string | ArrayBuffer | null): Promise<ImageU | undefined> {
+export async function readerResultToImageData(
+  readerResult: string | ArrayBuffer | null
+): Promise<ImageData | undefined> {
   try {
     const binaryStr: Buffer = Buffer.from(readerResult as ArrayBuffer);
     const str64 = binaryStr.toString('base64');
@@ -51,18 +53,12 @@ export function setImageByView(
   imagesState: UploadImageData,
   readerResult: string | ArrayBuffer | null,
   view: keyof UploadImageData,
-  imageType: keyof ImageType
+  imageType: keyof ImageGroupData
 ) {
   let prevImagesState = imagesState;
   if (readerResult) {
     readerResultToImageData(readerResult).then((data) => {
       prevImagesState[view][imageType] = data || defaultImage;
-      for (const key in imagesState) {
-        const viewAlt = key as keyof UploadImageData;
-        if (view != viewAlt && !prevImagesState[viewAlt][imageType].src) {
-          prevImagesState[viewAlt][imageType] = data || defaultImage;
-        }
-      }
       return prevImagesState;
     });
   }

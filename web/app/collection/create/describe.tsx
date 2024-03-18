@@ -4,8 +4,7 @@ import { forwardRef, Ref, useCallback, useImperativeHandle } from 'react';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import { useForm } from 'react-hook-form';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -13,15 +12,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { useCreateCollectionContext } from './context';
-import { DescribeCollectionData, DescribeCollectionSchema, ParentSubmitForm } from './schema';
+import { DescribeData, DescribeSchema, ParentSubmitForm } from './schema';
 
 const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
-  DescribeContent.displayName = 'DescribeContent';
-  const { description, setDescription } = useCreateCollectionContext();
+  const { describe, setDescribe } = useCreateCollectionContext();
 
-  const form = useForm<DescribeCollectionData>({
-    resolver: valibotResolver(DescribeCollectionSchema),
-    defaultValues: description,
+  const form = useForm<DescribeData>({
+    resolver: valibotResolver(DescribeSchema),
+    defaultValues: describe,
   });
 
   const { trigger, getValues } = form;
@@ -31,15 +29,15 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const handleSubmit = useCallback(async () => {
     const isValid = await trigger();
     if (isValid) {
-      setDescription(form.getValues());
+      setDescribe(form.getValues());
     }
 
     return isValid;
-  }, [trigger, getValues, setDescription]);
+  }, [trigger, getValues, setDescribe]);
 
   useImperativeHandle(ref, () => ({ handleSubmit }));
 
-  const onSubmit = useCallback((values: DescribeCollectionData) => setDescription(values), [setDescription]);
+  const onSubmit = useCallback((values: DescribeData) => setDescribe(values), [setDescribe]);
 
   return (
     <Card>
@@ -151,7 +149,7 @@ function DescribeCollectionHeader() {
   return (
     <CardHeader>
       <CardTitle className="font-heading pb-2">Describe your collection</CardTitle>
-      <div className="font-heading">
+      <CardDescription className="font-heading">
         A collection is one or more NFTs (non-fungible tokens) minted under the same{' '}
         <Tooltip>
           <TooltipTrigger>
@@ -166,9 +164,11 @@ function DescribeCollectionHeader() {
         </Tooltip>
         . Below you can fill out some basic information that markets and other tools can use for displaying information
         about your collection.
-      </div>
+      </CardDescription>
     </CardHeader>
   );
 }
+
+DescribeContent.displayName = 'DescribeContent';
 
 export default DescribeContent;
