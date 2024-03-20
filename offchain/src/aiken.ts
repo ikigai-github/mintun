@@ -1,8 +1,10 @@
 /// Schema for aiken stdlib types added here as needed.
 /// Some schema definitions were liberally taken from
 /// https://github.com/spacebudz/nebula/blob/main/common/utils.ts
-import { Address, Constr, Data, fromText, getAddressDetails, Lucid } from 'lucid-cardano';
+import { Constr, fromText, getAddressDetails, type Address, type Lucid } from 'lucid-cardano';
+
 import { TimeWindow } from './common';
+import { Data } from './data';
 
 export const PolicyIdSchema = Data.Bytes({ minLength: 28, maxLength: 28 });
 
@@ -17,7 +19,7 @@ export const OutputReferenceSchema = Data.Object({
 
 const PosixTimeIntervalBoundTypeSchema = Data.Enum([
   Data.Literal('NegativeInfinity'),
-  Data.Object({ 'Finite': Data.Tuple([Data.Integer()]) }),
+  Data.Object({ Finite: Data.Tuple([Data.Integer()]) }),
   Data.Literal('PositiveInfinity'),
 ]);
 
@@ -46,29 +48,27 @@ export const MetadataShape = MetadataSchema as unknown as MetadataType;
 
 export const ChainCredentialSchema = Data.Enum([
   Data.Object({
-    VerificationKeyCredential: Data.Tuple([
-      Data.Bytes({ minLength: 28, maxLength: 28 }),
-    ]),
+    VerificationKeyCredential: Data.Tuple([Data.Bytes({ minLength: 28, maxLength: 28 })]),
   }),
   Data.Object({
-    ScriptCredential: Data.Tuple([
-      Data.Bytes({ minLength: 28, maxLength: 28 }),
-    ]),
+    ScriptCredential: Data.Tuple([Data.Bytes({ minLength: 28, maxLength: 28 })]),
   }),
 ]);
 
 export const ChainAddressSchema = Data.Object({
   paymentCredential: ChainCredentialSchema,
-  stakeCredential: Data.Nullable(Data.Enum([
-    Data.Object({ Inline: Data.Tuple([ChainCredentialSchema]) }),
-    Data.Object({
-      Pointer: Data.Object({
-        slotNumber: Data.Integer(),
-        transactionIndex: Data.Integer(),
-        certificateIndex: Data.Integer(),
+  stakeCredential: Data.Nullable(
+    Data.Enum([
+      Data.Object({ Inline: Data.Tuple([ChainCredentialSchema]) }),
+      Data.Object({
+        Pointer: Data.Object({
+          slotNumber: Data.Integer(),
+          transactionIndex: Data.Integer(),
+          certificateIndex: Data.Integer(),
+        }),
       }),
-    }),
-  ])),
+    ])
+  ),
 });
 
 export type ChainAddress = Data.Static<typeof ChainAddressSchema>;
@@ -82,7 +82,7 @@ export function asChainTimeWindow(
   lowerMs: number,
   upperMs: number,
   inclusiveLowerBound = true,
-  inclusiveUpperBound = true,
+  inclusiveUpperBound = true
 ): PosixTimeIntervalType {
   if (Number.isInteger(lowerMs) && Number.isInteger(upperMs)) {
     const lower_bound: PosixTimeIntervalBoundType = {
@@ -119,21 +119,21 @@ export function asChainTimeWindow(
 /// Loses the bound inclusive flags but can add if we end up need anything other than inclusive
 export function toTimeWindow(interval: PosixTimeIntervalType): TimeWindow {
   const { lower_bound, upper_bound } = interval;
-  let startMs = -Infinity;
+  let fromMs = -Infinity;
   if (typeof lower_bound.bound_type == 'object') {
-    startMs = Number(lower_bound.bound_type.Finite);
+    fromMs = Number(lower_bound.bound_type.Finite);
   } else {
     throw new Error(`Invalid lower bound of type ${lower_bound.bound_type}`);
   }
 
-  let endMs = Infinity;
+  let toMs = Infinity;
   if (typeof upper_bound.bound_type == 'object') {
-    endMs = Number(upper_bound.bound_type.Finite);
+    toMs = Number(upper_bound.bound_type.Finite);
   } else {
     throw new Error(`Invalid upper bound of type ${upper_bound.bound_type}`);
   }
 
-  return { startMs, endMs };
+  return { fromMs, toMs };
 }
 
 /// Converts an object into a general metadata map
@@ -156,28 +156,27 @@ export function asChainBoolean(bool: boolean) {
 
 /// Converts a Bech32 address to the aiken representation of a chain address
 export function asChainAddress(address: Address): ChainAddress {
-  const { paymentCredential, stakeCredential } = getAddressDetails(
-    address,
-  );
+  const { paymentCredential, stakeCredential } = getAddressDetails(address);
 
   if (!paymentCredential) throw new Error('Not a valid payment address.');
 
   return {
-    paymentCredential: paymentCredential?.type === 'Key'
-      ? {
-        VerificationKeyCredential: [paymentCredential.hash],
-      }
-      : { ScriptCredential: [paymentCredential.hash] },
+    paymentCredential:
+      paymentCredential?.type === 'Key'
+        ? {
+            VerificationKeyCredential: [paymentCredential.hash],
+          }
+        : { ScriptCredential: [paymentCredential.hash] },
     stakeCredential: stakeCredential
       ? {
-        Inline: [
-          stakeCredential.type === 'Key'
-            ? {
-              VerificationKeyCredential: [stakeCredential.hash],
-            }
-            : { ScriptCredential: [stakeCredential.hash] },
-        ],
-      }
+          Inline: [
+            stakeCredential.type === 'Key'
+              ? {
+                  VerificationKeyCredential: [stakeCredential.hash],
+                }
+              : { ScriptCredential: [stakeCredential.hash] },
+          ],
+        }
       : null,
   };
 }
@@ -189,26 +188,18 @@ export function toBech32Address(lucid: Lucid, address: ChainAddress): Address {
 
   const paymentCredential = (() => {
     if ('VerificationKeyCredential' in address.paymentCredential) {
-      return utils.keyHashToCredential(
-        address.paymentCredential.VerificationKeyCredential[0],
-      );
+      return utils.keyHashToCredential(address.paymentCredential.VerificationKeyCredential[0]);
     } else {
-      return utils.scriptHashToCredential(
-        address.paymentCredential.ScriptCredential[0],
-      );
+      return utils.scriptHashToCredential(address.paymentCredential.ScriptCredential[0]);
     }
   })();
   const stakeCredential = (() => {
     if (!address.stakeCredential) return undefined;
     if ('Inline' in address.stakeCredential) {
       if ('VerificationKeyCredential' in address.stakeCredential.Inline[0]) {
-        return utils.keyHashToCredential(
-          address.stakeCredential.Inline[0].VerificationKeyCredential[0],
-        );
+        return utils.keyHashToCredential(address.stakeCredential.Inline[0].VerificationKeyCredential[0]);
       } else {
-        return utils.scriptHashToCredential(
-          address.stakeCredential.Inline[0].ScriptCredential[0],
-        );
+        return utils.scriptHashToCredential(address.stakeCredential.Inline[0].ScriptCredential[0]);
       }
     } else {
       return undefined;

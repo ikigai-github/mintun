@@ -3,7 +3,7 @@
 export const ImagePurpose = {
   Thumbnail: 'Thumbnail',
   Banner: 'Banner',
-  Avatar: 'Avatar',
+  Brand: 'Brand',
   Gallery: 'Gallery',
   General: 'General',
 } as const;

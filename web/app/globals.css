@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .justify-safe {
+    justify-content: safe center;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -21,6 +27,8 @@
 
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 50%;
+
+    --text-shadow-background: rgb(255 255 255 / 96%);
 
     --accent: 0 0% 96%;
     --accent-foreground: 0 0% 5%;
@@ -53,6 +61,8 @@
 
     --muted: 0 0% 9%;
     --muted-foreground: 0 0% 59%;
+
+    --text-shadow-background: rgb(0 0 0 / 97%);
 
     --accent: 0 0% 6%;
     --accent-foreground: 0 0% 98%;

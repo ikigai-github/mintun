@@ -1,9 +1,5 @@
-import { Address, Assets, Data, Lucid, UTxO } from 'lucid-cardano';
-import { TxReference } from './utils';
+import type { Address, Assets, Lucid, UTxO } from 'lucid-cardano';
 
-import { AddressedNft, MintunNft, prepareAssets } from './nft';
-import { fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script';
-import { MintRedeemerShape, StateValidatorRedeemerShape } from './contract';
 import { NftMetadataWrappedShape } from './cip-68';
 import { toRoyaltyUnit } from './cip-102';
 import {
@@ -13,6 +9,11 @@ import {
   CollectionStateMetadataShape,
   extractCollectionState,
 } from './collection-state';
+import { MintRedeemerShape, StateValidatorRedeemerShape } from './contract';
+import { Data } from './data';
+import { AddressedNft, MintunNft, prepareAssets } from './nft';
+import { fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script';
+import { TxReference } from './utils';
 
 // Don't have a dedicated cip-25.ts so just putting this here
 export const CIP_25_METADATA_LABEL = 721;
@@ -132,7 +133,7 @@ export class MintTxBuilder {
 
     // Compute the updated state
     const currentState = this.#currentState ? this.#currentState : await extractCollectionState(this.#lucid, stateUtxo);
-    const defaultRecipientAddress = this.#recipient || await this.#lucid.wallet.address();
+    const defaultRecipientAddress = this.#recipient || (await this.#lucid.wallet.address());
     const referenceAddress = currentState.nftValidatorAddress;
 
     // Update state to reflect the new mitns
@@ -146,7 +147,7 @@ export class MintTxBuilder {
       currentState.nextSequence,
       defaultRecipientAddress,
       hasRoyalty,
-      referenceAddress,
+      referenceAddress
     );
 
     const mintRedeemer = Data.to('EndpointMint', MintRedeemerShape);
@@ -157,7 +158,8 @@ export class MintTxBuilder {
     const stateOutput = { inline: Data.to(chainState, CollectionStateMetadataShape) };
 
     // TODO: See if it is possible for genesis to output a script ref of the minting policy to leave room for minting more NFTs in a single batch
-    const tx = this.#lucid.newTx()
+    const tx = this.#lucid
+      .newTx()
       .collectFrom([ownerUtxo])
       .attachSpendingValidator(spend.script)
       .collectFrom([stateUtxo], validatorRedeemer)

@@ -29,17 +29,17 @@ const defaultContract = {
 const defaultImages = {
   desktop: {
     banner: defaultImage,
-    avatar: defaultImage,
+    brand: defaultImage,
     thumbnail: defaultImage,
   },
   tablet: {
     banner: defaultImage,
-    avatar: defaultImage,
+    brand: defaultImage,
     thumbnail: defaultImage,
   },
   mobile: {
     banner: defaultImage,
-    avatar: defaultImage,
+    brand: defaultImage,
     thumbnail: defaultImage,
   },
 };

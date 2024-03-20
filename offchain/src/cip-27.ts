@@ -1,4 +1,5 @@
-import { Tx } from 'lucid-cardano';
+import type { Tx } from 'lucid-cardano';
+
 import { Royalty } from './royalty';
 import { chunk } from './utils';
 
@@ -10,7 +11,7 @@ export type Cip27Metadata = {
 };
 
 export function toCip27Metadata(percentage: number, address: string) {
-  const rate = `${(percentage / 100)}`;
+  const rate = `${percentage / 100}`;
   const addr = address.length > 64 ? chunk(address) : address;
 
   return { rate, addr };

@@ -1,8 +1,7 @@
 /// On chain schema for the collection state data. For more details on the purpose of the
 
-import { Data, Lucid, UTxO } from 'lucid-cardano';
-import { createReferenceData } from './cip-68';
-import { POLICY_ID_BYTE_LENGTH, TimeWindow } from './common';
+import type { Lucid, UTxO } from 'lucid-cardano';
+
 import {
   asChainAddress,
   asChainTimeWindow,
@@ -11,7 +10,10 @@ import {
   toBech32Address,
   toTimeWindow,
 } from './aiken';
+import { createReferenceData } from './cip-68';
 import { SEQUENCE_MAX_VALUE } from './collection';
+import { POLICY_ID_BYTE_LENGTH, TimeWindow } from './common';
+import { Data } from './data';
 
 /// fields see smart contract library docs.
 const CollectionStateSchema = Data.Object({
@@ -87,7 +89,7 @@ export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetad
 // Given the initial state creates the genesis data.
 export function createGenesisStateData(state: Partial<CollectionState>) {
   const group = state.group ?? null;
-  const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.startMs, state.mintWindow.endMs) : null;
+  const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.fromMs, state.mintWindow.toMs) : null;
   const max_nfts = state.maxNfts ? BigInt(state.maxNfts) : null;
   const reference_address = state.nftValidatorAddress ? asChainAddress(state.nftValidatorAddress) : null;
 
@@ -107,7 +109,7 @@ export function createGenesisStateData(state: Partial<CollectionState>) {
 // Given the initial state creates the genesis data.
 export function asChainStateData(state: CollectionState) {
   const group = state.group ?? null;
-  const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.startMs, state.mintWindow.endMs) : null;
+  const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.fromMs, state.mintWindow.toMs) : null;
   const max_nfts = state.maxNfts ? BigInt(state.maxNfts) : null;
   const force_locked = state.locked;
   const current_nfts = BigInt(state.currentNfts);
@@ -134,7 +136,7 @@ export function addMintsToCollectionState(state: CollectionState, numMints: numb
   }
 
   const now = Date.now();
-  if (state.mintWindow && (state.mintWindow.startMs > now || state.mintWindow.endMs < now)) {
+  if (state.mintWindow && (state.mintWindow.fromMs > now || state.mintWindow.toMs < now)) {
     throw new Error('The valid mint window for this minting policy has passed. Cannot mint new NFTs.');
   }
 

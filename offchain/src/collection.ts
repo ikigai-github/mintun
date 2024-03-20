@@ -56,12 +56,7 @@ function toNftAssetName(label: number, sequence: number, content: string) {
 }
 
 /// Construct a unit from the collection specific parts that compose the unit name
-function toNftUnit(
-  policyId: string,
-  label: number,
-  sequence: number,
-  content: string,
-) {
+function toNftUnit(policyId: string, label: number, sequence: number, content: string) {
   return policyId + toNftAssetName(label, sequence, content);
 }
 
@@ -71,11 +66,7 @@ export function toNftReferenceAssetName(sequence: number, content: string) {
 }
 
 /// Construct NFT reference unit from the parts that compose the unit name
-export function toNftReferenceUnit(
-  policyId: string,
-  sequence: number,
-  content: string,
-) {
+export function toNftReferenceUnit(policyId: string, sequence: number, content: string) {
   return toNftUnit(policyId, REFERENCE_TOKEN_LABEL, sequence, content);
 }
 
@@ -85,19 +76,12 @@ export function toNftUserAssetName(sequence: number, content: string) {
 }
 
 /// Construct NFT user unit from the parts that compose the unit name
-export function toNftUserUnit(
-  policyId: string,
-  sequence: number,
-  content: string,
-) {
+export function toNftUserUnit(policyId: string, sequence: number, content: string) {
   return toNftUnit(policyId, NFT_TOKEN_LABEL, sequence, content);
 }
 
 /// Construct management token unit from policy id and label
-function toManageUnit(
-  policyId: string,
-  label: number,
-) {
+function toManageUnit(policyId: string, label: number) {
   const name = `${toPurposeHex(COLLECTION_TOKEN_PURPOSE.Management)}${fromText('Collection')}`;
   return toUnit(policyId, name, label);
 }

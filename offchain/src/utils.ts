@@ -1,4 +1,4 @@
-import { fromText, Lucid, toText, Tx, Unit, UTxO } from 'lucid-cardano';
+import { fromText, toText, type Lucid, type Tx, type Unit, type UTxO } from 'lucid-cardano';
 
 /// Simple form of UTxO that only includes part needed to reference a transaction
 export type TxReference = {

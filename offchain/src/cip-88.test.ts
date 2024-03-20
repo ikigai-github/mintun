@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+
 import {
   Cip27RoyaltyDetail,
   Cip27RoyaltyDetailField,
@@ -11,8 +12,8 @@ import {
   TokenProjectDetail,
   TokenProjectDetailField,
 } from './cip-88';
-import { TEST_COLLECTION_INFO } from './fixtures.test';
 import { paramaterizeMintingPolicy } from './contract';
+import { TEST_COLLECTION_INFO } from './fixtures.test';
 import { createEmulatorLucid } from './support.test';
 
 test('Build CIP-88 metadata', async () => {
@@ -55,10 +56,7 @@ test('Build CIP-88 metadata', async () => {
   expect(validationMethod[0] === 1, 'Validation method is beacon token');
   expect(validationMethod[1] !== undefined, 'Validation tuple second value must not be undefined');
   if (!validationMethod[1]) throw new Error('Make type checker happy');
-  expect(
-    validationMethod[1][0] === policyId,
-    'Validation Method Beacon Token Policy matches minting policy',
-  );
+  expect(validationMethod[1][0] === policyId, 'Validation Method Beacon Token Policy matches minting policy');
   expect(validationMethod[1][1] === assetName, 'Beacon token asset name is null (can be other things)');
 
   const nonce = payload[RegistrationPayloadField.NONCE];
@@ -76,11 +74,11 @@ test('Build CIP-88 metadata', async () => {
   const tokenDetail = detailWrapper[FEATURE_DETAIL_FIELD];
   expect(
     tokenDetail[TokenProjectDetailField.NAME] === TEST_COLLECTION_INFO.name,
-    `Token detail name is ${TEST_COLLECTION_INFO.name}`,
+    `Token detail name is ${TEST_COLLECTION_INFO.name}`
   );
   expect(
     tokenDetail[TokenProjectDetailField.DESCRIPTION]?.join('') === info.description,
-    'Token detail description chunks rejoin into original description',
+    'Token detail description chunks rejoin into original description'
   );
   // Some other fields I could check here
 
@@ -90,10 +88,10 @@ test('Build CIP-88 metadata', async () => {
   const royaltyDetail = royaltyWrapper[FEATURE_DETAIL_FIELD];
   expect(
     royaltyDetail[Cip27RoyaltyDetailField.RATE] === `${royalty.variableFee / 100}`,
-    'Royalty fee is string form of percentage',
+    'Royalty fee is string form of percentage'
   );
   expect(
     royaltyDetail[Cip27RoyaltyDetailField.RECIPIENT].join('') === address,
-    'Rejoined royalty detail address matches original',
+    'Rejoined royalty detail address matches original'
   );
 });

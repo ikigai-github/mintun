@@ -38,8 +38,8 @@ pub type ImagePurpose {
   Thumbnail
   /// The image is intended to be displayed as a banner
   Banner
-  /// The image is intended to be displayed as a Avatar
-  Avatar
+  /// The image is intended to be displayed as a Brand Image
+  Brand
   /// The image is intended to be displayed in a Gallery
   Gallery
   /// The image has no specific purpose

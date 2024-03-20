@@ -3,7 +3,7 @@ import { valibotResolver } from '@hookform/resolvers/valibot';
 import { DiscordLogoIcon, GlobeIcon, InstagramLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
 import { useForm } from 'react-hook-form';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
@@ -108,10 +108,11 @@ function SocialHeader() {
   return (
     <CardHeader>
       <CardTitle className="font-heading pb-2">Links to social media</CardTitle>
-      <div className="font-heading">
-        Some marketplaces might provide ways of getting to know the creator. One easy approach is to provide links to
-        the creators social media. It can be helpful to provide this information as part of the collection.
-      </div>
+      <CardDescription className="font-heading">
+        A marketplaces might provide links to the collection creator as a way of further legitimizing the collection.
+        Placing these links in the collection information gives the market an easy way to obtain correct links to your
+        social media and website.
+      </CardDescription>
     </CardHeader>
   );
 }

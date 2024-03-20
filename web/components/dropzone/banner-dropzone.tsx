@@ -37,7 +37,7 @@ export function BannerDropzone({ callback, imagesState, view, className, imageCl
           className={cn('h-[200px] rounded-md object-cover', imageClassName)}
           height={150}
           src={'data:image;base64, ' + img || undefined}
-          alt="Avatar"
+          alt="Brand"
         />
       ) : (
         <div className="px-3">

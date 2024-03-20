@@ -1,28 +1,36 @@
+import { Emulator, generateSeedPhrase, type Assets, type Lucid, type Tx } from 'lucid-cardano';
 import { expect } from 'vitest';
-import { Assets, Emulator, generateSeedPhrase, Lucid, Tx } from 'lucid-cardano';
-import { submit } from './utils';
-import { fetchInfoUtxo, fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script';
-import { MintunNft } from './nft';
-import { extractCollectionState } from './collection-state';
+
 import { extractCollectionInfo } from './collection-info';
+import { extractCollectionState } from './collection-state';
+import { MintunNft } from './nft';
+import { fetchInfoUtxo, fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script';
+import { submit } from './utils';
 
 /// Creates a new emulator account with the given assets, if any.
-export async function generateEmulatorAccount(assets: Assets = {}) {
+export async function generateEmulatorAccount(lucid: Lucid, assets: Assets = {}) {
   const seedPhrase = generateSeedPhrase();
+
+  lucid.selectWalletFromSeed(seedPhrase);
+  const address = await lucid.wallet.address();
+
   return {
     seedPhrase,
-    address: await (await Lucid.new(undefined, 'Custom'))
-      .selectWalletFromSeed(seedPhrase).wallet.address(),
+    address,
     assets,
   };
 }
 
 /// Instantiates an instace of Lucid with an Emulator as the provider.  The emulator is seeded with two starting accounts with one of them preselected.
 export async function createEmulatorLucid() {
-  const ACCOUNT_0 = await generateEmulatorAccount({ lovelace: 7_500_0000_000n });
-  const ACCOUNT_1 = await generateEmulatorAccount({ lovelace: 100_000_000n });
-  const ACCOUNT_2 = await generateEmulatorAccount({ lovelace: 10_000_000n });
-  const ACCOUNT_3 = await generateEmulatorAccount({ lovelace: 10_000_000n });
+  const { Lucid } = await import('lucid-cardano');
+
+  const customLucid = await Lucid.new(undefined, 'Custom');
+
+  const ACCOUNT_0 = await generateEmulatorAccount(customLucid, { lovelace: 7_500_0000_000n });
+  const ACCOUNT_1 = await generateEmulatorAccount(customLucid, { lovelace: 100_000_000n });
+  const ACCOUNT_2 = await generateEmulatorAccount(customLucid, { lovelace: 10_000_000n });
+  const ACCOUNT_3 = await generateEmulatorAccount(customLucid, { lovelace: 10_000_000n });
 
   const emulator = new Emulator([ACCOUNT_0, ACCOUNT_1]);
   const lucid = await Lucid.new(emulator);
@@ -70,13 +78,15 @@ export function generateNft(): MintunNft {
     image: `https://picsum.photos/200`,
     description: 'This is a generated test NFT',
     id,
-    files: [{
-      name: `Image ${id}`,
-      mediaType: 'image/jpeg',
-      src: 'https://picsum.photos/200',
-      dimension: { width: 200, height: 200 },
-      purpose: 'General',
-    }],
+    files: [
+      {
+        name: `Image ${id}`,
+        mediaType: 'image/jpeg',
+        src: 'https://picsum.photos/200',
+        dimension: { width: 200, height: 200 },
+        purpose: 'General',
+      },
+    ],
     attributes: {
       test: 1,
     },

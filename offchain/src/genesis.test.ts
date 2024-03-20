@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest';
+
+import { TEST_COLLECTION_INFO } from './fixtures.test';
 import { GenesisTxBuilder } from './genesis';
 import { applyTx, createEmulatorLucid } from './support.test';
-import { TEST_COLLECTION_INFO } from './fixtures.test';
 
 test('Minimal minting policy genesis transaction', async () => {
   const { lucid, seedUtxo } = await createEmulatorLucid();
-  const { tx, cache } = await GenesisTxBuilder
-    .create(lucid)
+  const { tx, cache } = await GenesisTxBuilder.create(lucid)
     .info({ name: 'No Constraints', nsfw: false })
     .seed(seedUtxo)
     .build();
@@ -30,8 +30,7 @@ test('All configuration genesis transaction', async () => {
   const royaltyTokenAddress = accounts[3].address;
   const endMs = Date.now() + 1_000_000;
   const groupPolicyId = 'de2340edc45629456bf695200e8ea32f948a653b21ada10bc6f0c554';
-  const { tx, cache } = await GenesisTxBuilder
-    .create(lucid)
+  const { tx, cache } = await GenesisTxBuilder.create(lucid)
     .seed(seedUtxo)
     .group(groupPolicyId)
     .maxNfts(1)
@@ -51,7 +50,7 @@ test('All configuration genesis transaction', async () => {
   expect(info.artist === TEST_COLLECTION_INFO.artist);
   expect(info.description === TEST_COLLECTION_INFO.description);
   expect(info.images?.[0].src === TEST_COLLECTION_INFO.images?.[0].src);
-  expect(state.mintWindow && state.mintWindow.startMs === 0 && state.mintWindow.endMs === endMs);
+  expect(state.mintWindow && state.mintWindow.fromMs === 0 && state.mintWindow.toMs === endMs);
   expect(state.maxNfts === 1);
 });
 

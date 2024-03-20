@@ -8,7 +8,7 @@ import { readerResultToBase64, setImageByView } from '@/lib/dropzone/utils';
 import { cn } from '@/lib/utils';
 
 export function AvatarDropzone({ callback, imagesState, view, className, imageClassName }: DropzoneProps) {
-  const [img, setImg] = useState<string | null>(imagesState[view].avatar.src || imagesState['desktop'].avatar.src);
+  const [img, setImg] = useState<string | null>(imagesState[view].brand.src || imagesState['desktop'].brand.src);
   const onDrop = useCallback((acceptedFiles: any) => {
     acceptedFiles.forEach((file: any) => {
       const reader = new FileReader();
@@ -18,7 +18,7 @@ export function AvatarDropzone({ callback, imagesState, view, className, imageCl
       reader.onload = () => {
         const str64 = readerResultToBase64(reader.result);
 
-        const newImagesState = setImageByView(imagesState, reader.result, view, 'avatar');
+        const newImagesState = setImageByView(imagesState, reader.result, view, 'brand');
         callback(newImagesState);
         setImg(str64);
       };
@@ -40,11 +40,11 @@ export function AvatarDropzone({ callback, imagesState, view, className, imageCl
         <img
           className={cn('h-[200px] w-[200px] rounded-md object-cover', imageClassName)}
           src={'data:image;base64, ' + img || undefined}
-          alt="Avatar"
+          alt="Brand"
         />
       ) : (
         <div className="px-3">
-          <p className=" text-2xl font-semibold">Add an Avatar Image</p>
+          <p className=" text-2xl font-semibold">Add an Brand or Avatar Image</p>
           <p className="text-sm opacity-70">Click to upload or drag image</p>
         </div>
       )}

@@ -1,17 +1,18 @@
 /// Allow passing in as little or as much already computed data as possible
 /// This cache will be updated if a some part is missing. The only case where
 
-import { applyDoubleCborEncoding, Credential, Lucid, Script } from 'lucid-cardano';
-import { findUtxo, TxReference } from './utils';
+import { applyDoubleCborEncoding, type Credential, type Lucid, type Script } from 'lucid-cardano';
+
+import contracts from '../contracts.json';
 import { toInfoUnit, toOwnerUnit } from './collection';
+import { toStateUnit } from './collection-state';
 import {
   paramaterizeImmutableInfoValidator,
   paramaterizeImmutableNftValidator,
   paramaterizeMintingPolicy,
   paramaterizeStateValidator,
 } from './contract';
-import contracts from '../contracts.json' with { type: 'json' };
-import { toStateUnit } from './collection-state';
+import { findUtxo, TxReference } from './utils';
 
 /// All the parts commonly used when dealing with a paramaterized script
 export type ScriptInfo = {

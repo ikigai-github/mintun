@@ -1,6 +1,8 @@
-import { applyParamsToScript, Data, Lucid } from 'lucid-cardano';
-import { getScript, getScriptInfo } from './script';
+import { applyParamsToScript, type Lucid } from 'lucid-cardano';
+
 import { OutputReferenceSchema, PolicyIdSchema } from './aiken';
+import { Data } from './data';
+import { getScript, getScriptInfo } from './script';
 
 /// Minting policy paramaterization schema
 const MintParameterSchema = Data.Tuple([OutputReferenceSchema]);
@@ -15,7 +17,7 @@ const StateValidatorParameterShape = StateValidatorParameterSchema as unknown as
 /// Redeemer schema for minting
 const MintRedeemerSchema = Data.Enum([
   Data.Object({
-    'EndpointGenesis': Data.Object({
+    EndpointGenesis: Data.Object({
       state_validator_policy_id: PolicyIdSchema,
       info_validator_policy_id: PolicyIdSchema,
     }),
@@ -26,10 +28,7 @@ const MintRedeemerSchema = Data.Enum([
 export type MintRedeemerType = Data.Static<typeof MintRedeemerSchema>;
 export const MintRedeemerShape = MintRedeemerSchema as unknown as MintRedeemerType;
 
-const StateValidatorRedeemerSchema = Data.Enum([
-  Data.Literal('EndpointMint'),
-  Data.Literal('EndpointBurn'),
-]);
+const StateValidatorRedeemerSchema = Data.Enum([Data.Literal('EndpointMint'), Data.Literal('EndpointBurn')]);
 export type StateValidatorRedeemerType = Data.Static<typeof StateValidatorRedeemerSchema>;
 export const StateValidatorRedeemerShape = StateValidatorRedeemerSchema as unknown as StateValidatorRedeemerType;
 
@@ -46,7 +45,7 @@ export function paramaterizeMintingPolicy(lucid: Lucid, hash: string, index: num
   const paramertizedMintingPolicy = applyParamsToScript<MintParameterType>(
     script.compiledCode,
     [seed],
-    MintParameterShape,
+    MintParameterShape
   );
   return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
 }
@@ -57,7 +56,7 @@ export function paramaterizeStateValidator(lucid: Lucid, mintingPolicyId: string
   const paramertizedMintingPolicy = applyParamsToScript<StateValidatorParameterType>(
     script.compiledCode,
     [mintingPolicyId],
-    StateValidatorParameterShape,
+    StateValidatorParameterShape
   );
   return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
 }
@@ -65,19 +64,17 @@ export function paramaterizeStateValidator(lucid: Lucid, mintingPolicyId: string
 /// Given a minting policy, parameterizes the collection info reference token spending validator and returns its info
 export function paramaterizeImmutableInfoValidator(lucid: Lucid, mintingPolicyId: string) {
   const script = getScript('immutable_info_validator.spend');
-  const paramertizedMintingPolicy = applyParamsToScript<StateValidatorParameterType>(
-    script.compiledCode,
-    [mintingPolicyId],
-  );
+  const paramertizedMintingPolicy = applyParamsToScript<StateValidatorParameterType>(script.compiledCode, [
+    mintingPolicyId,
+  ]);
   return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
 }
 
 /// Given a minting policy, parameterizes the nft reference token spending validator and returns its info
 export function paramaterizeImmutableNftValidator(lucid: Lucid, mintingPolicyId: string) {
   const script = getScript('immutable_nft.spend');
-  const paramertizedMintingPolicy = applyParamsToScript<StateValidatorParameterType>(
-    script.compiledCode,
-    [mintingPolicyId],
-  );
+  const paramertizedMintingPolicy = applyParamsToScript<StateValidatorParameterType>(script.compiledCode, [
+    mintingPolicyId,
+  ]);
   return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
 }

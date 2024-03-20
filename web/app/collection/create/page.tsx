@@ -7,9 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCreateCollectionContext } from './context';
 import ContractContent from './contract';
 import DescribeContent from './describe';
-import ImagesContent from './images';
-import Mint from './mint';
-import ReviewContent from './review';
+import { ImagesV2 } from './images-v2';
+import Mint from './mint-dialog';
 import RoyaltiesContent from './royalties';
 import { ParentSubmitForm } from './schema';
 import SocialContent from './social';
@@ -54,7 +53,7 @@ export default function CreateCollection() {
   );
 
   return (
-    <div className="flex w-full max-w-[1024px] flex-col gap-2">
+    <div className="flex w-full max-w-[1280px] flex-col gap-2">
       <Mint allowOpen={handleViewChange} />
       <Tabs defaultValue="describe" value={tab} onValueChange={handleViewChange} className="flex-1">
         {/* TODO: Maybe Put the Tab list inside a navigation menu on mobile  since it gets a bit unwieldy */}
@@ -70,7 +69,7 @@ export default function CreateCollection() {
           <DescribeContent ref={describeRef} />
         </TabsContent>
         <TabsContent value="images">
-          <ImagesContent />
+          <ImagesV2 />
         </TabsContent>
         <TabsContent value="contract">
           <ContractContent ref={contractRef} />

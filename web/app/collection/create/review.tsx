@@ -151,15 +151,15 @@ function ImagesAccordionItem() {
     const { desktop, tablet, mobile } = images;
     let imageArray = [];
 
-    if (desktop.avatar.src) imageArray.push(desktop.avatar);
+    if (desktop.brand.src) imageArray.push(desktop.brand);
     if (desktop.banner.src) imageArray.push(desktop.banner);
     if (desktop.thumbnail.src) imageArray.push(desktop.thumbnail);
 
-    if (tablet.avatar.src) imageArray.push(tablet.avatar);
+    if (tablet.brand.src) imageArray.push(tablet.brand);
     if (tablet.banner.src) imageArray.push(tablet.banner);
     if (tablet.thumbnail.src) imageArray.push(tablet.thumbnail);
 
-    if (mobile.avatar.src) imageArray.push(mobile.avatar);
+    if (mobile.brand.src) imageArray.push(mobile.brand);
     if (mobile.banner.src) imageArray.push(mobile.banner);
     if (mobile.thumbnail.src) imageArray.push(mobile.thumbnail);
 
