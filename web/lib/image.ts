@@ -10,16 +10,35 @@ export const ImagePurpose = {
 
 export type ImagePurposeType = keyof typeof ImagePurpose;
 
-/// Width height of an image in pixels
-export type ImageDimension = {
+export type ImageDetail = {
+  file: File;
+  preview: string;
   width: number;
   height: number;
+  mime: string;
+  ext: string;
 };
-/////////////////////////////
 
-export type WebImageData = {
-  purpose: ImagePurposeType;
-  dimension: ImageDimension;
-  mediaType: string;
-  src: string;
+export type ImageViewMode = 'desktop' | 'tablet' | 'mobile';
+
+export type SupportedPurpose = Exclude<ImagePurposeType, 'Gallery' | 'General'>;
+
+export type ImageLookup = {
+  [key in ImageViewMode]: {
+    [key in SupportedPurpose]?: ImageDetail;
+  };
 };
+
+export function countImages(lookup: ImageLookup) {
+  return Object.values(lookup).reduce(
+    (acc, curr) => acc + Object.values(curr).reduce((acc, curr) => acc + (curr != null ? 1 : 0), 0),
+    0
+  );
+}
+
+export function getPreviews(lookup: ImageLookup) {
+  return Object.values(lookup)
+    .flatMap((values) => Object.values(values))
+    .filter((value) => value != null)
+    .map((value) => value?.preview);
+}

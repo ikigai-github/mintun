@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 
+import { ImageDetail } from '@/lib/image';
 import { cn } from '@/lib/utils';
 
-import { Button } from '../ui/button';
-import { ImageDetail } from './schema';
+import { Button } from './ui/button';
 import { useImageDropzone } from './use-image-dropzone';
 
 export type ImageDropzoneProps = {
@@ -44,6 +44,7 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
     // Fire image ready anytime the component has fully loaded its image
     useEffect(() => {
       if (isReady && file && onImageChange) {
+        console.log(`on Image Change: width: ${width} and height: ${height}`);
         onImageChange({
           file,
           preview,

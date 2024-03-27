@@ -13,6 +13,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { useCreateCollectionContext } from './context';
 import { ParentSubmitForm, RoyaltiesData, RoyaltiesSchema } from './schema';
 
+// TODO: Add fields for min/max fee as well
 const RoyaltiesContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const { royalties, setRoyalties } = useCreateCollectionContext();
 

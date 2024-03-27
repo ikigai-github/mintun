@@ -3,8 +3,6 @@
 import { createContext, Dispatch, SetStateAction, useContext } from 'react';
 import type { Lucid, Network, WalletApi } from 'lucid-cardano';
 
-import { KnownWalletName } from './support';
-
 export type WalletContextType = {
   lucid: Lucid | null;
   api: WalletApi | null;

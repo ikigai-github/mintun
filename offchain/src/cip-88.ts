@@ -184,7 +184,9 @@ function mapSocial(info: CollectionInfo) {
   if (info.links) {
     const mapped: Record<string, string[]> = {};
     for (const [label, uri] of Object.entries(info.links)) {
-      mapped[label] = cip88Uri(uri);
+      if (uri) {
+        mapped[label] = cip88Uri(uri);
+      }
     }
 
     return mapped;

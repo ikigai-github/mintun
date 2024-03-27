@@ -1,8 +1,10 @@
 'use client';
 
-import { createContext, PropsWithChildren, useContext, useState } from 'react';
+import { createContext, PropsWithChildren, useCallback, useContext, useState } from 'react';
 
-import { ContractData, DataContract, DescribeData, RoyaltiesData, SocialData, UploadImageData } from './schema';
+import { ImageDetail, ImageLookup, ImagePurpose, ImagePurposeType, ImageViewMode, SupportedPurpose } from '@/lib/image';
+
+import { ContractData, DataContract, DescribeData, RoyaltiesData, SocialData } from './schema';
 
 export const defaultImage = {
   src: '',
@@ -28,19 +30,19 @@ const defaultContract = {
 
 const defaultImages = {
   desktop: {
-    banner: defaultImage,
-    brand: defaultImage,
-    thumbnail: defaultImage,
+    [ImagePurpose.Thumbnail]: undefined,
+    [ImagePurpose.Banner]: undefined,
+    [ImagePurpose.Brand]: undefined,
   },
   tablet: {
-    banner: defaultImage,
-    brand: defaultImage,
-    thumbnail: defaultImage,
+    [ImagePurpose.Thumbnail]: undefined,
+    [ImagePurpose.Banner]: undefined,
+    [ImagePurpose.Brand]: undefined,
   },
   mobile: {
-    banner: defaultImage,
-    brand: defaultImage,
-    thumbnail: defaultImage,
+    [ImagePurpose.Thumbnail]: undefined,
+    [ImagePurpose.Banner]: undefined,
+    [ImagePurpose.Brand]: undefined,
   },
 };
 
@@ -64,8 +66,8 @@ export type CreateCollectionContextProps = {
   setTraits: (data: string[]) => void;
   contract: ContractData;
   setContract: (data: ContractData) => void;
-  images: UploadImageData;
-  setImages: (images: UploadImageData) => void;
+  images: ImageLookup;
+  updateImage: (mode: ImageViewMode, purpose: SupportedPurpose, image?: ImageDetail) => void;
   royalties: RoyaltiesData;
   setRoyalties: (royalties: RoyaltiesData) => void;
   social: SocialData;
@@ -84,7 +86,7 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
   },
   setContract: () => null,
   images: defaultImages,
-  setImages: () => null,
+  updateImage: (_mode: ImageViewMode, _purpose: SupportedPurpose, _image?: ImageDetail) => null,
   royalties: defaultRoyalties,
   setRoyalties: () => null,
   social: defaultSocial,
@@ -96,9 +98,26 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
   const [describe, setDescribe] = useState<DescribeData>(defaultDescribe);
   const [traits, setTraits] = useState<string[]>([]);
   const [contract, setContract] = useState<ContractData>(defaultContract);
-  const [images, setImages] = useState<UploadImageData>(defaultImages);
+  const [images, setImages] = useState<ImageLookup>(defaultImages);
   const [royalties, setRoyalties] = useState<RoyaltiesData>(defaultRoyalties);
   const [social, setSocial] = useState<SocialData>(defaultSocial);
+
+  const updateImage = useCallback(
+    (mode: ImageViewMode, purpose: SupportedPurpose, image?: ImageDetail) => {
+      setImages((prev) => {
+        const next = {
+          desktop: { ...prev['desktop'] },
+          tablet: { ...prev['tablet'] },
+          mobile: { ...prev['mobile'] },
+        };
+
+        next[mode][purpose] = image;
+
+        return next;
+      });
+    },
+    [setImages]
+  );
 
   return (
     <CreateCollectionContext.Provider
@@ -112,7 +131,7 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
         contract,
         setContract,
         images,
-        setImages,
+        updateImage,
         royalties,
         setRoyalties,
         social,

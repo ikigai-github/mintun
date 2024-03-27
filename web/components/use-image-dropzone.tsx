@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import filetypeinfo from 'magic-bytes.js';
 import { DropEvent, DropzoneInputProps, DropzoneRootProps, FileRejection, useDropzone } from 'react-dropzone';
 
-import { ImageDetail } from './schema';
+import { ImageDetail } from '@/lib/image';
 
 const MAX_IMAGE_DROP_FILE_SIZE = 1024 * 1024 * 10; // 10 MB
 
@@ -40,7 +40,7 @@ export function useImageDropzone(preselectedImage?: ImageDetail): ImageDropzoneP
     } else {
       setReady(false);
     }
-  }, [mimeDone, dimDone, file]);
+  }, [setReady, mimeDone, dimDone, file]);
 
   const reset = useCallback(() => {
     setFile(null);
@@ -49,14 +49,17 @@ export function useImageDropzone(preselectedImage?: ImageDetail): ImageDropzoneP
     setExt('');
     setWidth(0);
     setHeight(0);
-    if (preview) {
-      URL.revokeObjectURL(preview);
-    }
-    setPreview('');
+    setPreview((preview) => {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+
+      return '';
+    });
     setMimeDone(false);
     setDimDone(false);
     setReady(false);
-  }, [setFile, setError, setMime, setExt, setWidth, setHeight, setPreview, setMimeDone, setDimDone, setReady, preview]);
+  }, [setFile, setError, setMime, setExt, setWidth, setHeight, setPreview, setMimeDone, setDimDone, setReady]);
 
   const onDropRejected = useCallback(
     (fileRejections: FileRejection[], event: DropEvent) => {
@@ -103,23 +106,26 @@ export function useImageDropzone(preselectedImage?: ImageDetail): ImageDropzoneP
         setMimeDone(true);
       });
 
-      const preview = URL.createObjectURL(file);
-
-      setPreview(preview);
-
       const image = new Image();
       image.onload = () => {
         setWidth(image.naturalWidth);
         setHeight(image.naturalHeight);
-        setDimDone(true);
+        // Don't keep the image in memory. Will also fire onerror which will let us know we got the dimensions.
+        image.src = '';
       };
-      image.onerror = () => {
-        setWidth(0);
-        setHeight(0);
-        setError('Failed to load image into browser it may be unsupported');
-        setDimDone(true);
-      };
-      image.src = preview;
+
+      image.onerror = () => setDimDone(true);
+
+      // Clean up old preview if set use the preview to get the dimensions
+      setPreview((prev) => {
+        if (prev) {
+          URL.revokeObjectURL(prev);
+        }
+
+        const preview = URL.createObjectURL(file);
+        image.src = preview;
+        return preview;
+      });
     },
     [reset, setFile, setMime, setExt, setError, setPreview, setWidth, setHeight, setMimeDone, setDimDone]
   );

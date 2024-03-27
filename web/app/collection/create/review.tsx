@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { DiscordLogoIcon, GlobeIcon, InstagramLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
 import { format } from 'date-fns';
 
+import { getPreviews } from '@/lib/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -147,38 +148,21 @@ function ContractAccordionItem() {
 function ImagesAccordionItem() {
   const { images } = useCreateCollectionContext();
 
-  const imageArray = useMemo(() => {
-    const { desktop, tablet, mobile } = images;
-    let imageArray = [];
-
-    if (desktop.brand.src) imageArray.push(desktop.brand);
-    if (desktop.banner.src) imageArray.push(desktop.banner);
-    if (desktop.thumbnail.src) imageArray.push(desktop.thumbnail);
-
-    if (tablet.brand.src) imageArray.push(tablet.brand);
-    if (tablet.banner.src) imageArray.push(tablet.banner);
-    if (tablet.thumbnail.src) imageArray.push(tablet.thumbnail);
-
-    if (mobile.brand.src) imageArray.push(mobile.brand);
-    if (mobile.banner.src) imageArray.push(mobile.banner);
-    if (mobile.thumbnail.src) imageArray.push(mobile.thumbnail);
-
-    return imageArray;
-  }, [images]);
+  const previews = useMemo(() => getPreviews(images), [images]);
 
   return (
     <AccordionItem value="images">
       <AccordionTrigger
-        disabled={imageArray.length === 0}
+        disabled={previews.length === 0}
         className="font-heading text-foreground font-light leading-none"
-      >{`${imageArray.length} Images`}</AccordionTrigger>
+      >{`${previews.length} Images`}</AccordionTrigger>
       <AccordionContent>
         <div className="bg-accent flex flex-wrap items-end gap-2 rounded-[0.5rem] p-2">
-          {imageArray.map((image, index) => (
+          {previews.map((image, index) => (
             <img
               key={`review-image-${index}`}
               className="size-10 object-cover"
-              src={'data:image/jpeg;base64, ' + image.src}
+              src={image}
               alt={`Review Image ${index}`}
             />
           ))}

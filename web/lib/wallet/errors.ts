@@ -145,7 +145,7 @@ export function apiError(type: WalletApiErrorType, error: unknown) {
   }
 }
 
-function isWalletInternalApiError(error: unknown): error is WalletInternalApiError {
+export function isWalletInternalApiError(error: unknown): error is WalletInternalApiError {
   if (error instanceof Object) {
     if ('code' in error && typeof error.code === 'number' && 'info' in error && typeof error.info === 'string') {
       return true;

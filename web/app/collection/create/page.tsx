@@ -7,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCreateCollectionContext } from './context';
 import ContractContent from './contract';
 import DescribeContent from './describe';
-import { ImagesV2 } from './images-v2';
-import Mint from './mint-dialog';
+import ImagesContent from './images';
+import Mint from './mint';
 import RoyaltiesContent from './royalties';
 import { ParentSubmitForm } from './schema';
 import SocialContent from './social';
@@ -69,7 +69,7 @@ export default function CreateCollection() {
           <DescribeContent ref={describeRef} />
         </TabsContent>
         <TabsContent value="images">
-          <ImagesV2 />
+          <ImagesContent />
         </TabsContent>
         <TabsContent value="contract">
           <ContractContent ref={contractRef} />

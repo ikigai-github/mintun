@@ -22,9 +22,9 @@ export const CollectionImageDimensionsSchema = Data.Object({
 
 // On chain data schema for a collection image with hints
 export const CollectionImageSchema = Data.Object({
-  purpose: CollectionImagePurposeSchema,
-  dimension: CollectionImageDimensionsSchema,
-  media_type: Data.Bytes(),
+  purpose: Data.Nullable(CollectionImagePurposeSchema),
+  dimension: Data.Nullable(CollectionImageDimensionsSchema),
+  media_type: Data.Nullable(Data.Bytes()),
   src: Data.Array(Data.Bytes()),
 });
 
@@ -56,9 +56,9 @@ export const CollectionInfoMetadataShape = CollectionInfoMetadataSchema as unkno
 
 /// An image with hints for its format, purpose, and dimensions
 export type CollectionImage = {
-  purpose: ImagePurpose;
-  dimension: ImageDimension;
-  mediaType: string;
+  purpose?: ImagePurpose;
+  dimension?: ImageDimension;
+  mediaType?: string;
   src: string;
 };
 
@@ -75,9 +75,11 @@ export type CollectionInfo = {
 };
 
 export function asChainCollectionImage(image: CollectionImage): CollectionImageType {
-  const purpose = image.purpose;
-  const dimension = { width: BigInt(image.dimension.width), height: BigInt(image.dimension.height) };
-  const media_type = fromText(image.mediaType);
+  const purpose = image.purpose ?? null;
+  const dimension = image.dimension
+    ? { width: BigInt(image.dimension.width), height: BigInt(image.dimension.height) }
+    : null;
+  const media_type = image.mediaType ? fromText(image.mediaType) : null;
   const src = asChunkedHex(image.src);
 
   return {
@@ -89,9 +91,11 @@ export function asChainCollectionImage(image: CollectionImage): CollectionImageT
 }
 
 export function toCollectionImage(chainImage: CollectionImageType): CollectionImage {
-  const purpose = chainImage.purpose;
-  const dimension = { width: Number(chainImage.dimension.width), height: Number(chainImage.dimension.height) };
-  const mediaType = toText(chainImage.media_type);
+  const purpose = chainImage.purpose ?? undefined;
+  const dimension = chainImage.dimension
+    ? { width: Number(chainImage.dimension.width), height: Number(chainImage.dimension.height) }
+    : undefined;
+  const mediaType = chainImage.media_type ? toText(chainImage.media_type) : undefined;
   const src = toJoinedText(chainImage.src);
 
   return {

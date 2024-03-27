@@ -1,7 +1,7 @@
 import { type Lucid } from 'lucid-cardano';
 
-import { apiError} from './errors';
 import { WalletContextSetters } from './context';
+import { apiError } from './errors';
 import { waitforWalletExtension } from './util';
 import { getBalanceAda, getInstalledWalletExtensions, getStakeAddress, getWalletApi } from './wallet';
 
@@ -70,6 +70,8 @@ export async function connect(lucid: Lucid, wallet: string, setters: WalletConte
     const api = await getWalletApi(wallet);
     const networkId = await api.getNetworkId();
     await updateProvider(lucid, networkId, setters);
+
+    lucid.selectWallet(api);
 
     setters.setApi(api);
     setters.setNetwork(networkId === 1 ? 'Mainnet' : 'Preprod');
