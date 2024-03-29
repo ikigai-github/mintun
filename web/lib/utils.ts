@@ -4,3 +4,11 @@ import { twMerge } from 'tailwind-merge';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export function timeout<T>(promise: Promise<T>, timeoutMs: number, reason?: string): Promise<T> {
+  const timeoutPromise = new Promise<T>((_resolve, reject) => {
+    setTimeout(() => reject(reason || 'Timed out waiting for promise'), timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]);
+}

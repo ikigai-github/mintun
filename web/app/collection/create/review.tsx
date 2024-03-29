@@ -176,26 +176,26 @@ function RoyaltiesAccordionItem() {
   const { royalties } = useCreateCollectionContext();
 
   const label = useMemo(() => {
-    if (royalties.royalties.length === 0) {
+    if (royalties.length === 0) {
       return 'No Royalties';
-    } else if (royalties.royalties.length === 1) {
+    } else if (royalties.length === 1) {
       return 'One Royalty Beneficiary';
     } else {
-      return `${royalties.royalties.length} Royalty Beneficiaries`;
+      return `${royalties.length} Royalty Beneficiaries`;
     }
   }, [royalties]);
 
   return (
     <AccordionItem value="royalties">
       <AccordionTrigger
-        disabled={royalties.royalties.length === 0}
+        disabled={royalties.length === 0}
         className="font-heading text-foreground font-light leading-none"
       >
         {label}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid grid-cols-[auto_1fr] gap-x-10 gap-y-2 rounded-[0.5rem] p-4">
-          {royalties.royalties.map((royalty, index) => (
+        <div className="bg-accent grid grid-cols-[auto_1fr_1fr_1fr] gap-x-10 gap-y-2 rounded-[0.5rem] p-4">
+          {royalties.map((royalty, index) => (
             <>
               <div key={`royalty-address-${index}`} className="font-heading text-primary cursor-pointer truncate">
                 <Tooltip>
@@ -211,8 +211,22 @@ function RoyaltiesAccordionItem() {
                 </Tooltip>
               </div>
               <div className="text-foreground" key={`royalty-percent-${index}`}>
-                {royalty.percentage}%
+                {royalty.percent}%
               </div>
+              {royalty.minFee ? (
+                <div className="text-foreground whitespace-nowrap" key={`royalty-min-fee-${index}`}>
+                  {royalty.minFee} ₳
+                </div>
+              ) : (
+                <div></div>
+              )}
+              {royalty.maxFee ? (
+                <div className="text-foreground whitespace-nowrap" key={`royalty-max-fee-${index}`}>
+                  {royalty.maxFee} ₳
+                </div>
+              ) : (
+                <div></div>
+              )}
             </>
           ))}
         </div>

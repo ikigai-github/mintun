@@ -1,132 +1,174 @@
-import { forwardRef, Ref, useCallback, useImperativeHandle } from 'react';
-import { valibotResolver } from '@hookform/resolvers/valibot';
-import { Cross1Icon, PlusIcon } from '@radix-ui/react-icons';
-import { TooltipContent } from '@radix-ui/react-tooltip';
-import { useFieldArray, useForm } from 'react-hook-form';
+'use client';
 
+import { useState } from 'react';
+import { valibotResolver } from '@hookform/resolvers/valibot';
+import { useForm } from 'react-hook-form';
+
+import { useWallet } from '@/lib/wallet';
 import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Tooltip } from '@/components/ui/tooltip';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { useCreateCollectionContext } from './context';
-import { ParentSubmitForm, RoyaltiesData, RoyaltiesSchema } from './schema';
+import { RoyaltyData, RoyaltySchema } from './schema';
 
-// TODO: Add fields for min/max fee as well
-const RoyaltiesContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
+export default function RoyaltiesContent() {
   const { royalties, setRoyalties } = useCreateCollectionContext();
+  const [total, setTotal] = useState(0);
+  const { changeAddress } = useWallet();
 
-  const form = useForm<RoyaltiesData>({
-    resolver: valibotResolver(RoyaltiesSchema),
-    defaultValues: royalties,
+  const form = useForm<RoyaltyData>({
+    resolver: valibotResolver(RoyaltySchema),
+    defaultValues: {
+      address: '',
+      percent: '',
+      minFee: '',
+      maxFee: '',
+    },
   });
 
-  const { fields, append, remove, update } = useFieldArray({
-    control: form.control,
-    name: 'royalties',
-  });
-
-  const { trigger, getValues } = form;
-
-  const handleSubmit = useCallback(async () => {
-    const isValid = await trigger();
-    if (isValid) {
-      setRoyalties(form.getValues());
+  function onSubmit(royalty: RoyaltyData) {
+    const address = royalty.address.toLowerCase();
+    if (address && !royalties.find((royalty) => royalty.address === address)) {
+      setRoyalties([...royalties, { ...royalty, address }]);
+      setTotal((prev) => prev + Number(royalty.percent));
+      form.reset({ address: '', percent: undefined, minFee: undefined, maxFee: undefined });
+      form.setFocus('address');
     }
-
-    return isValid;
-  }, [trigger, getValues, setRoyalties]);
-
-  useImperativeHandle(ref, () => ({ handleSubmit }));
-
-  const onSubmit = useCallback((values: RoyaltiesData) => setRoyalties(values), [setRoyalties]);
-
-  function handleAddRoyalty(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-    // If the preventDefault is not called the form will submit. I am not sure why as the buttons are not submit type
-    e.preventDefault();
-    append({ address: '', percentage: 0 });
   }
-
-  const handleRemoveRoyalty = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, index: number) => {
-    e.preventDefault();
-    remove(index);
-  };
 
   return (
     <Card>
       <RoyaltiesHeader />
-      <Form {...form}>
-        <form className="px-6" id="create-collection-royalties-form" onSubmit={form.handleSubmit(onSubmit)}>
-          {fields?.map((field, index) => {
-            return (
-              <div key={`royalty-${index}`} className={`mb-3 gap-8 pb-3 md:flex ${index !== 0 && 'border-t py-3'}`}>
-                <FormField
-                  name={`royalties.${index}.address`}
-                  render={() => (
-                    <FormItem className="mb-1 w-full md:mb-0">
-                      <FormLabel>Address {index > 0 && `#${index + 1}`}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          value={field.address}
-                          onChange={(e) => {
-                            update(index, { ...field, address: e.target.value });
-                          }}
-                        />
-                      </FormControl>
-                      {/* Show the small info text only under the last royalty input because it looks weird being repeated */}
-                      {index === fields.length - 1 && (
-                        <FormDescription className="!md:mb-0 !mb-1">
-                          The wallet address or policy id of the royalty recipient.
-                        </FormDescription>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`royalties.${index}.percentage`}
-                  render={(_) => (
-                    <FormItem className="w-full md:w-[160px]">
-                      <FormLabel>Percent {index > 0 && `#${index + 1}`}</FormLabel>
-                      <FormControl>
-                        <div className="flex items-center gap-6">
-                          <Input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={field.percentage}
-                            onChange={(e) => {
-                              update(index, { ...field, percentage: Number(e.target.value) });
-                            }}
-                          />
-                          <Tooltip>
-                            <TooltipContent>Delete Royalty</TooltipContent>
-                            <Button onClick={(e) => handleRemoveRoyalty(e, index)} variant="ghost">
-                              <Cross1Icon color="red" />
-                            </Button>
-                          </Tooltip>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            );
-          })}
-          <div className="flex w-full justify-center p-6">
-            <Button onClick={handleAddRoyalty} variant="ghost" className="py-6">
-              <PlusIcon width={36} height={36} />
-            </Button>
+      <CardContent className="flex flex-col gap-5">
+        <Form {...form}>
+          <form className="flex flex-col gap-3" onSubmit={form.handleSubmit(onSubmit)}>
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="Required" {...field} />
+                  </FormControl>
+                  <FormDescription className="inline-flex w-full justify-between">
+                    <span>The address of the royalty beneficiary.</span>
+                    {changeAddress ? (
+                      <span>
+                        <Button
+                          variant="link"
+                          onClick={() => form.setValue('address', changeAddress)}
+                          className="h-fit py-0 pl-4 text-[0.8rem]"
+                        >
+                          Click here to use connected wallet address
+                        </Button>
+                      </span>
+                    ) : undefined}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="percent"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input type="number" min={0} max={100} placeholder="Required" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    A number between 0 and 100 representing the percent of a sale that should go to the beneficiary.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="minFee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input type="number" min={0} placeholder="Optional Minimum Fee Ada" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    An optional minimum fee that will be paid to the beneficiary on sale of any NFT in the collection.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="maxFee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input type="number" min={0} placeholder="Optional Maximum Fee Ada" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    An optional maximum fee that will be paid to the beneficiary on sale of any NFT in the collection.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit">Add Royalty</Button>
+          </form>
+        </Form>
+
+        {royalties.length ? (
+          <div>
+            <div className="font-heading pl-2 font-bold">
+              Royalties
+              <span className="font-base text-foreground/70 pl-2 text-sm font-light italic">
+                click on a royalty row to remove it
+              </span>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Address</TableHead>
+                  <TableHead>Percent Fee</TableHead>
+                  <TableHead>Minimum Fee</TableHead>
+                  <TableHead>Maximum Fee</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {royalties.map((royalty) => (
+                  <Tooltip key={`royalty-address-reveiew-${royalty.address}`}>
+                    <TooltipTrigger asChild>
+                      <TableRow
+                        className="font-heading cursor-pointer text-[0.8rem] font-light"
+                        onClick={() => setRoyalties(royalties.filter((r) => r.address !== royalty.address))}
+                        key={`royalty-address-reveiew-${royalty.address}`}
+                      >
+                        <TableCell className="max-w-64 truncate">{royalty.address}</TableCell>
+                        <TableCell className="text-center">{royalty.percent + '%'}</TableCell>
+                        <TableCell className="text-center">{royalty.minFee ? royalty.minFee + ' ₳' : '-'}</TableCell>
+                        <TableCell className="text-center">{royalty.maxFee ? royalty.maxFee + ' ₳' : '-'}</TableCell>
+                      </TableRow>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      align="start"
+                      className="bg-accent text-foreground shadow-foreground/10 whitespace-normal text-xs shadow-md"
+                    >
+                      <div className="p-2">{royalty.address}</div>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </form>
-      </Form>
+        ) : undefined}
+      </CardContent>
     </Card>
   );
-});
+}
 
 function RoyaltiesHeader() {
   return (
@@ -143,7 +185,3 @@ function RoyaltiesHeader() {
     </CardHeader>
   );
 }
-
-RoyaltiesContent.displayName = 'RoyaltiesContent';
-
-export default RoyaltiesContent;

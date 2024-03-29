@@ -26,7 +26,7 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
 
   const form = useForm<ContractData>({
     resolver: valibotResolver(ContractSchema),
-    defaultValues: contract,
+    values: contract,
   });
 
   const { trigger, getValues } = form;
@@ -150,19 +150,7 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                 <FormItem>
                   <FormLabel>Max Tokens</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Optional"
-                      type="number"
-                      {...field}
-                      onChange={(event) => {
-                        const value = Number(event.target.value);
-                        if (value === 0) {
-                          field.onChange(undefined);
-                        } else if (!Number.isNaN(value)) {
-                          field.onChange(value);
-                        }
-                      }}
-                    />
+                    <Input placeholder="Optional" type="number" {...field} />
                   </FormControl>
                   <FormDescription>
                     The maximum number of NFTs that will be created under this collection.

@@ -1,10 +1,12 @@
 'use client';
 
-import { Dispatch, SetStateAction, useCallback, useMemo, useState } from 'react';
+import { stat } from 'fs';
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
-import { useMediaQuery } from 'usehooks-ts';
+import { useInterval, useMediaQuery } from 'usehooks-ts';
 
+import { timeout } from '@/lib/utils';
 import { isWalletInternalApiError, useWallet } from '@/lib/wallet';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
@@ -19,13 +21,13 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
+import { Progress } from '@/components/ui/progress';
 
 import { ReviewAccordion } from './review';
 import useGenesisMint from './use-genesis-mint';
 
 type MintStatus = 'ready' | 'preparing' | 'signing' | 'verifying' | 'complete';
 const mintButtonLabel = 'Ready To Mint';
-const mintDescription = `You can review your mint details and cost breakdown below.`;
 
 export type MintProps = {
   allowOpen: () => Promise<boolean>;
@@ -69,14 +71,20 @@ function MintDialogButton({ allowOpen }: MintProps) {
   const mintTitle = useMemo(() => {
     if (status === 'ready') {
       return 'Ready To Mint';
-    } else if (status === 'preparing') {
-      return 'Preparing Mint Tx';
-    } else if (status === 'signing') {
-      return 'Awaiting Signature';
-    } else if (status === 'verifying') {
-      return 'Verifying transaction success';
     } else if (status === 'complete') {
       return 'Mint Complete';
+    } else {
+      return 'Mint in Progress';
+    }
+  }, [status]);
+
+  const mintDescription = useMemo(() => {
+    if (status === 'ready') {
+      return 'You can review your mint details and cost breakdown below.';
+    } else if (status === 'complete') {
+      return 'Click manage collection below to add NFTs to the collection and more.';
+    } else {
+      return 'Building, signing, and submitting the collection minting transaction to the blockchain.';
     }
   }, [status]);
 
@@ -150,24 +158,62 @@ type MintStateProps = {
 };
 
 function MintButton({ status, setStatus }: MintStateProps) {
-  const { prepareTx } = useGenesisMint();
+  const [progress, setProgress] = useState(0);
+  const [message, setMessage] = useState('Mint');
+  const { prepareTx, uploadProgress } = useGenesisMint();
+
   const { lucid } = useWallet();
+
+  const isUploading = useMemo(() => uploadProgress < 100 && status === 'preparing', [uploadProgress, status]);
+
+  // Gradually increase progress during upload as the callback from upload seems to only come once
+  useInterval(
+    () => {
+      setProgress((prev) => {
+        return Math.min(prev + 1, 50);
+      });
+    },
+    isUploading ? 1000 : null
+  );
+
+  // Fake progress towards verifying since the time it takes is unknown somewhere between 20-200 seconds
+  useInterval(
+    () => {
+      setProgress((prev) => {
+        return Math.min(prev + 1, 100);
+      });
+    },
+    status === 'verifying' ? 3 * 1000 : null
+  );
 
   const handleMint = useCallback(async () => {
     try {
       setStatus('preparing');
-
       const tx = await prepareTx();
       const completed = await tx.complete();
 
       setStatus('signing');
-
-      const signed = await completed.sign().complete();
-      const txHash = await signed.submit();
+      const signed = await timeout(
+        completed.sign().complete(),
+        60 * 1000,
+        'Timed out waiting for signature. Click mint to try again.'
+      );
+      // TODO: Show this tx hash during verification step
+      const txHash = await timeout(
+        signed.submit(),
+        60 * 1000,
+        'Timed out trying to submit transaction. Click mint to try again.'
+      );
 
       setStatus('verifying');
-
-      if (lucid) await lucid.awaitTx(txHash);
+      if (lucid) {
+        // After 5 minutes something must have gone wrong. Hopefully suggesting a retry at this point is okay.
+        await timeout(
+          lucid.awaitTx(txHash),
+          5 * 60 * 1000,
+          'Timed out verifying transaction. Click mint to try again.'
+        );
+      }
 
       setStatus('complete');
     } catch (e: unknown) {
@@ -180,16 +226,41 @@ function MintButton({ status, setStatus }: MintStateProps) {
       } else {
         toast.error('An unknown error occurred while creating the mint transaction');
       }
-
-      console.log(e);
-
       setStatus('ready');
     }
   }, [prepareTx]);
 
+  useEffect(() => {
+    if (status === 'ready') {
+      setProgress(0);
+      setMessage('Mint');
+    } else if (status === 'preparing') {
+      setProgress(20);
+      setMessage('Storing images in IPFS');
+    } else if (status === 'signing') {
+      setProgress(50);
+      setMessage('Waiting for your signature');
+    } else if (status === 'verifying') {
+      setProgress(60);
+      setMessage('Waiting for transaction to appear on chain. This can take up to 5 minutes.');
+    } else if (status === 'complete') {
+      setProgress(100);
+      setMessage('Collection creation complete!');
+    }
+  }, [status, setProgress, setMessage]);
+
+  if (status === 'ready') {
+    return <Button onClick={handleMint}>Mint</Button>;
+  }
+
+  if (status === 'complete') {
+    return <Button>Manage Collection</Button>;
+  }
+
   return (
-    <Button onClick={handleMint} disabled={status !== 'ready'}>
-      Mint
-    </Button>
+    <div className="flex flex-col gap-2">
+      <span>{message}</span>
+      <Progress value={progress} />
+    </div>
   );
 }

@@ -18,7 +18,6 @@ export default function CreateCollection() {
   const { tab, setTab } = useCreateCollectionContext();
   const describeRef = useRef<ParentSubmitForm>(null);
   const contractRef = useRef<ParentSubmitForm>(null);
-  const royaltiesRef = useRef<ParentSubmitForm>(null);
   const socialRef = useRef<ParentSubmitForm>(null);
 
   // We want to submit the part of the form they are currently viewing whenever they
@@ -33,8 +32,6 @@ export default function CreateCollection() {
             return (await describeRef.current?.handleSubmit()) ?? true;
           case 'contract':
             return (await contractRef.current?.handleSubmit()) ?? true;
-          case 'royalties':
-            return (await royaltiesRef.current?.handleSubmit()) ?? true;
           case 'social':
             return (await socialRef.current?.handleSubmit()) ?? true;
           default:
@@ -75,7 +72,7 @@ export default function CreateCollection() {
           <ContractContent ref={contractRef} />
         </TabsContent>
         <TabsContent value="royalties">
-          <RoyaltiesContent ref={royaltiesRef} />
+          <RoyaltiesContent />
         </TabsContent>
         <TabsContent value="traits">
           <TraitsContent />

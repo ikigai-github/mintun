@@ -17,6 +17,9 @@ export default function TraitsContent() {
 
   const form = useForm<AddTraitData>({
     resolver: valibotResolver(AddTraitSchema),
+    defaultValues: {
+      trait: '',
+    },
   });
 
   function onSubmit({ trait }: AddTraitData) {

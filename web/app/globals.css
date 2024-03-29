@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 @layer utilities {
-  .justify-safe {
+  .justify-safe-center {
     justify-content: safe center;
+  }
+
+  .items-safe-center {
+    align-items: safe center;
   }
 }
 

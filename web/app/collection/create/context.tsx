@@ -2,18 +2,11 @@
 
 import { createContext, PropsWithChildren, useCallback, useContext, useState } from 'react';
 
-import { ImageDetail, ImageLookup, ImagePurpose, ImagePurposeType, ImageViewMode, SupportedPurpose } from '@/lib/image';
+import { ImageDetail, ImageLookup, ImagePurpose, ImageViewMode, SupportedPurpose } from '@/lib/image';
 
-import { ContractData, DataContract, DescribeData, RoyaltiesData, SocialData } from './schema';
+import { ContractData, DataContract, DescribeData, RoyaltyData, SocialData } from './schema';
 
-export const defaultImage = {
-  src: '',
-  mime: '',
-  width: 0,
-  height: 0,
-};
-
-const defaultDescribe = {
+const defaultDescribe: DescribeData = {
   collection: '',
   artist: '',
   project: '',
@@ -21,9 +14,9 @@ const defaultDescribe = {
   nsfw: false,
 };
 
-const defaultContract = {
+const defaultContract: ContractData = {
   contract: DataContract.Immutable,
-  maxTokens: undefined,
+  maxTokens: '',
   window: undefined,
   group: '',
 };
@@ -46,10 +39,6 @@ const defaultImages = {
   },
 };
 
-const defaultRoyalties = {
-  royalties: [],
-};
-
 const defaultSocial = {
   website: '',
   twitter: '',
@@ -68,8 +57,8 @@ export type CreateCollectionContextProps = {
   setContract: (data: ContractData) => void;
   images: ImageLookup;
   updateImage: (mode: ImageViewMode, purpose: SupportedPurpose, image?: ImageDetail) => void;
-  royalties: RoyaltiesData;
-  setRoyalties: (royalties: RoyaltiesData) => void;
+  royalties: RoyaltyData[];
+  setRoyalties: (royalties: RoyaltyData[]) => void;
   social: SocialData;
   setSocial: (social: SocialData) => void;
 };
@@ -81,13 +70,11 @@ const CreateCollectionContext = createContext<CreateCollectionContextProps>({
   setDescribe: () => null,
   traits: [],
   setTraits: () => null,
-  contract: {
-    contract: DataContract.Immutable,
-  },
+  contract: defaultContract,
   setContract: () => null,
   images: defaultImages,
   updateImage: (_mode: ImageViewMode, _purpose: SupportedPurpose, _image?: ImageDetail) => null,
-  royalties: defaultRoyalties,
+  royalties: [],
   setRoyalties: () => null,
   social: defaultSocial,
   setSocial: () => null,
@@ -99,7 +86,7 @@ export function CreateCollectionContextProvider(props: PropsWithChildren) {
   const [traits, setTraits] = useState<string[]>([]);
   const [contract, setContract] = useState<ContractData>(defaultContract);
   const [images, setImages] = useState<ImageLookup>(defaultImages);
-  const [royalties, setRoyalties] = useState<RoyaltiesData>(defaultRoyalties);
+  const [royalties, setRoyalties] = useState<RoyaltyData[]>([]);
   const [social, setSocial] = useState<SocialData>(defaultSocial);
 
   const updateImage = useCallback(

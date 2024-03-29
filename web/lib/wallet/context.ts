@@ -14,6 +14,7 @@ export type WalletContextType = {
   network: Network;
   selectedWallet: string;
   lastSelectedWallet: string;
+  changeAddress: string | null;
   stakeAddress: string | null;
   installedExtensions: string[];
   accountBalance: number;
@@ -32,6 +33,7 @@ export type WalletContextSetters = {
   setNetwork: Dispatch<SetStateAction<Network>>;
   setSelectedWallet: Dispatch<SetStateAction<string>>;
   setLastSelectedWallet: Dispatch<SetStateAction<string>>;
+  setChangeAddress: Dispatch<SetStateAction<string>>;
   setStakeAddress: Dispatch<SetStateAction<string>>;
   setInstalledExtensions: Dispatch<SetStateAction<string[]>>;
   setAccountBalance: Dispatch<SetStateAction<number>>;
@@ -50,6 +52,7 @@ export const WalletContext = createContext<WalletContextType>({
   network: 'Mainnet',
   selectedWallet: '',
   lastSelectedWallet: '',
+  changeAddress: '',
   stakeAddress: '',
   installedExtensions: [],
   accountBalance: 0,

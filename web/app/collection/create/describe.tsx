@@ -19,7 +19,7 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
 
   const form = useForm<DescribeData>({
     resolver: valibotResolver(DescribeSchema),
-    defaultValues: describe,
+    values: describe,
   });
 
   const { trigger, getValues } = form;

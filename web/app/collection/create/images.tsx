@@ -42,7 +42,7 @@ export default function Images() {
             </div>
           </TabsContent>
 
-          <TabsContent value="tablet" className="justify-safe flex flex-col">
+          <TabsContent value="tablet" className="items-safe-center flex flex-col">
             <TabletImageZone />
             <div className="text-muted-foreground flex w-full justify-center p-4 text-center text-sm italic">
               You can set images here if you prefer different images than the default for displays with a width around

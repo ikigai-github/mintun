@@ -24,9 +24,6 @@ export default function useGenesisMint() {
     if (utxos.length === 0) {
       throw Error('Not enough funds in wallet to complete the mint');
     }
-
-    console.log('Seed found');
-
     return utxos[Math.floor(Math.random() * utxos.length)];
   }, []);
 
@@ -34,7 +31,6 @@ export default function useGenesisMint() {
   // While the upload is in progress it updates a progress state so that UI can
   // display progress if desired.
   const uploadImages = useCallback(async () => {
-    console.log('Thare are ' + numImages + ' num images');
     if (numImages) {
       setUploadProgress(0);
 
@@ -44,7 +40,6 @@ export default function useGenesisMint() {
       for (const [mode, values] of Object.entries(images)) {
         for (const [purpose, detail] of Object.entries(values)) {
           if (detail) {
-            console.log(`mode: ${mode}, purpose: ${purpose}, detail: ${JSON.stringify(detail, undefined, 2)}`);
             const fileName =
               mode === 'desktop'
                 ? `${purpose.toLowerCase()}.${detail.ext}`
@@ -64,8 +59,7 @@ export default function useGenesisMint() {
 
       const result = await client.uploadDirectory(files, {
         onUploadProgress: (status) => {
-          console.log(`Upload Progress: ${JSON.stringify(status, undefined, 2)}`);
-          setUploadProgress(status.loaded / status.total);
+          setUploadProgress((status.loaded * 100) / status.total);
         },
       });
 
@@ -99,14 +93,12 @@ export default function useGenesisMint() {
     const tx = GenesisTxBuilder.create(lucid).seed(seed).useCip88(true);
 
     if (contract.maxTokens) {
-      console.log('Max Tokens: ' + contract.maxTokens);
       tx.maxNfts(contract.maxTokens);
     }
 
     if (contract.window) {
       const fromMs = getTime(contract.window.from);
       const toMs = getTime(contract.window.to);
-      console.log(`fromMs: ${fromMs}, toMs: ${toMs}`);
       tx.mintWindow(fromMs, toMs);
     }
 
