@@ -25,7 +25,7 @@ const SocialContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const handleSubmit = useCallback(async () => {
     const isValid = await trigger();
     if (isValid) {
-      setSocial(form.getValues());
+      setSocial(getValues());
     }
 
     return isValid;

@@ -1,13 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import { useForm } from 'react-hook-form';
 
 import { useWallet } from '@/lib/wallet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormMessage,
+  FormRootMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -30,15 +38,39 @@ export default function RoyaltiesContent() {
     },
   });
 
-  function onSubmit(royalty: RoyaltyData) {
-    const address = royalty.address.toLowerCase();
-    if (address && !royalties.find((royalty) => royalty.address === address)) {
-      setRoyalties([...royalties, { ...royalty, address }]);
-      setTotal((prev) => prev + Number(royalty.percent));
-      form.reset({ address: '', percent: undefined, minFee: undefined, maxFee: undefined });
-      form.setFocus('address');
-    }
-  }
+  const { setFocus, setValue, setError, reset } = form;
+
+  const onSubmit = useCallback(
+    (royalty: RoyaltyData) => {
+      const address = royalty.address.toLowerCase();
+      const royaltyIndex = royalties.findIndex((royalty) => royalty.address === address);
+      const newTotal =
+        royaltyIndex >= 0
+          ? total - Number(royalties[royaltyIndex].percent) + Number(royalty.percent)
+          : total + Number(royalty.percent);
+
+      if (newTotal > 100) {
+        setError('root', {
+          message: 'Total beneficiary percent cannot exceed 100%',
+        });
+        return;
+      }
+
+      const newRoyalties = [...royalties];
+      const newRoyalty = { ...royalty, address };
+      if (royaltyIndex >= 0) {
+        newRoyalties.splice(royaltyIndex, 1, newRoyalty);
+      } else {
+        newRoyalties.push(newRoyalty);
+      }
+
+      setRoyalties(newRoyalties);
+      setTotal(newTotal);
+      reset({ address: '', percent: undefined, minFee: undefined, maxFee: undefined });
+      setFocus('address');
+    },
+    [setTotal, setRoyalties, royalties, setFocus, setError, reset, total]
+  );
 
   return (
     <Card>
@@ -59,8 +91,12 @@ export default function RoyaltiesContent() {
                     {changeAddress ? (
                       <span>
                         <Button
+                          type="button"
                           variant="link"
-                          onClick={() => form.setValue('address', changeAddress)}
+                          onClick={() => {
+                            setValue('address', changeAddress);
+                            setFocus('percent');
+                          }}
                           className="h-fit py-0 pl-4 text-[0.8rem]"
                         >
                           Click here to use connected wallet address
@@ -118,6 +154,7 @@ export default function RoyaltiesContent() {
               )}
             />
             <Button type="submit">Add Royalty</Button>
+            <FormRootMessage className="text-center" />
           </form>
         </Form>
 
@@ -133,18 +170,24 @@ export default function RoyaltiesContent() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Address</TableHead>
-                  <TableHead>Percent Fee</TableHead>
-                  <TableHead>Minimum Fee</TableHead>
-                  <TableHead>Maximum Fee</TableHead>
+                  <TableHead className="text-center">Percent Fee</TableHead>
+                  <TableHead className="text-center">Minimum Fee</TableHead>
+                  <TableHead className="text-center">Maximum Fee</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {royalties.map((royalty) => (
-                  <Tooltip key={`royalty-address-reveiew-${royalty.address}`}>
+                {royalties.map((royalty, index) => (
+                  <Tooltip key={`royalty-address-review-${royalty.address}`}>
                     <TooltipTrigger asChild>
                       <TableRow
                         className="font-heading cursor-pointer text-[0.8rem] font-light"
-                        onClick={() => setRoyalties(royalties.filter((r) => r.address !== royalty.address))}
+                        onClick={() => {
+                          console.log('removin index ' + index);
+                          setTotal((prev) => prev - Number(royalties[index].percent));
+                          const newRoyalties = [...royalties];
+                          newRoyalties.splice(index, 1);
+                          setRoyalties(newRoyalties);
+                        }}
                         key={`royalty-address-reveiew-${royalty.address}`}
                       >
                         <TableCell className="max-w-64 truncate">{royalty.address}</TableCell>
@@ -157,7 +200,7 @@ export default function RoyaltiesContent() {
                       align="start"
                       className="bg-accent text-foreground shadow-foreground/10 whitespace-normal text-xs shadow-md"
                     >
-                      <div className="p-2">{royalty.address}</div>
+                      <span className="p-2">{royalty.address}</span>
                     </TooltipContent>
                   </Tooltip>
                 ))}

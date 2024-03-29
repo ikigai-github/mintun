@@ -73,8 +73,14 @@ export default function Images() {
 function DesktopImageZone() {
   const { images, updateImage, describe } = useCreateCollectionContext();
 
-  const onBannerChange = useCallback((image?: ImageDetail) => updateImage('desktop', ImagePurpose.Banner, image), []);
-  const onBrandChange = useCallback((image?: ImageDetail) => updateImage('desktop', ImagePurpose.Brand, image), []);
+  const onBannerChange = useCallback(
+    (image?: ImageDetail) => updateImage('desktop', ImagePurpose.Banner, image),
+    [updateImage]
+  );
+  const onBrandChange = useCallback(
+    (image?: ImageDetail) => updateImage('desktop', ImagePurpose.Brand, image),
+    [updateImage]
+  );
 
   return (
     <div className="flex flex-col p-4">
@@ -119,7 +125,7 @@ function DesktopImageZone() {
           }
         />
       </div>
-      <div className="text-foreground/20 -mt-28 flex h-60 w-full items-center justify-center rounded-b-md border-b border-l border-r text-center text-3xl italic">
+      <div className="text-foreground/20 -mt-28 flex h-60 w-full items-center justify-center rounded-b-md border-x border-b text-center text-3xl italic">
         <span className="mt-14">Your NFT Collection would appear here</span>
       </div>
     </div>
@@ -129,8 +135,14 @@ function DesktopImageZone() {
 function TabletImageZone() {
   const { images, updateImage, describe } = useCreateCollectionContext();
 
-  const onBannerChange = useCallback((image?: ImageDetail) => updateImage('tablet', ImagePurpose.Banner, image), []);
-  const onBrandChange = useCallback((image?: ImageDetail) => updateImage('tablet', ImagePurpose.Brand, image), []);
+  const onBannerChange = useCallback(
+    (image?: ImageDetail) => updateImage('tablet', ImagePurpose.Banner, image),
+    [updateImage]
+  );
+  const onBrandChange = useCallback(
+    (image?: ImageDetail) => updateImage('tablet', ImagePurpose.Brand, image),
+    [updateImage]
+  );
 
   return (
     <div className="min-w-[768px] max-w-[1024px] p-4">
@@ -175,7 +187,7 @@ function TabletImageZone() {
           }
         />
       </div>
-      <div className="text-foreground/20 -mt-2 flex h-40 w-full items-center justify-center rounded-b-md border-b border-l border-r text-center text-3xl italic">
+      <div className="text-foreground/20 -mt-2 flex h-40 w-full items-center justify-center rounded-b-md border-x border-b text-center text-3xl italic">
         Your NFT Collection would appear here
       </div>
     </div>
@@ -185,8 +197,14 @@ function TabletImageZone() {
 function MobileImageZone() {
   const { images, updateImage, describe } = useCreateCollectionContext();
 
-  const onBannerChange = useCallback((image?: ImageDetail) => updateImage('mobile', ImagePurpose.Banner, image), []);
-  const onBrandChange = useCallback((image?: ImageDetail) => updateImage('mobile', ImagePurpose.Brand, image), []);
+  const onBannerChange = useCallback(
+    (image?: ImageDetail) => updateImage('mobile', ImagePurpose.Banner, image),
+    [updateImage]
+  );
+  const onBrandChange = useCallback(
+    (image?: ImageDetail) => updateImage('mobile', ImagePurpose.Brand, image),
+    [updateImage]
+  );
 
   return (
     <div className="flex w-full min-w-[360px] max-w-[420px] flex-col items-center p-4">
@@ -229,7 +247,7 @@ function MobileImageZone() {
           }
         />
       </div>
-      <div className="text-foreground/20 -mt-16 flex h-60 w-full items-center justify-center rounded-b-md border-b border-l border-r text-center text-2xl">
+      <div className="text-foreground/20 -mt-16 flex h-60 w-full items-center justify-center rounded-b-md border-x border-b text-center text-2xl">
         Your NFT Collection would appear here
       </div>
     </div>
@@ -241,7 +259,7 @@ function ThumbnailImageZone() {
 
   const onThumbnailChange = useCallback(
     (image?: ImageDetail) => updateImage('desktop', ImagePurpose.Thumbnail, image),
-    []
+    [updateImage]
   );
 
   return (

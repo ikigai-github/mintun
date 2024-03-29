@@ -46,7 +46,7 @@ export default function CreateCollection() {
 
       return isValid;
     },
-    [tab]
+    [setTab, tab]
   );
 
   return (

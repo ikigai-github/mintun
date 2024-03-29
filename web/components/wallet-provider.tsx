@@ -109,6 +109,7 @@ export function WalletProvider({ children }: PropsWithChildren) {
       network,
       selectedWallet,
       lastSelectedWallet,
+      changeAddress,
       stakeAddress,
       installedExtensions,
       accountBalance,

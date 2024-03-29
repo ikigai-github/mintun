@@ -10,7 +10,7 @@ import { createWebClient } from '@/lib/storage/client';
 import { useWallet } from '@/lib/wallet';
 
 import { useCreateCollectionContext } from './context';
-import { DataContract, SocialData } from './schema';
+import { DataContract } from './schema';
 
 export default function useGenesisMint() {
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -73,7 +73,7 @@ export default function useGenesisMint() {
 
     setUploadProgress(100);
     return [];
-  }, [images, setUploadProgress]);
+  }, [images, setUploadProgress, numImages]);
 
   // Finds the seed, uploads images, and imports offchain in parallel. Then it builds the transaction.
   // It doesn't catch any thrown errors so higher level can manage that part.
@@ -121,7 +121,7 @@ export default function useGenesisMint() {
     const built = await tx.build();
 
     return built.tx;
-  }, [lucid, contract, describe, social]);
+  }, [lucid, contract, describe, social, findSeed, uploadImages]);
 
   return {
     uploadProgress,

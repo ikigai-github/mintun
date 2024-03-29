@@ -54,7 +54,7 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
           height,
         });
       }
-    }, [file, ext, mime, width, height, isReady, onImageChange]);
+    }, [file, ext, mime, width, height, isReady, onImageChange, preview]);
 
     // Display a toast whenever an error occurs
     useEffect(() => {
@@ -68,17 +68,19 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
         <input {...getInputProps()} />
         {preview ? (
           <div className="grid grid-cols-1 grid-rows-1">
+            {/* eslint-disable @next/next/no-img-element */}
             <img
               ref={ref}
+              alt="Preview of local file image"
               src={preview}
               className={cn('col-start-1 row-start-1', shapeClassName, className)}
               {...props}
             />
-            <div className="col-start-1 row-start-1 h-full w-full"> {children} </div>
+            <div className="col-start-1 row-start-1 size-full"> {children} </div>
             {showClearButton ? (
               <div
                 className={cn(
-                  'group col-start-1 row-start-1 flex h-full w-full cursor-pointer items-start',
+                  'group col-start-1 row-start-1 flex size-full cursor-pointer items-start',
                   clearClassName
                 )}
               >
@@ -92,7 +94,7 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
                   }}
                   variant="secondary"
                   size="icon"
-                  className="m-1 hidden items-center justify-end justify-center group-hover:flex"
+                  className="m-1 hidden items-center justify-center group-hover:flex"
                 >
                   <Cross2Icon className="size-6" />
                 </Button>
@@ -101,10 +103,7 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
           </div>
         ) : (
           <div
-            className={cn(
-              'border-foreground/10 bg-muted flex h-full w-full border-2 border-dashed p-2',
-              shapeClassName
-            )}
+            className={cn('border-foreground/10 bg-muted flex size-full border-2 border-dashed p-2', shapeClassName)}
           >
             {dropMessage ?? (
               <div className="flex items-center justify-center">

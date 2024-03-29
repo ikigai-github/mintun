@@ -145,6 +145,7 @@ function ContractAccordionItem() {
   );
 }
 
+/* eslint-disable @next/next/no-img-element */
 function ImagesAccordionItem() {
   const { images } = useCreateCollectionContext();
 
@@ -294,7 +295,7 @@ function SocialAccordionItem() {
         {label}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent text-foreground grid grid-cols-[auto_1fr] items-end items-center gap-4 rounded-[0.5rem] p-2">
+        <div className="bg-accent text-foreground grid grid-cols-[auto_1fr] items-center gap-4 rounded-[0.5rem] p-2">
           {social.website ? (
             <>
               <GlobeIcon className="size-5" />

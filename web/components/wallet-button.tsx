@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+/* eslint-disable @next/next/no-img-element */
+import { useCallback } from 'react';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 
@@ -56,7 +57,7 @@ export function WalletButton() {
         {installedExtensions.map((extension, key) => (
           <DropdownMenuItem key={key} disabled={extension === selectedWallet} onClick={() => handleClick(extension)}>
             <div className="flex w-full items-center gap-4 font-bold">
-              <img src={getWalletIcon(extension)} className="h-5" />
+              <img src={getWalletIcon(extension)} alt="Wallet Icon" className="h-5" />
 
               {getWalletDisplayName(extension)}
             </div>

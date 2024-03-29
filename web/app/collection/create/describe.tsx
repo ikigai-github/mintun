@@ -29,7 +29,7 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const handleSubmit = useCallback(async () => {
     const isValid = await trigger();
     if (isValid) {
-      setDescribe(form.getValues());
+      setDescribe(getValues());
     }
 
     return isValid;
@@ -76,8 +76,8 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                     <Input placeholder="Optional" {...field} />
                   </FormControl>
                   <FormDescription>
-                    The name of the artist that created the collection. Feel free to leave this blank if you don't want
-                    to associate an artist with the collection for any reason.
+                    The name of the artist that created the collection. Feel free to leave this blank if you don&apos;t
+                    want to associate an artist with the collection for any reason.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

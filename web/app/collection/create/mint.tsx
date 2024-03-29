@@ -1,6 +1,5 @@
 'use client';
 
-import { stat } from 'fs';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
@@ -228,7 +227,7 @@ function MintButton({ status, setStatus }: MintStateProps) {
       }
       setStatus('ready');
     }
-  }, [prepareTx]);
+  }, [prepareTx, lucid, setStatus]);
 
   useEffect(() => {
     if (status === 'ready') {
