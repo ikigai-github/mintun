@@ -9,9 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@cardano-foundation/cardano-connect-with-wallet-core": "^0.2.4",
-    "@fabianbormann/cardano-peer-connect": "^1.2.14",
     "@hookform/resolvers": "^3.3.4",
+    "@ikigai-github/mintun-offchain": "workspace:../offchain",
     "@ipld/car": "^5.3.0",
     "@ipld/dag-ucan": "^3.4.0",
     "@mdx-js/loader": "^3.0.1",
@@ -25,6 +24,7 @@
     "@radix-ui/react-icons": "^1.3.0",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-popover": "^1.0.7",
+    "@radix-ui/react-progress": "^1.0.3",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-separator": "^1.0.3",
     "@radix-ui/react-slot": "^1.0.2",
@@ -36,6 +36,7 @@
     "@ucanto/principal": "^9.0.0",
     "@web3-storage/w3up-client": "^12.4.1",
     "bech32": "^2.0.0",
+    "buffer": "^6.0.3",
     "cborg": "^4.0.9",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",

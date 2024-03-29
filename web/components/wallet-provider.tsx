@@ -25,6 +25,7 @@ export function WalletProvider({ children }: PropsWithChildren) {
   const [network, setNetwork] = useState<Network>('Mainnet');
   const [selectedWallet, setSelectedWallet] = useState('');
   const [lastSelectedWallet, setLastSelectedWallet] = useLocalStorage('mintun:selected:wallet', '');
+  const [changeAddress, setChangeAddress] = useState('');
   const [stakeAddress, setStakeAddress] = useState('');
   const [installedExtensions, setInstalledExtensions] = useState<Array<string>>([]);
   const [accountBalance, setAccountBalance] = useState<number>(0);
@@ -41,6 +42,7 @@ export function WalletProvider({ children }: PropsWithChildren) {
       setNetwork,
       setSelectedWallet,
       setLastSelectedWallet,
+      setChangeAddress,
       setStakeAddress,
       setInstalledExtensions,
       setAccountBalance,
@@ -56,6 +58,7 @@ export function WalletProvider({ children }: PropsWithChildren) {
       setNetwork,
       setSelectedWallet,
       setLastSelectedWallet,
+      setChangeAddress,
       setStakeAddress,
       setInstalledExtensions,
       setAccountBalance,
@@ -88,6 +91,7 @@ export function WalletProvider({ children }: PropsWithChildren) {
       network,
       selectedWallet,
       lastSelectedWallet,
+      changeAddress,
       stakeAddress,
       installedExtensions,
       accountBalance,
@@ -105,6 +109,7 @@ export function WalletProvider({ children }: PropsWithChildren) {
       network,
       selectedWallet,
       lastSelectedWallet,
+      changeAddress,
       stakeAddress,
       installedExtensions,
       accountBalance,

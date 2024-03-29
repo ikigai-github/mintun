@@ -11,7 +11,7 @@ import { useForm } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent } from '@/components/ui/popover';
@@ -26,7 +26,7 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
 
   const form = useForm<ContractData>({
     resolver: valibotResolver(ContractSchema),
-    defaultValues: contract,
+    values: contract,
   });
 
   const { trigger, getValues } = form;
@@ -36,7 +36,7 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
   const handleSubmit = useCallback(async () => {
     const isValid = await trigger();
     if (isValid) {
-      setContract(form.getValues());
+      setContract(getValues());
     }
 
     return isValid;
@@ -110,7 +110,7 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                           ) : (
                             <span>Optional</span>
                           )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          <CalendarIcon className="ml-auto size-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
@@ -150,19 +150,7 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                 <FormItem>
                   <FormLabel>Max Tokens</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Optional"
-                      type="number"
-                      {...field}
-                      onChange={(event) => {
-                        const value = Number(event.target.value);
-                        if (value === 0) {
-                          field.onChange(undefined);
-                        } else if (!Number.isNaN(value)) {
-                          field.onChange(value);
-                        }
-                      }}
-                    />
+                    <Input placeholder="Optional" type="number" {...field} />
                   </FormControl>
                   <FormDescription>
                     The maximum number of NFTs that will be created under this collection.
@@ -184,7 +172,7 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                     A collection group can be used to verify multiple collections are created by the same creator. This
                     is done by each collection referencing the group to which it belongs. The collection group also must
                     be updated with the policy id of this new collection to completley prove the collection is in the
-                    group. If you don't have a collection group and would like one then you can{' '}
+                    group. If you don&apos;t have a collection group and would like one then you can{' '}
                     <Link className="font-bold" target="_blank" href="/">
                       {/* TODO: Rather than making them exit the flow let them check a box indicating they want to make a group policy as well.  Also, I need to actually write the contract for group policy */}
                       create a collection group by clicking here

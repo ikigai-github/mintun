@@ -104,6 +104,20 @@ export async function getStakeAddress(api: WalletApi) {
   return '';
 }
 
+export async function getChangeAddress(api: WalletApi) {
+  if (typeof api.getChangeAddress === 'function') {
+    const hexAddress = await api.getChangeAddress();
+
+    if (hexAddress) {
+      try {
+        return decodeHexAddress(hexAddress);
+      } catch (error) {}
+    }
+  }
+
+  return '';
+}
+
 export async function signMessage(
   walletName: string,
   message: string,

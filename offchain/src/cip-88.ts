@@ -1,10 +1,11 @@
 /// CIP-88 definitions and builder
-import { fromUnit, Lucid, Script, Tx } from 'lucid-cardano';
-import { CollectionImage, CollectionInfo } from './collection-info';
-import { chunk } from './utils';
-import { Royalty } from './royalty';
+import { fromUnit, type Lucid, type Script, type Tx } from 'lucid-cardano';
+
 import { asChainVariableFee } from './cip-102';
+import { CollectionImage, CollectionInfo } from './collection-info';
 import { IMAGE_PURPOSE } from './image';
+import { Royalty } from './royalty';
+import { chunk } from './utils';
 
 export const CIP_88_METADATA_LABEL = 867;
 
@@ -141,16 +142,13 @@ function mapImages(info: CollectionInfo) {
   /// Find the best matching purpose for the project profile image and the project banner image.
   function selectImages(images: CollectionImage[]) {
     // Could be fancier here to reduce from 5*N search but it should be a tiny N list to search
-    const avatar = images.find((image) => image.purpose === IMAGE_PURPOSE.Avatar);
+    const brand = images.find((image) => image.purpose === IMAGE_PURPOSE.Brand);
     const banner = images.find((image) => image.purpose === IMAGE_PURPOSE.Banner);
     const thumbnail = images.find((image) => image.purpose === IMAGE_PURPOSE.Thumbnail);
     const general = images.find((image) => image.purpose === IMAGE_PURPOSE.General);
     const gallery = images.find((image) => image.purpose === IMAGE_PURPOSE.Gallery);
 
-    return [
-      avatar || thumbnail || general,
-      banner || gallery || general,
-    ];
+    return [brand || thumbnail || general, banner || gallery || general];
   }
 
   let profile: string[] | undefined;
@@ -186,7 +184,9 @@ function mapSocial(info: CollectionInfo) {
   if (info.links) {
     const mapped: Record<string, string[]> = {};
     for (const [label, uri] of Object.entries(info.links)) {
-      mapped[label] = cip88Uri(uri);
+      if (uri) {
+        mapped[label] = cip88Uri(uri);
+      }
     }
 
     return mapped;
@@ -334,7 +334,7 @@ export class Cip88Builder {
   private tokenProject(standard: 25 | 68, detail: TokenProjectDetail) {
     if (this.#features[25] || this.#features[68]) {
       throw new Error(
-        'Cannot declare a token project more than once. If your minting policy is CIP-68 but also emits CIP-25  for backward compatability just use 68',
+        'Cannot declare a token project more than once. If your minting policy is CIP-68 but also emits CIP-25  for backward compatability just use 68'
       );
     }
 
@@ -389,11 +389,9 @@ export async function addCip88MetadataToTransaction(
   tx: Tx,
   script: Script,
   beaconUnit: string,
-  config: Cip88ExtraConfig | undefined = undefined,
+  config: Cip88ExtraConfig | undefined = undefined
 ) {
-  const builder = Cip88Builder
-    .register(script)
-    .validateWithbeacon(beaconUnit);
+  const builder = Cip88Builder.register(script).validateWithbeacon(beaconUnit);
 
   if (config) {
     if (config.cip27Royalty) {

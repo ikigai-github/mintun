@@ -1,7 +1,9 @@
-import { Address, Assets, Data, fromText } from 'lucid-cardano';
+import { fromText, type Address, type Assets } from 'lucid-cardano';
+
 import { createReferenceData, NftMetadataShape, NftMetadataType, NftMetadataWrappedType } from './cip-68';
 import { toNftReferenceAssetName, toNftUserAssetName } from './collection';
 import { TxMetadataPrimitive } from './common';
+import { Data } from './data';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
 import { chunk } from './utils';
 
@@ -69,7 +71,7 @@ export class NftBuilder {
     src: string,
     mediaType: string,
     purpose: ImagePurpose | undefined = undefined,
-    dimension: ImageDimension | undefined = undefined,
+    dimension: ImageDimension | undefined = undefined
   ) {
     if (purpose === IMAGE_PURPOSE.Thumbnail) {
       this.#nft.image = src;
@@ -131,7 +133,7 @@ export function prepareAssets(
   sequence: number,
   defaultRecipientAddress: Address,
   hasRoyalty: boolean,
-  referenceAddress?: Address,
+  referenceAddress?: Address
 ): PreparedAssets {
   const mints: Assets = {};
   const userPayouts: UserPayouts = {};

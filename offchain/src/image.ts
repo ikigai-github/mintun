@@ -2,7 +2,7 @@
 export const IMAGE_PURPOSE = {
   Thumbnail: 'Thumbnail',
   Banner: 'Banner',
-  Avatar: 'Avatar',
+  Brand: 'Brand',
   Gallery: 'Gallery',
   General: 'General',
 } as const;

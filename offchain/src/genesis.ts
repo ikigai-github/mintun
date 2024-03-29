@@ -1,19 +1,21 @@
-import { Address, Data, Lucid, Script, UTxO } from 'lucid-cardano';
-import { MintRedeemerShape } from './contract';
-import { checkPolicyId } from './utils';
-import { addCip102RoyaltyToTransaction } from './cip-102';
+import type { Address, Lucid, Script, UTxO } from 'lucid-cardano';
+
 import { addCip27RoyaltyToTransaction } from './cip-27';
-import { Royalty } from './royalty';
-import { ScriptCache } from './script';
-import { asChainCollectionInfo, CollectionInfo, CollectionInfoMetadataShape } from './collection-info';
 import { addCip88MetadataToTransaction, Cip88ExtraConfig } from './cip-88';
+import { addCip102RoyaltyToTransaction } from './cip-102';
+import { SEQUENCE_MAX_VALUE } from './collection';
+import { asChainCollectionInfo, CollectionInfo, CollectionInfoMetadataShape } from './collection-info';
 import {
   CollectionState,
   CollectionStateMetadataShape,
   createGenesisStateData,
   toCollectionState,
 } from './collection-state';
-import { SEQUENCE_MAX_VALUE } from './collection';
+import { MintRedeemerShape } from './contract';
+import { Data } from './data';
+import { Royalty } from './royalty';
+import { ScriptCache } from './script';
+import { checkPolicyId } from './utils';
 
 export class GenesisTxBuilder {
   #lucid: Lucid;
@@ -45,11 +47,11 @@ export class GenesisTxBuilder {
     throw new Error('Group policy id must be a 28 bytes hex string');
   }
 
-  mintWindow(startMs: number, endMs: number) {
-    if (startMs >= 0 && startMs < endMs) {
+  mintWindow(fromMs: number, toMs: number) {
+    if (fromMs >= 0 && fromMs < toMs) {
       this.#state.mintWindow = {
-        startMs,
-        endMs,
+        fromMs,
+        toMs,
       };
       return this;
     }
@@ -135,11 +137,11 @@ export class GenesisTxBuilder {
     address: string,
     variableFee: number,
     minFee: number | undefined = undefined,
-    maxFee: number | undefined = undefined,
+    maxFee: number | undefined = undefined
   ) {
     if (variableFee < 0.1) {
       throw new Error(
-        'Royalty percent must be greater than 0.1%. If you want a fixed fee set min fee equal to max fee and percent to any postive number',
+        'Royalty percent must be greater than 0.1%. If you want a fixed fee set min fee equal to max fee and percent to any postive number'
       );
     }
 
@@ -154,15 +156,10 @@ export class GenesisTxBuilder {
 
     const total = Object.values(this.#royalties)
       .map((royalty) => royalty.variableFee)
-      .reduce(
-        (acc, next) => acc + next,
-        0,
-      );
+      .reduce((acc, next) => acc + next, 0);
 
     if (total > 100) {
-      throw new Error(
-        'Total royalty percent must be less than 100',
-      );
+      throw new Error('Total royalty percent must be less than 100');
     }
 
     return this;
@@ -191,17 +188,18 @@ export class GenesisTxBuilder {
     const recipientAssets = { [unit.owner]: 1n };
     const assets = { ...stateValidatorAssets, ...infoValidatorAssets, ...recipientAssets };
 
-    const redeemer = Data.to({
-      'EndpointGenesis': {
-        state_validator_policy_id: stateScript.policyId,
-        info_validator_policy_id: infoScript.policyId,
+    const redeemer = Data.to(
+      {
+        EndpointGenesis: {
+          state_validator_policy_id: stateScript.policyId,
+          info_validator_policy_id: infoScript.policyId,
+        },
       },
-    }, MintRedeemerShape);
+      MintRedeemerShape
+    );
 
     // Start building tx
-    const tx = this.#lucid.newTx()
-      .attachMintingPolicy(mintScript.script)
-      .collectFrom([this.#seed]);
+    const tx = this.#lucid.newTx().attachMintingPolicy(mintScript.script).collectFrom([this.#seed]);
 
     // Add royalties to minted assets, if they are included
     const royalties = Object.values(this.#royalties);
@@ -248,14 +246,21 @@ export class GenesisTxBuilder {
     const infoData = asChainCollectionInfo(this.#info);
     const infoDatum = Data.to(infoData, CollectionInfoMetadataShape);
 
-    tx
-      .mintAssets(assets, redeemer)
-      .payToAddressWithData(stateScript.address, {
-        inline: genesisStateDatum,
-      }, stateValidatorAssets)
-      .payToAddressWithData(infoScript.address, {
-        inline: infoDatum,
-      }, infoValidatorAssets)
+    tx.mintAssets(assets, redeemer)
+      .payToAddressWithData(
+        stateScript.address,
+        {
+          inline: genesisStateDatum,
+        },
+        stateValidatorAssets
+      )
+      .payToAddressWithData(
+        infoScript.address,
+        {
+          inline: infoDatum,
+        },
+        infoValidatorAssets
+      )
       .payToAddress(recipient, recipientAssets);
 
     const state = toCollectionState(this.#lucid, genesisStateData);

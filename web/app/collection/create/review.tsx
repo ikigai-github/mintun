@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { DiscordLogoIcon, GlobeIcon, InstagramLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
 import { format } from 'date-fns';
 
+import { getPreviews } from '@/lib/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -144,41 +145,25 @@ function ContractAccordionItem() {
   );
 }
 
+/* eslint-disable @next/next/no-img-element */
 function ImagesAccordionItem() {
   const { images } = useCreateCollectionContext();
 
-  const imageArray = useMemo(() => {
-    const { desktop, tablet, mobile } = images;
-    let imageArray = [];
-
-    if (desktop.avatar.src) imageArray.push(desktop.avatar);
-    if (desktop.banner.src) imageArray.push(desktop.banner);
-    if (desktop.thumbnail.src) imageArray.push(desktop.thumbnail);
-
-    if (tablet.avatar.src) imageArray.push(tablet.avatar);
-    if (tablet.banner.src) imageArray.push(tablet.banner);
-    if (tablet.thumbnail.src) imageArray.push(tablet.thumbnail);
-
-    if (mobile.avatar.src) imageArray.push(mobile.avatar);
-    if (mobile.banner.src) imageArray.push(mobile.banner);
-    if (mobile.thumbnail.src) imageArray.push(mobile.thumbnail);
-
-    return imageArray;
-  }, [images]);
+  const previews = useMemo(() => getPreviews(images), [images]);
 
   return (
     <AccordionItem value="images">
       <AccordionTrigger
-        disabled={imageArray.length === 0}
+        disabled={previews.length === 0}
         className="font-heading text-foreground font-light leading-none"
-      >{`${imageArray.length} Images`}</AccordionTrigger>
+      >{`${previews.length} Images`}</AccordionTrigger>
       <AccordionContent>
         <div className="bg-accent flex flex-wrap items-end gap-2 rounded-[0.5rem] p-2">
-          {imageArray.map((image, index) => (
+          {previews.map((image, index) => (
             <img
               key={`review-image-${index}`}
               className="size-10 object-cover"
-              src={'data:image/jpeg;base64, ' + image.src}
+              src={image}
               alt={`Review Image ${index}`}
             />
           ))}
@@ -192,26 +177,26 @@ function RoyaltiesAccordionItem() {
   const { royalties } = useCreateCollectionContext();
 
   const label = useMemo(() => {
-    if (royalties.royalties.length === 0) {
+    if (royalties.length === 0) {
       return 'No Royalties';
-    } else if (royalties.royalties.length === 1) {
+    } else if (royalties.length === 1) {
       return 'One Royalty Beneficiary';
     } else {
-      return `${royalties.royalties.length} Royalty Beneficiaries`;
+      return `${royalties.length} Royalty Beneficiaries`;
     }
   }, [royalties]);
 
   return (
     <AccordionItem value="royalties">
       <AccordionTrigger
-        disabled={royalties.royalties.length === 0}
+        disabled={royalties.length === 0}
         className="font-heading text-foreground font-light leading-none"
       >
         {label}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid grid-cols-[auto_1fr] gap-x-10 gap-y-2 rounded-[0.5rem] p-4">
-          {royalties.royalties.map((royalty, index) => (
+        <div className="bg-accent grid grid-cols-[auto_1fr_1fr_1fr] gap-x-10 gap-y-2 rounded-[0.5rem] p-4">
+          {royalties.map((royalty, index) => (
             <>
               <div key={`royalty-address-${index}`} className="font-heading text-primary cursor-pointer truncate">
                 <Tooltip>
@@ -227,8 +212,22 @@ function RoyaltiesAccordionItem() {
                 </Tooltip>
               </div>
               <div className="text-foreground" key={`royalty-percent-${index}`}>
-                {royalty.percentage}%
+                {royalty.percent}%
               </div>
+              {royalty.minFee ? (
+                <div className="text-foreground whitespace-nowrap" key={`royalty-min-fee-${index}`}>
+                  {royalty.minFee} ₳
+                </div>
+              ) : (
+                <div></div>
+              )}
+              {royalty.maxFee ? (
+                <div className="text-foreground whitespace-nowrap" key={`royalty-max-fee-${index}`}>
+                  {royalty.maxFee} ₳
+                </div>
+              ) : (
+                <div></div>
+              )}
             </>
           ))}
         </div>
@@ -296,7 +295,7 @@ function SocialAccordionItem() {
         {label}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent text-foreground grid grid-cols-[auto_1fr] items-end items-center gap-4 rounded-[0.5rem] p-2">
+        <div className="bg-accent text-foreground grid grid-cols-[auto_1fr] items-center gap-4 rounded-[0.5rem] p-2">
           {social.website ? (
             <>
               <GlobeIcon className="size-5" />

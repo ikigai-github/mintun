@@ -2,8 +2,8 @@
 export const POLICY_ID_BYTE_LENGTH = 28;
 
 export type TimeWindow = {
-  startMs: number;
-  endMs: number;
+  fromMs: number;
+  toMs: number;
 };
 
 // Transaction metdata can be

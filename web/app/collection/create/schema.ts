@@ -1,15 +1,14 @@
 import {
-  array,
   boolean,
+  coerce,
+  custom,
   date,
   enum_,
+  forward,
   Input,
-  instance,
   literal,
   maxLength,
-  maxSize,
   maxValue,
-  mimeType,
   minLength,
   minValue,
   number,
@@ -50,27 +49,49 @@ export const ContractSchema = object({
       to: date(),
     })
   ),
-  maxTokens: optional(number([minValue(0)])),
-  group: optional(
-    union([
-      string('Policy ID of group must be a 28 byte (56 character) hex string', [
-        minLength(56),
-        maxLength(56),
-        regex(/[a-fA-F0-9]+/),
-      ]),
-      literal(''),
-    ])
-  ),
+  maxTokens: coerce(union([number([minValue(0)]), literal('')]), (str) => {
+    const num = Number(str);
+    return Number.isNaN(num) ? '' : num;
+  }),
+  group: union([
+    string('Policy ID of group must be a 28 byte (56 character) hex string', [
+      minLength(56),
+      maxLength(56),
+      regex(/[a-fA-F0-9]+/),
+    ]),
+    literal(''),
+  ]),
 });
 
-const RoyaltySchema = object({
-  address: string('Address not in string format', [minLength(1)]), // TODO: Should we have a regex or min length for this?
-  percentage: number('Percentage not in number format', [maxValue(100), minValue(0.01)]),
-});
-
-export const RoyaltiesSchema = object({
-  royalties: array(RoyaltySchema),
-});
+export const RoyaltySchema = object(
+  {
+    address: string('Address not in string format', [minLength(1)]),
+    percent: coerce(
+      union([number('Percentage not in number format', [maxValue(100), minValue(0.01)]), literal('')]),
+      (str) => {
+        const num = Number(str);
+        return Number.isNaN(num) ? '' : num;
+      }
+    ),
+    minFee: coerce(union([number([minValue(0)]), literal('')]), (str) => {
+      const num = Number(str);
+      return Number.isNaN(num) ? '' : num;
+    }),
+    maxFee: coerce(union([number([minValue(0)]), literal('')]), (str) => {
+      const num = Number(str);
+      return Number.isNaN(num) ? '' : num;
+    }),
+  },
+  [
+    forward(
+      custom(
+        (royalty) => royalty.minFee === '' || royalty.maxFee == '' || royalty.maxFee >= royalty.minFee,
+        'Max fee must be greater than or equal to min fee'
+      ),
+      ['maxFee']
+    ),
+  ]
+);
 
 export const SocialSchema = object({
   website: union([
@@ -118,7 +139,7 @@ const ImageSchema = object({
 
 const ImageGroupSchema = object({
   banner: ImageSchema,
-  avatar: ImageSchema,
+  brand: ImageSchema,
   thumbnail: ImageSchema,
 });
 
@@ -128,40 +149,6 @@ export const UploadImageSchema = object({
   tablet: ImageGroupSchema,
   mobile: ImageGroupSchema,
 });
-
-/// TODO: Just import this section from offchain/image.ts  library once I have integrated it.
-/////////////////////////////
-export const ImagePurpose = {
-  Thumbnail: 'Thumbnail',
-  Banner: 'Banner',
-  Avatar: 'Avatar',
-  Gallery: 'Gallery',
-  General: 'General',
-} as const;
-
-export type ImagePurposeType = keyof typeof ImagePurpose;
-
-/// Width height of an image in pixels
-export type ImageDimension = {
-  width: number;
-  height: number;
-};
-/////////////////////////////
-
-const SupportedMimeTypes = [
-  'image/jpeg',
-  'image/png',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg',
-  'image/svg+xml',
-] as const;
-
-const FileImageSchema = instance(File, [
-  mimeType(['image/jpeg', 'image/png', 'image/png', 'image/gif', 'image/webp', 'image/svg', 'image/svg+xml']),
-  maxSize(1024 * 1024 * 10),
-]);
 
 export type ParentSubmitForm = {
   handleSubmit: () => Promise<boolean>;
@@ -173,6 +160,5 @@ export type AddTraitData = Input<typeof AddTraitSchema>;
 export type UploadImageData = Input<typeof UploadImageSchema>;
 export type ImageGroupData = Input<typeof ImageGroupSchema>;
 export type ImageData = Input<typeof ImageSchema>;
-export type Royalty = Input<typeof RoyaltySchema>;
-export type RoyaltiesData = Input<typeof RoyaltiesSchema>;
+export type RoyaltyData = Input<typeof RoyaltySchema>;
 export type SocialData = Input<typeof SocialSchema>;

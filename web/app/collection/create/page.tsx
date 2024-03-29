@@ -9,7 +9,6 @@ import ContractContent from './contract';
 import DescribeContent from './describe';
 import ImagesContent from './images';
 import Mint from './mint';
-import ReviewContent from './review';
 import RoyaltiesContent from './royalties';
 import { ParentSubmitForm } from './schema';
 import SocialContent from './social';
@@ -19,7 +18,6 @@ export default function CreateCollection() {
   const { tab, setTab } = useCreateCollectionContext();
   const describeRef = useRef<ParentSubmitForm>(null);
   const contractRef = useRef<ParentSubmitForm>(null);
-  const royaltiesRef = useRef<ParentSubmitForm>(null);
   const socialRef = useRef<ParentSubmitForm>(null);
 
   // We want to submit the part of the form they are currently viewing whenever they
@@ -34,8 +32,6 @@ export default function CreateCollection() {
             return (await describeRef.current?.handleSubmit()) ?? true;
           case 'contract':
             return (await contractRef.current?.handleSubmit()) ?? true;
-          case 'royalties':
-            return (await royaltiesRef.current?.handleSubmit()) ?? true;
           case 'social':
             return (await socialRef.current?.handleSubmit()) ?? true;
           default:
@@ -50,11 +46,11 @@ export default function CreateCollection() {
 
       return isValid;
     },
-    [tab]
+    [setTab, tab]
   );
 
   return (
-    <div className="flex w-full max-w-[1024px] flex-col gap-2">
+    <div className="flex w-full max-w-[1280px] flex-col gap-2">
       <Mint allowOpen={handleViewChange} />
       <Tabs defaultValue="describe" value={tab} onValueChange={handleViewChange} className="flex-1">
         {/* TODO: Maybe Put the Tab list inside a navigation menu on mobile  since it gets a bit unwieldy */}
@@ -76,7 +72,7 @@ export default function CreateCollection() {
           <ContractContent ref={contractRef} />
         </TabsContent>
         <TabsContent value="royalties">
-          <RoyaltiesContent ref={royaltiesRef} />
+          <RoyaltiesContent />
         </TabsContent>
         <TabsContent value="traits">
           <TraitsContent />

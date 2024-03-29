@@ -4,7 +4,7 @@
   "description": "A batch minting contract and integration with Lucid for interacting with that contract",
   "author": "Genun Games",
   "scripts": {
-    "build:dapp": "pnpm --filter {web} build",
+    "build:web": "pnpm --filter {web} build",
     "build:offchain": "pnpm --filter {offchain} build",
     "build:aiken": "aiken build contracts && mv contracts/plutus.json offchain/contracts.json",
     "build:aiken:trace": "aiken build contracts --keep-traces && mv contracts/plutus.json offchain/contracts.json",

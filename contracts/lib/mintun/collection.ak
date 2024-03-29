@@ -38,8 +38,8 @@ pub type ImagePurpose {
   Thumbnail
   /// The image is intended to be displayed as a banner
   Banner
-  /// The image is intended to be displayed as a Avatar
-  Avatar
+  /// The image is intended to be displayed as a Brand Image
+  Brand
   /// The image is intended to be displayed in a Gallery
   Gallery
   /// The image has no specific purpose
@@ -49,12 +49,12 @@ pub type ImagePurpose {
 /// Slightly more robust image type that includes a hint at the purpose and dimension of an image
 pub type CollectionImage {
   /// A hint at the intend purpose/usage for the image
-  purpose: ImagePurpose,
+  purpose: Option<ImagePurpose>,
   /// The dimensions of the image. Can also be used to infer aspect ratio and decide which image to use.
   /// For example, given two banner images a web3 app can pick based on display aspect ratio. 
-  dimensions: ImageDimensions,
+  dimensions: Option<ImageDimensions>,
   /// The media type of the image should usually start with 'image/'. Not sure it is needed honestly.
-  media_type: ByteArray,
+  media_type: Option<ByteArray>,
   /// The source of the image. Usually a HTTP URL, though could be a CID or base64 encoded data.  Broken into 64 byte chunks.
   src: List<ByteArray>,
 }

@@ -1,5 +1,5 @@
 {
-  "name": "mintun-offchain",
+  "name": "@ikigai-github/mintun-offchain",
   "version": "0.1.0",
   "description": "An offchain library for interacting with Mintun smart contracts",
   "author": "Genun Games",
@@ -37,6 +37,9 @@
     "vitest": "^0.34.6"
   },
   "dependencies": {
+    "@sinclair/typebox": "^0.32.17"
+  },
+  "peerDependencies": {
     "lucid-cardano": "^0.10.7"
   }
 }

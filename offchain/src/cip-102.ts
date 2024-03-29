@@ -1,5 +1,7 @@
-import { Data, fromText, toUnit, Tx } from 'lucid-cardano';
+import { fromText, toUnit, type Tx } from 'lucid-cardano';
+
 import { asChainAddress, ChainAddressSchema } from './aiken';
+import { Data } from './data';
 import { Royalty } from './royalty';
 
 export const ROYALTY_TOKEN_LABEL = 500;
@@ -84,7 +86,7 @@ export function addCip102RoyaltyToTransaction(
   policyId: string,
   address: string,
   royalties: Royalty[],
-  redeemer?: string,
+  redeemer?: string
 ) {
   const royaltyUnit = toRoyaltyUnit(policyId);
   const royaltyAsset = { [royaltyUnit]: 1n };

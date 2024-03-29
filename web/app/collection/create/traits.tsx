@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
 import { useCreateCollectionContext } from './context';
@@ -17,6 +17,9 @@ export default function TraitsContent() {
 
   const form = useForm<AddTraitData>({
     resolver: valibotResolver(AddTraitSchema),
+    defaultValues: {
+      trait: '',
+    },
   });
 
   function onSubmit({ trait }: AddTraitData) {
@@ -83,8 +86,8 @@ function TraitsHeader() {
       <CardTitle className="font-heading pb-2">Add some traits</CardTitle>
       <CardDescription>
         <div className="font-heading">
-          Sometimes collections include data for each NFT that describes it's image or other attributes. This data is
-          interchangeably referred to as attributes, properties, or traits. We will refer to them as traits. As an
+          Sometimes collections include data for each NFT that describes it&apos;s image or other attributes. This data
+          is interchangeably referred to as attributes, properties, or traits. We will refer to them as traits. As an
           example an NFT might have a background color trait that simply indicates the background color used for the
           image.
         </div>

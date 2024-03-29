@@ -1,9 +1,10 @@
 import { type Lucid } from 'lucid-cardano';
+import { toast } from 'sonner';
 
-import { apiError} from './errors';
 import { WalletContextSetters } from './context';
+import { apiError } from './errors';
 import { waitforWalletExtension } from './util';
-import { getBalanceAda, getInstalledWalletExtensions, getStakeAddress, getWalletApi } from './wallet';
+import { getBalanceAda, getChangeAddress, getInstalledWalletExtensions, getStakeAddress, getWalletApi } from './wallet';
 
 async function createLucid() {
   // TODO: Figure out if this is the best way to do this
@@ -56,6 +57,7 @@ export async function disconnect(setters: WalletContextSetters) {
   setters.setConnected(false);
   setters.setSelectedWallet('');
   setters.setLastSelectedWallet('');
+  setters.setChangeAddress('');
   setters.setStakeAddress('');
   setters.setAccountBalance(0);
 }
@@ -71,11 +73,16 @@ export async function connect(lucid: Lucid, wallet: string, setters: WalletConte
     const networkId = await api.getNetworkId();
     await updateProvider(lucid, networkId, setters);
 
+    lucid.selectWallet(api);
+
+    api.getChangeAddress();
+
     setters.setApi(api);
     setters.setNetwork(networkId === 1 ? 'Mainnet' : 'Preprod');
     setters.setEnabled(true);
     setters.setConnected(true);
     setters.setLastSelectedWallet(wallet);
+    setters.setChangeAddress(await getChangeAddress(api));
     setters.setStakeAddress(await getStakeAddress(api));
     setters.setAccountBalance(await getBalanceAda(api));
     setters.setConnecting(false);
@@ -85,9 +92,11 @@ export async function connect(lucid: Lucid, wallet: string, setters: WalletConte
     setters.setConnected(false);
     setters.setSelectedWallet('');
     setters.setLastSelectedWallet('');
+    setters.setChangeAddress('');
     setters.setStakeAddress('');
     setters.setAccountBalance(0);
     if (!suppressErrors) {
+      toast.info('You may need to open the wallet extension from your browser before connecting.');
       throw apiError('ApiError', error);
     }
   }
