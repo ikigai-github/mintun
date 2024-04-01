@@ -47,11 +47,16 @@ jobs:
       - name: Install Dependencies
         run: pnpm install
 
-      - name: Deploy to Vercel
+      - name: Build Application
+        run: pnpm build
+
+      - name: Deploy Application to Vercel
         uses: amondnet/vercel-action@v25
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
           scope: ${{ secrets.VERCEL_TEAM_ID }}
+          working-directory: ./web
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID}}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
+          vercel-project-name: mintun
