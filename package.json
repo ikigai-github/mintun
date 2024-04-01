@@ -9,7 +9,6 @@
     "build:aiken": "aiken build contracts && mv contracts/plutus.json offchain/contracts.json",
     "build:aiken:trace": "aiken build contracts --keep-traces && mv contracts/plutus.json offchain/contracts.json",
     "build": "pnpm build:aiken && pnpm build:offchain && pnpm build:web",
-    "build:ci": "pnpm build:offchain && pnpm build:web",
     "build:trace": "pnpm build:aiken:trace && pnpm build:offchain && pnpm build:web",
     "dev": "pnpm --filter {web} dev",
     "test": "pnpm build:aiken:trace && pnpm --filter {offchain} test"
@@ -19,6 +18,7 @@
     "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
     "next": "14.1.0",
     "prettier": "^3",
-    "prettier-plugin-tailwindcss": "^0.5.11"
+    "prettier-plugin-tailwindcss": "^0.5.11",
+    "vercel": "^33.6.2"
   }
 }
