@@ -20,6 +20,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.5.11
         version: 0.5.11(@ianvs/prettier-plugin-sort-imports@4.1.1)(prettier@3.2.5)
+      vercel:
+        specifier: ^33.6.2
+        version: 33.6.2
 
   offchain:
     dependencies:
@@ -238,9 +241,6 @@ importers:
       typescript:
         specifier: ^5
         version: 5.3.3
-      vercel:
-        specifier: ^33.6.2
-        version: 33.6.2
 
 packages:
 

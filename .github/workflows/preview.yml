@@ -44,17 +44,11 @@ jobs:
       - name: Install Dependencies
         run: pnpm install
 
-      - name: Build Application
-        run: pnpm build
+      - name: Pull Vercel Environment Information
+        run: pnpm vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Deploy Application to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          scope: ${{ secrets.VERCEL_TEAM_ID }}
-          working-directory: ./web
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          github-comment: false
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID}}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
-          vercel-project-name: mintun
+      - name: Build Project Artifacts
+        run: pnpm vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        run: pnpm vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
