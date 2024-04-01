@@ -1,0 +1,62 @@
+name: Production Build and Deploy
+on:
+  push:
+    branches:
+      - 'main'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Aiken
+        uses: aiken-lang/setup-aiken@v0.1.0
+        with:
+          version: v1.0.24-alpha
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Build Application
+        run: pnpm build
+
+      - name: Deploy Application to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          scope: ${{ secrets.VERCEL_TEAM_ID }}
+          working-directory: ./web
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-comment: false
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID}}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
+          vercel-project-name: mintun
+          vercel-args: '--prod' # Pretty much only diff from preview is tell vercel it is prod probably a better way
