@@ -1,4 +1,4 @@
-# Mintun Tool
+# Mintun Web
 
 This tool is aimed at providing a creator friendly means of making blockchain assets and events. This includes things like creating and managing collections, collection groups, tickets, airdrops, and more. It will also include some guides to help explain some of the nomenclature in laymans terms.
 
@@ -71,9 +71,4 @@ Now you should be ready to upload. If you get some parse errors when uploading t
 
 ## Other possible helper tool ideas
 
-- Helping load wallets with Ada
 - NFT Layered image generator with support for trait probabilities
-
-```
-
-```
