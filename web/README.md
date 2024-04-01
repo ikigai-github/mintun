@@ -60,18 +60,14 @@ Now you should be ready to upload. If you get some parse errors when uploading t
 
 ## Current Task List
 
-1. Add remaining collection creation flow
-   - Collection Attributes
-   - Royalties
-   - Review And Mint
-2. Add manage collection page for minting NFTs
-3. Add a guides/blog section setup with MDX
+1. Add manage collection page for minting NFTs
+2. Add a guides/blog section setup with MDX
    - Basics (common nomenclature)
    - Evolving NFTs
    - Wallets
-4. Add collection viewer page
-5. Add more special case validators (predetermined evolution, )
-6. Add Quick Mint flow to skip the larger collection creation flow
+3. Add collection viewer page
+4. Add more special case validators (predetermined evolution, )
+5. Add Quick Mint flow to skip the larger collection creation flow
 
 ## Other possible helper tool ideas
 
