@@ -53,7 +53,6 @@ export default function CreateCollection() {
     <div className="flex w-full max-w-[1280px] flex-col gap-2">
       <Mint allowOpen={handleViewChange} />
       <Tabs defaultValue="describe" value={tab} onValueChange={handleViewChange} className="flex-1">
-        {/* TODO: Maybe Put the Tab list inside a navigation menu on mobile  since it gets a bit unwieldy */}
         <TabsList className="grid h-fit w-full grid-cols-3 sm:grid-cols-6">
           <TabsTrigger value="describe">Descriptions</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>

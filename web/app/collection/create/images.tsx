@@ -15,9 +15,9 @@ export default function Images() {
       <Tabs defaultValue="default">
         <CardHeader>
           <div className="justify-between sm:flex">
-            <CardTitle className="font-heading pb-2">Add market images</CardTitle>
+            <CardTitle className="pb-2">Add market images</CardTitle>
           </div>
-          <CardDescription className="font-heading">
+          <CardDescription>
             When markets display your collection they often use additional images to personalize the collection page.
             This includes things like brand, banner, and thumbnail images. You can add those types of images in the area
             below and preview the banners at different potential resolutions. The desktop resolution is also the default
@@ -280,7 +280,7 @@ function ThumbnailImageZone() {
         }
       />
       <CardContent className="flex h-36 flex-col p-3">
-        <div className="font-heading text-lg font-bold">{describe.collection}</div>
+        <div className="text-lg font-bold">{describe.collection}</div>
         <div className="font-thin italic">{describe.project}</div>
         <div className="flex-1 content-end self-end">{describe.artist}</div>
       </CardContent>

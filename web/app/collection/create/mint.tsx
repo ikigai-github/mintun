@@ -113,9 +113,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
         >
           <DialogHeader>
             <DialogTitle>{mintTitle}</DialogTitle>
-            <DialogDescription className="font-heading text-muted-foreground text-sm">
-              {mintDescription}
-            </DialogDescription>
+            <DialogDescription className="text-muted-foreground text-sm">{mintDescription}</DialogDescription>
           </DialogHeader>
           <ReviewAccordion />
           <MintButton setStatus={setStatus} status={status} />
@@ -132,9 +130,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
       <DrawerContent onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
         <DrawerHeader className="text-left">
           <DrawerTitle>{mintTitle}</DrawerTitle>
-          <DrawerDescription className="font-heading text-muted-foreground text-sm">
-            {mintDescription}
-          </DrawerDescription>
+          <DrawerDescription className="text-muted-foreground text-sm">{mintDescription}</DrawerDescription>
         </DrawerHeader>
         <div className="p-4">
           <ReviewAccordion />

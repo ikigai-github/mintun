@@ -180,9 +180,8 @@ export default function RoyaltiesContent() {
                   <Tooltip key={`royalty-address-review-${royalty.address}`}>
                     <TooltipTrigger asChild>
                       <TableRow
-                        className="font-heading cursor-pointer text-[0.8rem] font-light"
+                        className="cursor-pointer text-[0.8rem] font-light"
                         onClick={() => {
-                          console.log('removin index ' + index);
                           setTotal((prev) => prev - Number(royalties[index].percent));
                           const newRoyalties = [...royalties];
                           newRoyalties.splice(index, 1);
@@ -217,7 +216,7 @@ function RoyaltiesHeader() {
   return (
     <CardHeader>
       <CardTitle className="font-heading pb-2">Add collection royalties</CardTitle>
-      <CardDescription className="font-heading">
+      <CardDescription>
         If your collection is intended to be bought and sold you may want to add in royalties for each resale. Royalties
         require a percentage of any sale of NFTs in the collection go to the specified beneficiaries. Beneficiaries can
         be any address which may be a charity script address or personal wallet. Keep in mind large royalties can

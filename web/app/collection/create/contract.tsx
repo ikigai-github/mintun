@@ -192,8 +192,8 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
 function ContractHeader() {
   return (
     <CardHeader>
-      <CardTitle className="font-heading pb-2">Configure your contracts</CardTitle>
-      <CardDescription className="font-heading">
+      <CardTitle className="pb-2">Configure your contracts</CardTitle>
+      <CardDescription>
         Contracts provide a way to guarantee some properties of your collection to your token holders.{' '}
         <Tooltip>
           <TooltipTrigger>

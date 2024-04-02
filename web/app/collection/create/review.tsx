@@ -22,8 +22,8 @@ export default function ReviewContent() {
 function ReviewHeader() {
   return (
     <CardHeader>
-      <CardTitle className="font-heading pb-2">Review and create your collection</CardTitle>
-      <div className="font-heading">
+      <CardTitle className="pb-2">Review and create your collection</CardTitle>
+      <div>
         You can review the data you filled out below. At a minimum you need a collection name and a connected wallet to
         mint a collection. If you are ready to mint click the mint button on the cart.
       </div>
@@ -68,20 +68,20 @@ function DescribeAccordionItem() {
           {describe.artist && (
             <>
               <div className="text-xs font-bold">Artist</div>
-              <div className="font-heading text-foreground font-light">{describe.artist}</div>
+              <div className="text-foreground font-light">{describe.artist}</div>
             </>
           )}
           {describe.project && (
             <>
               <div className="text-xs font-bold">Brand</div>
-              <div className="font-heading text-foreground font-light">{describe.project}</div>
+              <div className="text-foreground font-light">{describe.project}</div>
             </>
           )}
 
           {describe.description && (
             <>
               <div className="text-xs font-bold">Description</div>
-              <div className="font-heading text-foreground truncate font-light">
+              <div className="text-foreground truncate font-light">
                 <Tooltip>
                   <TooltipTrigger asChild className="cursor-pointer">
                     <span>{describe.description}</span>
@@ -94,7 +94,7 @@ function DescribeAccordionItem() {
             </>
           )}
           <div className="text-xs font-bold">Not Safe for work</div>
-          <div className="font-heading text-foreground font-light">{describe.nsfw ? 'Yes' : 'No'}</div>
+          <div className="text-foreground font-light">{describe.nsfw ? 'Yes' : 'No'}</div>
         </div>
       </AccordionContent>
     </AccordionItem>
@@ -122,7 +122,7 @@ function ContractAccordionItem() {
           {configuration.window && (
             <>
               <div className="text-xs font-bold">Minting Window</div>
-              <div className="font-heading text-foreground font-light">
+              <div className="text-foreground font-light">
                 {`${format(configuration.window.from, 'LLL dd, y')} - ${format(configuration.window.to, 'LLL dd, y')}`}
               </div>
             </>
@@ -130,13 +130,13 @@ function ContractAccordionItem() {
           {configuration.maxTokens && (
             <>
               <div className="text-xs font-bold">Max NFTs</div>
-              <div className="font-heading text-foreground font-light">{configuration.maxTokens}</div>
+              <div className="text-foreground font-light">{configuration.maxTokens}</div>
             </>
           )}
           {configuration.group && (
             <>
               <div className="text-xs font-bold">Group</div>
-              <div className="font-heading text-foreground truncate font-light">{configuration.group}</div>
+              <div className="text-foreground truncate font-light">{configuration.group}</div>
             </>
           )}
         </div>
@@ -198,7 +198,7 @@ function RoyaltiesAccordionItem() {
         <div className="bg-accent grid grid-cols-[auto_1fr_1fr_1fr] gap-x-10 gap-y-2 rounded-[0.5rem] p-4">
           {royalties.map((royalty, index) => (
             <>
-              <div key={`royalty-address-${index}`} className="font-heading text-primary cursor-pointer truncate">
+              <div key={`royalty-address-${index}`} className="text-primary cursor-pointer truncate">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span>{royalty.address}</span>

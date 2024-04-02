@@ -83,16 +83,16 @@ export default function TraitsContent() {
 function TraitsHeader() {
   return (
     <CardHeader>
-      <CardTitle className="font-heading pb-2">Add some traits</CardTitle>
+      <CardTitle className="pb-2">Add some traits</CardTitle>
       <CardDescription>
-        <div className="font-heading">
+        <div>
           Sometimes collections include data for each NFT that describes it&apos;s image or other attributes. This data
           is interchangeably referred to as attributes, properties, or traits. We will refer to them as traits. As an
           example an NFT might have a background color trait that simply indicates the background color used for the
           image.
         </div>
         <br />
-        <div className="font-heading">
+        <div>
           Technically different sets of traits can be added to each NFT in a collection but generally every NFT inside a
           collection has the same set of traits with varying values for each trait. For example two NFTs might have the
           traits <b>hat</b> and <b>shirt</b>. But the <b>hat</b> and <b>shirt</b> of each NFT could be different. In

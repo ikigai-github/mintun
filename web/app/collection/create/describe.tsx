@@ -125,7 +125,7 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem className="">
+                <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Optional" {...field} />
@@ -148,8 +148,8 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
 function DescribeCollectionHeader() {
   return (
     <CardHeader>
-      <CardTitle className="font-heading pb-2">Describe your collection</CardTitle>
-      <CardDescription className="font-heading">
+      <CardTitle className="pb-2">Describe your collection</CardTitle>
+      <CardDescription>
         A collection is one or more NFTs (non-fungible tokens) minted under the same{' '}
         <Tooltip>
           <TooltipTrigger>
