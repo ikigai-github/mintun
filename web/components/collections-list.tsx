@@ -5,7 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { CollectionInfo } from '@ikigai-github/mintun-offchain';
 
-import { getCollectionImageSrc, getCollectionsInfo } from '@/lib/utils';
+import { getCollectionImageSrc } from '@/lib/image';
+import { getCollectionsInfo } from '@/lib/utils';
 import { useWallet } from '@/lib/wallet';
 
 import { Card, CardContent, CardFooter } from './ui/card';
@@ -20,7 +21,7 @@ const CollectionCard = ({ name, imageSrc }: CollectionCardProps) => {
     <Link href="/">
       <Card>
         <CardContent className="flex justify-center p-8">
-          <Image
+          <img
             className="h-48 w-full object-cover object-center transition-transform duration-[500ms] hover:scale-110"
             src={imageSrc}
             alt={name}
@@ -28,7 +29,7 @@ const CollectionCard = ({ name, imageSrc }: CollectionCardProps) => {
             height={200}
           />
         </CardContent>
-        <CardFooter className="">{name}</CardFooter>
+        <CardFooter>{name}</CardFooter>
       </Card>
     </Link>
   );
@@ -39,15 +40,14 @@ export default function CollectionsList() {
   const { lucid, isConnected } = useWallet();
 
   useEffect(() => {
-    if (isConnected && lucid) {
-      getCollectionsInfo(lucid).then((collectionsInfo) => setCollectionsInfo(collectionsInfo));
-    }
+    if (isConnected && lucid) getCollectionsInfo(lucid).then((collectionsInfo) => setCollectionsInfo(collectionsInfo));
   }, [isConnected, lucid]);
 
   return (
     <>
       <div className="mb-6 text-2xl font-bold">Manage Collections</div>
       <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {/* could have some loading state so we can show a label if no collections here */}
         {collectionsInfo.map((collection) => (
           <CollectionCard
             key={`collection-card-${collection.name}`}

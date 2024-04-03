@@ -13,7 +13,7 @@ const nextConfig = {
     return config;
   },
   images: {
-    domains: ['ipfs.io'],
+    domains: ['w3s.link'],
   },
   pageExtensions: ['jsx', 'js', 'ts', 'tsx', 'mdx'],
 };

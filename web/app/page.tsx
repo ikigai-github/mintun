@@ -15,7 +15,7 @@ const LandingLink = ({ href, imageSrc, label, alt }: LandingLinkProps) => {
   return (
     <Card className="overflow-hidden border-[3px] border-gray-300/20">
       <Link href={href} className="relative flex h-60 w-full flex-col justify-center">
-        <Image
+        <img
           src={imageSrc}
           alt={alt}
           width={400}

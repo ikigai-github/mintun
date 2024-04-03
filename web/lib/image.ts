@@ -1,4 +1,7 @@
 /// TODO: Just import this section from offchain/image.ts  library once I have integrated it.
+
+import { CollectionInfo } from '@ikigai-github/mintun-offchain';
+
 /////////////////////////////
 export const ImagePurpose = {
   Thumbnail: 'Thumbnail',
@@ -41,4 +44,16 @@ export function getPreviews(lookup: ImageLookup) {
     .flatMap((values) => Object.values(values))
     .filter((value) => value != null)
     .map((value) => value?.preview);
+}
+
+export function ipfsToUrl(ipfs: string | undefined) {
+  return `https://w3s.link/ipfs/${ipfs?.split('ipfs://').join('')}`;
+}
+
+export function getCollectionImageSrc(collection: CollectionInfo) {
+  const image =
+    collection.images?.find((image) => image.purpose === 'Brand' || image.purpose === 'Thumbnail') ||
+    collection.images?.[0];
+
+  return ipfsToUrl(image?.src);
 }
