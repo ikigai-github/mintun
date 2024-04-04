@@ -12,6 +12,9 @@ const nextConfig = {
 
     return config;
   },
+  images: {
+    domains: ['w3s.link'],
+  },
   pageExtensions: ['jsx', 'js', 'ts', 'tsx', 'mdx'],
 };
 
