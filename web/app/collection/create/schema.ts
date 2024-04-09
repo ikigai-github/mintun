@@ -21,6 +21,8 @@ import {
   url,
 } from 'valibot';
 
+import { ImageSchema } from '@/lib/image';
+
 export const DescribeSchema = object({
   collection: string('The collection name is required', [
     minLength(3, 'The collection must have a name of at least 3 characters'),
@@ -130,13 +132,6 @@ export const SocialSchema = object({
   ]),
 });
 
-const ImageSchema = object({
-  src: string('Image not in string format', [minLength(1)]),
-  mime: string('Mime not in string format', [minLength(1)]),
-  width: number('Width not in number format', [minValue(1)]),
-  height: number('Height not in number format', [minValue(1)]),
-});
-
 const ImageGroupSchema = object({
   banner: ImageSchema,
   brand: ImageSchema,
@@ -159,6 +154,5 @@ export type ContractData = Input<typeof ContractSchema>;
 export type AddTraitData = Input<typeof AddTraitSchema>;
 export type UploadImageData = Input<typeof UploadImageSchema>;
 export type ImageGroupData = Input<typeof ImageGroupSchema>;
-export type ImageData = Input<typeof ImageSchema>;
 export type RoyaltyData = Input<typeof RoyaltySchema>;
 export type SocialData = Input<typeof SocialSchema>;

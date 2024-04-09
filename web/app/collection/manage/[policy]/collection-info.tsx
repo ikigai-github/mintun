@@ -1,10 +1,9 @@
 import type { CollectionImage, CollectionInfo, CollectionState } from '@ikigai-github/mintun-offchain';
-import { Cross2Icon, DiscordLogoIcon, GlobeIcon, InstagramLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
+import { DiscordLogoIcon, GlobeIcon, InfoCircledIcon, InstagramLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
 
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
-const info: CollectionInfo = {
+export const info: CollectionInfo = {
   name: 'Rasendriya Unlimited Artworks',
   artist: 'Rasendriya',
   project: 'Abstract works',
@@ -24,6 +23,7 @@ const info: CollectionInfo = {
       dimension: { width: 200, height: 200 },
     },
   ],
+  traits: ['action', 'type', 'background'],
   links: {
     website: 'https://www.grabbit.market',
     x: 'https://www.x.com/rasendriya',
@@ -47,9 +47,9 @@ export default function CollectionInfo() {
   const brand = info.images?.[1] as CollectionImage;
 
   return (
-    <div className="bg-background/50 -mt-44 flex flex-col gap-4 rounded-md border p-4 backdrop-blur">
+    <div className="bg-background/50 -mt-44 flex flex-col gap-4 rounded-xl border p-4 backdrop-blur">
       <div className="flex min-h-36 gap-6">
-        <img src={brand.src} alt="Brand Image" className="size-32 rounded-md object-cover" />
+        <img src={brand.src} alt="Brand Image" className="size-32 rounded-xl object-cover" />
 
         <div className="flex flex-col gap-4 md:flex-1 md:flex-row">
           <div className="flex-0 md:flex-1">
@@ -78,6 +78,11 @@ export default function CollectionInfo() {
           <div className="truncate text-xs">{state.group}</div>
           <div className="font-heading text-sm">Group</div>
           <div className="truncate text-xs">{state.group}</div>
+          <div className="font-heading text-sm">Royalties</div>
+          <div className="flex items-center gap-2 truncate text-xs">
+            <span>2%</span> <InfoCircledIcon className="size-3" />
+            {/* TODO: Add tooltip that shows the full royalty breakdown */}
+          </div>
           <div className="font-heading text-sm">Minted</div>
           <div className="truncate text-xs">
             {state.currentNfts}/{state.maxNfts} NFTs
@@ -88,8 +93,7 @@ export default function CollectionInfo() {
           <div className="truncate text-xs">2 mints in progress</div>
         </div>
         <div className="flex flex-col gap-4">
-          <Button>Update Collection Information</Button>
-          <Button>Draft a new NFT</Button>
+          <Button>Mint Drafts</Button>
         </div>
       </div>
     </div>

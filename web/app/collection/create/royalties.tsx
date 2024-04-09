@@ -13,6 +13,7 @@ import {
   FormDescription,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
   FormRootMessage,
 } from '@/components/ui/form';
@@ -83,6 +84,7 @@ export default function RoyaltiesContent() {
               name="address"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Address</FormLabel>
                   <FormControl>
                     <Input placeholder="Required" {...field} />
                   </FormControl>
@@ -113,6 +115,7 @@ export default function RoyaltiesContent() {
               name="percent"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Percent Fee</FormLabel>
                   <FormControl>
                     <Input type="number" min={0} max={100} placeholder="Required" {...field} />
                   </FormControl>
@@ -128,6 +131,7 @@ export default function RoyaltiesContent() {
               name="minFee"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Minimum Fee</FormLabel>
                   <FormControl>
                     <Input type="number" min={0} placeholder="Optional Minimum Fee Ada" {...field} />
                   </FormControl>
@@ -143,6 +147,7 @@ export default function RoyaltiesContent() {
               name="maxFee"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Maximum Fee</FormLabel>
                   <FormControl>
                     <Input type="number" min={0} placeholder="Optional Maximum Fee Ada" {...field} />
                   </FormControl>

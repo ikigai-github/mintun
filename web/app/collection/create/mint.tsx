@@ -212,6 +212,7 @@ function MintButton({ status, setStatus }: MintStateProps) {
 
       setStatus('complete');
     } catch (e: unknown) {
+      console.log(e);
       if (isWalletInternalApiError(e)) {
         toast.error(e.info);
       } else if (e instanceof Error) {

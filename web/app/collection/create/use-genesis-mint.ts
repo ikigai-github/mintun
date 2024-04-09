@@ -14,7 +14,7 @@ import { DataContract } from './schema';
 
 export default function useGenesisMint() {
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { contract, images, describe, social } = useCreateCollectionContext();
+  const { contract, images, describe, social, traits } = useCreateCollectionContext();
   const { lucid } = useWallet();
   const numImages = useMemo(() => countImages(images), [images]);
 
@@ -114,6 +114,7 @@ export default function useGenesisMint() {
       description: describe.description,
       images: [...uploaded],
       links: { ...social },
+      traits: [...traits],
     });
 
     // TODO: Add royalty here
@@ -121,7 +122,7 @@ export default function useGenesisMint() {
     const built = await tx.build();
 
     return built.tx;
-  }, [lucid, contract, describe, social, findSeed, uploadImages]);
+  }, [lucid, contract, describe, social, traits, findSeed, uploadImages]);
 
   return {
     uploadProgress,

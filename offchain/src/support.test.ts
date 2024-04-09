@@ -87,7 +87,7 @@ export function generateNft(): MintunNft {
         purpose: 'General',
       },
     ],
-    attributes: {
+    traits: {
       test: 1,
     },
     tags: ['generated', 'test'],

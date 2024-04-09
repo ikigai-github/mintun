@@ -22,7 +22,7 @@ const CollectionCard = ({ name, imageSrc }: CollectionCardProps) => {
       <Card>
         <CardContent className="flex justify-center p-8">
           <img
-            className="h-48 w-full object-cover object-center transition-transform duration-[500ms] hover:scale-110"
+            className="h-48 w-full object-cover object-center transition-transform duration-500 hover:scale-110"
             src={imageSrc}
             alt={name}
             width={200}

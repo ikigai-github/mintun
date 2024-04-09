@@ -13,7 +13,10 @@ const nextConfig = {
     return config;
   },
   images: {
-    domains: ['w3s.link'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'w3s.link' },
+      { protocol: 'https', hostname: 'ipfs.grabbit.market' },
+    ],
   },
   pageExtensions: ['jsx', 'js', 'ts', 'tsx', 'mdx'],
 };

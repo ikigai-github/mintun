@@ -3,11 +3,6 @@
 import { createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useState } from 'react';
 import type { CollectionInfo, CollectionState, MintunNft } from '@ikigai-github/mintun-offchain';
 
-export type CollectionNft = {
-  title: string;
-  image: string;
-};
-
 export type ManageCollectionContextProps = {
   policy: string;
 } & PropsWithChildren;

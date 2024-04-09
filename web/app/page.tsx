@@ -20,7 +20,7 @@ const LandingLink = ({ href, imageSrc, label, alt }: LandingLinkProps) => {
           alt={alt}
           width={400}
           height={200}
-          className="absolute z-0 size-full object-cover object-center opacity-15 transition-transform duration-[500ms] hover:scale-110"
+          className="absolute z-0 size-full object-cover object-center opacity-15 transition-transform duration-500 hover:scale-110"
         />
         <div className=" z-10 text-center text-2xl shadow-sm">{label}</div>
       </Link>

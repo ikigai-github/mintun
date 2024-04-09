@@ -102,7 +102,7 @@ function DesktopImageZone() {
           }
         >
           <div className="ml-64 mr-4 grid h-full grid-cols-1 grid-rows-1 items-center">
-            <div className="col-start-1 row-start-1 w-fit rounded-md p-2 backdrop-blur-md">
+            <div className="col-start-1 row-start-1 w-fit rounded-xl p-2 backdrop-blur-md">
               <div className="text-shadow text-3xl font-bold">{describe.collection}</div>
               <div className="text-shadow text-xl">{describe.project}</div>
             </div>
@@ -164,7 +164,7 @@ function TabletImageZone() {
           }
         >
           <div className="ml-64 mr-4 grid h-full grid-cols-1 grid-rows-1 items-center">
-            <div className="col-start-1 row-start-1 w-fit rounded-md p-2 backdrop-blur-md">
+            <div className="col-start-1 row-start-1 w-fit rounded-xl p-2 backdrop-blur-md">
               <div className="text-shadow text-3xl font-bold">{describe.collection}</div>
               <div className="text-shadow text-xl">{describe.project}</div>
             </div>

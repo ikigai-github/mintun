@@ -75,6 +75,8 @@ pub type CollectionInfo {
   images: List<CollectionImage>,
   /// Links to social media and website associated with the project or artist
   links: Dict<ByteArray, List<ByteArray>>,
+  /// Declared traits that NFTs in the collection will contain
+  traits: List<ByteArray>,
   /// Anything else not defined in the standard
   extra: Dict<ByteArray, Data>,
 }

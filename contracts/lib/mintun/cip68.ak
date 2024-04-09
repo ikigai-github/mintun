@@ -31,7 +31,7 @@ pub type Cip68AssetName {
 /// 222 reference token specific shape.
 /// metadata is Dict<ByteArray, Data> because spec allows including arbitrary extra 
 /// data in addition to the standard defined data. 
-/// For example, 'name' is in standard but 'attributes' is not so we can't have a well 
+/// For example, 'name' is in standard but 'traits' is not so we can't have a well 
 /// defined index of that field in the metadata.
 pub type Reference222TokenData {
   /// A map of metadata field and their values

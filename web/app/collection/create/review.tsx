@@ -219,14 +219,14 @@ function RoyaltiesAccordionItem() {
                   {royalty.minFee} ₳
                 </div>
               ) : (
-                <div></div>
+                <div key={`royalty-min-fee-${index}`}></div>
               )}
               {royalty.maxFee ? (
                 <div className="text-foreground whitespace-nowrap" key={`royalty-max-fee-${index}`}>
                   {royalty.maxFee} ₳
                 </div>
               ) : (
-                <div></div>
+                <div key={`royalty-min-fee-${index}`}></div>
               )}
             </>
           ))}

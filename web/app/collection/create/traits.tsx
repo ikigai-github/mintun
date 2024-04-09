@@ -61,7 +61,7 @@ export default function TraitsContent() {
                 click on a trait to remove it
               </span>
             </div>
-            <div className="mt-3 flex gap-2 rounded-md border p-3">
+            <div className="mt-3 flex gap-2 rounded-xl border p-3">
               {traits.map((trait) => (
                 <Badge
                   variant="secondary"

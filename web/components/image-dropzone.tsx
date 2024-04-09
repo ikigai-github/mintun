@@ -44,7 +44,6 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
     // Fire image ready anytime the component has fully loaded its image
     useEffect(() => {
       if (isReady && file && onImageChange) {
-        console.log(`on Image Change: width: ${width} and height: ${height}`);
         onImageChange({
           file,
           preview,
@@ -64,7 +63,7 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
     }, [error]);
 
     return (
-      <div className={cn(containerClassName, shapeClassName)} {...getRootProps()}>
+      <div className={cn('cursor-pointer', containerClassName, shapeClassName)} {...getRootProps()}>
         <input {...getInputProps()} />
         {preview ? (
           <div className="grid grid-cols-1 grid-rows-1">
@@ -92,11 +91,11 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
                     }
                     reset();
                   }}
-                  variant="secondary"
+                  variant="ghost"
                   size="icon"
-                  className="m-1 hidden items-center justify-center group-hover:flex"
+                  className="m-2 hidden items-center justify-center rounded-full group-hover:flex"
                 >
-                  <Cross2Icon className="size-6" />
+                  <Cross2Icon className="size-4" />
                 </Button>
               </div>
             ) : undefined}

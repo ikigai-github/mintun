@@ -16,7 +16,7 @@ type MintunFile = {
   purpose?: ImagePurpose;
 };
 
-export type MintunNftAttributes = Record<string, TxMetadataPrimitive>;
+export type MintunNftTraits = Record<string, TxMetadataPrimitive>;
 
 // Exands on CIP/25 metadata with id, attributes, and tags.
 export type MintunNft = {
@@ -26,7 +26,7 @@ export type MintunNft = {
   description?: string;
   files?: MintunFile[];
   id?: string;
-  attributes?: MintunNftAttributes;
+  traits?: MintunNftTraits;
   tags?: string[];
 };
 
@@ -95,14 +95,14 @@ export class NftBuilder {
     return this;
   }
 
-  attribute(key: string, value: TxMetadataPrimitive) {
-    const attributes = this.#nft.attributes || {};
-    attributes[key] = value;
-    return this.attributes(attributes);
+  trait(key: string, value: TxMetadataPrimitive) {
+    const traits = this.#nft.traits || {};
+    traits[key] = value;
+    return this.traits(traits);
   }
 
-  attributes(attributes: MintunNftAttributes) {
-    this.#nft.attributes = attributes;
+  traits(traits: MintunNftTraits) {
+    this.#nft.traits = traits;
     return this;
   }
 
