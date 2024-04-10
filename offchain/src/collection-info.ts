@@ -176,8 +176,8 @@ export function toCollectionInfo(chainInfo: CollectionInfoMetadataType): Collect
     nsfw,
     description,
     images,
-    traits,
     links,
+    traits,
     extra,
   };
 }

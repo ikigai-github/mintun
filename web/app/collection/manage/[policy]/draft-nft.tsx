@@ -158,9 +158,9 @@ function DraftNftCardForm({ info }: { info: CollectionInfo }) {
   const onImageChange = useCallback(
     (image?: ImageDetail) => {
       if (image) {
-        form.setValue('image', image);
+        setValue('image', image);
       } else {
-        form.setValue('image', DefaultImageDetail);
+        setValue('image', DefaultImageDetail);
       }
     },
     [setValue]
