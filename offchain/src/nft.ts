@@ -133,7 +133,7 @@ export function prepareAssets(
   sequence: number,
   defaultRecipientAddress: Address,
   hasRoyalty: boolean,
-  referenceAddress?: Address
+  nftValidatorAddress?: Address
 ): PreparedAssets {
   const mints: Assets = {};
   const userPayouts: UserPayouts = {};
@@ -154,7 +154,7 @@ export function prepareAssets(
     const chainMetadata = asChainNftData(metadata);
     const chainData = createReferenceData(chainMetadata, extra);
     const recipientAdress = recipient ? recipient : defaultRecipientAddress;
-    const referencePayoutAddress = referenceAddress ? referenceAddress : recipientAdress;
+    const referencePayoutAddress = nftValidatorAddress ? nftValidatorAddress : recipientAdress;
     const userPayout = userPayouts[recipientAdress] || [];
 
     userPayout.push(userUnit);

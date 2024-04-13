@@ -80,43 +80,34 @@ fn validate_genesis(
     dict.get(tokens, collection.state_asset_name)
   let mints_state_token = state_token_quantity == 1
 
-  let cip_27_token_quantity = tokens |> dict.get("") |> option.or_else(0)
-
   let cip_102_token_quantity =
     tokens |> dict.get(cip102.royalty_token_asset_name) |> option.or_else(0)
-
-  let mints_at_most_one_cip_27_token =
-    cip_27_token_quantity == 0 || cip_27_token_quantity == 1
 
   let mints_at_most_one_cip_102_token =
     cip_102_token_quantity == 0 || cip_102_token_quantity == 1
 
-  let total_expected_mints = 3 + cip_27_token_quantity + cip_102_token_quantity
+  let total_expected_mints = 3 + cip_102_token_quantity
 
-  // Don't allow minting anything else during genesis besides the state token, management token pair, and royalty tokens
+  // Don't allow minting anything else during genesis besides the state token, management token pair, and royalty token
   let only_expected_mints = dict.size(tokens) == total_expected_mints
 
-  let state_token_output =
-    get_reference_token_output(
-      outputs,
-      state_validator_policy_id,
-      collection.state_asset_name,
-    )
+  expect [state_token_output] =
+    transaction.find_script_outputs(outputs, state_validator_policy_id)
+
+  expect [info_token_output] =
+    transaction.find_script_outputs(outputs, info_validator_policy_id)
 
   // Confirm the datum matches the collection state structure 
   let state = collection.state_from_datum(tx, state_token_output.datum)
 
   // Current NFTs and sequence number must always start at zero 
-  let valid_initial_state = state.current_nfts == 0 && state.next_sequence == 0
+  let valid_initial_state = state.nfts == 0 && state.next_sequence == 0
 
-  let info_token_output =
-    get_reference_token_output(
-      outputs,
-      info_validator_policy_id,
-      collection.reference_asset_name,
-    )
+  let state_to_correct_validator =
+    nft_asset_in_output(state_token_output, collection.state_asset_name)
+  let info_to_correct_validator =
+    nft_asset_in_output(info_token_output, collection.reference_asset_name)
 
-  // Confirm the datum matches the collection info structure 
   let info = collection.info_from_datum(tx, info_token_output.datum)
 
   // Mostly just so the structure check doesn't get optimized out actually use it
@@ -129,10 +120,11 @@ fn validate_genesis(
     mints_reference_token?,
     mints_owner_token?,
     mints_state_token?,
-    mints_at_most_one_cip_27_token?,
     mints_at_most_one_cip_102_token?,
     only_expected_mints?,
     valid_initial_state?,
+    state_to_correct_validator?,
+    info_to_correct_validator?,
     non_empty_name?,
   }
 }
@@ -140,22 +132,13 @@ fn validate_genesis(
 /// Searches the output for a reference token.
 /// Reference token has it's own datum so it must be in its own output
 /// Also constrain nothing else goes to that output with the token.
-fn get_reference_token_output(
-  outputs: List<Output>,
-  validator_policy_id: PolicyId,
-  asset_name: ByteArray,
-) -> Output {
-  // There must be exactly one output UTxO to the reference token address
-  expect [token_output] =
-    transaction.find_script_outputs(outputs, validator_policy_id)
-
+fn nft_asset_in_output(output: Output, asset_name: ByteArray) -> Bool {
   // There should be exactly one asset sent to the validator
   expect [(_, output_asset_name, output_asset_quantity)] =
-    token_output.value |> value.without_lovelace() |> value.flatten()
+    output.value |> value.without_lovelace() |> value.flatten()
 
   // That one asset sent to the validator must be the reference token of quantity 1
-  expect output_asset_name == asset_name && output_asset_quantity == 1
-  token_output
+  output_asset_name == asset_name && output_asset_quantity == 1
 }
 
 /// Validates the management user and reference token are spent the returns the reference input
@@ -165,7 +148,8 @@ fn validate_witness_input(inputs: List<Input>, mint_policy_id: PolicyId) {
     in.has_nft(inputs, mint_policy_id, collection.owner_asset_name)
 
   expect spends_owner_token?
-  // Make sure the (600)Collection token is also spent in the inputs
+
+  // The state should be in the references so that we can check this is going to register address
   in.find_nft(inputs, mint_policy_id, collection.state_asset_name)
 }
 
@@ -193,7 +177,7 @@ fn pair_nfts(mint: MintedValue, mint_policy_id: PolicyId) {
   let even_number_assets = num_assets % 2 == 0
   let num_nfts = num_assets / 2
   let mints_at_least_one_nft = num_nfts > 0
-  expect even_number_assets && mints_at_least_one_nft?
+  expect even_number_assets? && mints_at_least_one_nft?
   // Sort so we end up with a list like [100A, 100B, 222A, 222B]
   // Then up the tokens into tuple pairs: [100A, 100B, 222A, 222B] -> [(100A, 222A), (100B, 222B)]
   let (reference_nfts, user_nfts) =
@@ -245,6 +229,9 @@ fn validate_mint(transaction: Transaction, mint_policy_id: PolicyId) {
     )
   tokens_valid? && datums_valid?
 }
+
+// NOTE: Validating the sequence number increment per token may add extra work with little benefit.  Also, it is arguably the
+//       responsibility of the spending validator to make certain the sequence number of the state is updated properly.
 
 /// This function takes the first pair in the list and validates it matches CIP-68 
 /// by validating the pair match the following pattern:

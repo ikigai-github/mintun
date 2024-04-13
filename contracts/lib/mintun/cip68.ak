@@ -12,6 +12,9 @@ pub const reference_token_label = #"000643b0"
 /// CIP-68 NFT user token label (222)
 pub const nft_user_token_label = #"000de140"
 
+/// Private use token label indicated general purpose token
+pub const general_token_label = #"00000000"
+
 /// CIP-102 Royalty token asset_name (500)Royalty
 pub const royalty_token_asset_name = #"001f4d70526f79616c7479"
 

@@ -1,5 +1,4 @@
 export * from './aiken';
-export * from './cip-27';
 export * from './cip-88';
 export * from './cip-102';
 export * from './collection-info';

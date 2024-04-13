@@ -6,28 +6,36 @@ import {
   asChainAddress,
   asChainTimeWindow,
   ChainAddressSchema,
+  OutputReferenceSchema,
+  PolicyIdSchema,
   PosixTimeIntervalSchema,
   toBech32Address,
   toTimeWindow,
 } from './aiken';
 import { createReferenceData } from './cip-68';
 import { SEQUENCE_MAX_VALUE } from './collection';
-import { POLICY_ID_BYTE_LENGTH, TimeWindow } from './common';
+import { TimeWindow } from './common';
 import { Data } from './data';
+
+const CollectionStateInfoSchema = Data.Object({
+  seed: OutputReferenceSchema,
+  group: Data.Nullable(PolicyIdSchema),
+  mint_window: Data.Nullable(PosixTimeIntervalSchema),
+  max_nfts: Data.Nullable(Data.Integer({ minimum: 1, maximum: SEQUENCE_MAX_VALUE })),
+  nft_validator_address: Data.Nullable(ChainAddressSchema),
+  script_reference_policy_id: Data.Nullable(PolicyIdSchema),
+});
 
 /// fields see smart contract library docs.
 const CollectionStateSchema = Data.Object({
-  group: Data.Nullable(Data.Bytes({ minLength: POLICY_ID_BYTE_LENGTH, maxLength: POLICY_ID_BYTE_LENGTH })),
-  mint_window: Data.Nullable(PosixTimeIntervalSchema),
-  max_nfts: Data.Nullable(Data.Integer({ minimum: 1, maximum: SEQUENCE_MAX_VALUE })),
+  info: CollectionStateInfoSchema,
   force_locked: Data.Boolean(),
-  current_nfts: Data.Integer({ minimum: 0, maximum: SEQUENCE_MAX_VALUE }),
+  nfts: Data.Integer({ minimum: 0, maximum: SEQUENCE_MAX_VALUE }),
   next_sequence: Data.Integer({ minimum: 0, maximum: SEQUENCE_MAX_VALUE }),
-  reference_address: Data.Nullable(ChainAddressSchema),
 });
 
-export const COLLECTION_STATE_TOKEN_LABEL = 600;
-export const COLLECTION_TOKEN_ASSET_NAME = '00258a50436f6c6c656374696f6e';
+export const COLLECTION_STATE_TOKEN_LABEL = 1;
+export const COLLECTION_TOKEN_ASSET_NAME = '00000070436f6c6c656374696f6e';
 
 export type CollectionStateType = Data.Static<typeof CollectionStateSchema>;
 export const CollectionStateShape = CollectionStateSchema as unknown as CollectionStateType;
@@ -42,15 +50,21 @@ export const CollectionStateMetadataSchema = Data.Object({
 export type CollectionStateMetadataType = Data.Static<typeof CollectionStateMetadataSchema>;
 export const CollectionStateMetadataShape = CollectionStateMetadataSchema as unknown as CollectionStateMetadataType;
 
-/// The collection state in offchain format.
-export type CollectionState = {
+export type CollectionStateInfo = {
+  seed: { hash: string; index: number };
   group?: string;
   mintWindow?: TimeWindow;
   maxNfts?: number;
-  locked: boolean;
-  currentNfts: number;
-  nextSequence: number;
   nftValidatorAddress?: string;
+  scriptReferencePolicyId?: string;
+};
+
+/// The collection state in offchain format.
+export type CollectionState = {
+  info: CollectionStateInfo;
+  locked: boolean;
+  nfts: number;
+  nextSequence: number;
 };
 
 export function toStateUnit(policyId: string) {
@@ -66,64 +80,83 @@ export async function extractCollectionState(lucid: Lucid, utxo: UTxO) {
 /// Convert from on chain plutus data to off chain data structure
 export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetadataType): CollectionState {
   const { metadata } = chainState;
-  const group = metadata.group ?? undefined;
-  const mintWindow = metadata.mint_window ? toTimeWindow(metadata.mint_window) : undefined;
-  const maxNfts = metadata.max_nfts ? Number(metadata.max_nfts) : undefined;
-  const currentNfts = Number(metadata.current_nfts);
-  const nextSequence = Number(metadata.next_sequence);
+  const chainInfo = metadata.info;
+  const info: CollectionStateInfo = {
+    seed: { hash: chainInfo.seed.transaction_id.hash, index: Number(chainInfo.seed.output_index) },
+    group: chainInfo.group ?? undefined,
+    mintWindow: chainInfo.mint_window ? toTimeWindow(chainInfo.mint_window) : undefined,
+    maxNfts: chainInfo.max_nfts ? Number(chainInfo.max_nfts) : undefined,
+    nftValidatorAddress: chainInfo.nft_validator_address
+      ? toBech32Address(lucid, chainInfo.nft_validator_address)
+      : undefined,
+    scriptReferencePolicyId: chainInfo.script_reference_policy_id ?? undefined,
+  };
+
   const locked = metadata.force_locked;
-  const nftValidatorAddress = metadata.reference_address
-    ? toBech32Address(lucid, metadata.reference_address)
-    : undefined;
+  const nfts = Number(metadata.nfts);
+  const nextSequence = Number(metadata.next_sequence);
+
   return {
-    group,
-    mintWindow,
-    maxNfts,
+    info,
     locked,
-    currentNfts,
+    nfts,
     nextSequence,
-    nftValidatorAddress,
   };
 }
 
 // Given the initial state creates the genesis data.
 export function createGenesisStateData(state: Partial<CollectionState>) {
-  const group = state.group ?? null;
-  const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.fromMs, state.mintWindow.toMs) : null;
-  const max_nfts = state.maxNfts ? BigInt(state.maxNfts) : null;
-  const reference_address = state.nftValidatorAddress ? asChainAddress(state.nftValidatorAddress) : null;
+  const info = asChainStateInfo(state.info);
 
   const metadata: CollectionStateType = {
-    group,
-    mint_window,
-    max_nfts,
+    info,
     force_locked: false,
-    current_nfts: 0n,
+    nfts: 0n,
     next_sequence: 0n,
-    reference_address,
   };
 
   return createReferenceData(metadata);
 }
 
-// Given the initial state creates the genesis data.
-export function asChainStateData(state: CollectionState) {
-  const group = state.group ?? null;
-  const mint_window = state.mintWindow ? asChainTimeWindow(state.mintWindow.fromMs, state.mintWindow.toMs) : null;
-  const max_nfts = state.maxNfts ? BigInt(state.maxNfts) : null;
-  const force_locked = state.locked;
-  const current_nfts = BigInt(state.currentNfts);
-  const next_sequence = BigInt(state.nextSequence);
-  const reference_address = state.nftValidatorAddress ? asChainAddress(state.nftValidatorAddress) : null;
+function asChainStateInfo(info?: CollectionStateInfo) {
+  if (!info) {
+    throw new Error('Collection state information must be specified.');
+  }
 
-  const metadata: CollectionStateType = {
+  const seed = {
+    transaction_id: {
+      hash: info.seed.hash,
+    },
+    output_index: BigInt(info.seed.index),
+  };
+  const group = info.group ?? null;
+  const mint_window = info.mintWindow ? asChainTimeWindow(info.mintWindow.fromMs, info.mintWindow.toMs) : null;
+  const max_nfts = info.maxNfts ? BigInt(info.maxNfts) : null;
+  const nft_validator_address = info.nftValidatorAddress ? asChainAddress(info.nftValidatorAddress) : null;
+  const script_reference_policy_id = info.scriptReferencePolicyId ?? null;
+
+  return {
+    seed,
     group,
     mint_window,
     max_nfts,
+    nft_validator_address,
+    script_reference_policy_id,
+  };
+}
+
+// Given the initial state creates the genesis data.
+export function asChainStateData(state: CollectionState) {
+  const info = asChainStateInfo(state.info);
+  const force_locked = state.locked;
+  const nfts = BigInt(state.nfts);
+  const next_sequence = BigInt(state.nextSequence);
+
+  const metadata: CollectionStateType = {
+    info,
     force_locked,
-    current_nfts,
+    nfts,
     next_sequence,
-    reference_address,
   };
 
   return createReferenceData(metadata);
@@ -136,17 +169,17 @@ export function addMintsToCollectionState(state: CollectionState, numMints: numb
   }
 
   const now = Date.now();
-  if (state.mintWindow && (state.mintWindow.fromMs > now || state.mintWindow.toMs < now)) {
+  if (state.info?.mintWindow && (state.info.mintWindow.fromMs > now || state.info.mintWindow.toMs < now)) {
     throw new Error('The valid mint window for this minting policy has passed. Cannot mint new NFTs.');
   }
 
   const nextState = {
     ...state,
-    currentNfts: state.currentNfts + numMints,
+    nfts: state.nfts + numMints,
     nextSequence: state.nextSequence + numMints,
   };
 
-  if (state.maxNfts && nextState.currentNfts > state.maxNfts) {
+  if (state.info?.maxNfts && nextState.nfts > state.info.maxNfts) {
     throw new Error('The number of NFTs being minted would exceed the maximum allowed NFTs for this minting policy');
   }
 

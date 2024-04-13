@@ -4,14 +4,14 @@ use aiken/bytearray
 use aiken/dict.{Dict}
 use aiken/interval.{Interval}
 use aiken/time.{PosixTime}
-use aiken/transaction.{Datum, Transaction}
+use aiken/transaction.{Datum, OutputReference, Transaction}
 use aiken/transaction/credential.{Address}
 use aiken/transaction/value.{AssetName, PolicyId}
 use mintun/cip68.{ReferenceTokenData}
 use mintun/int
 
-/// (600)Collection State token used by stateful minting contract to track mint count
-pub const state_asset_name = #"00258a50436f6c6c656374696f6e"
+/// (001)Collection State token used by stateful minting contract to track mint count
+pub const state_asset_name = #"00000070436f6c6c656374696f6e"
 
 /// Collection managmenent reference token that holds collection metadata in its datum
 /// (100)(Management)Collection reference token asset name
@@ -81,24 +81,34 @@ pub type CollectionInfo {
   extra: Dict<ByteArray, Data>,
 }
 
-/// State used by the spending validator on the reference token created by collection minting policy 
-pub type CollectionState {
+pub type CollectionStateInfo {
+  // The original seed utxo used to create this minting policy.
+  seed: OutputReference,
   /// The group that this collection claims to be a part of.
   group: Option<PolicyId>,
   /// The time range in which mints are possible for this collection
   mint_window: Option<Interval<PosixTime>>,
   /// The maximum number of NFTs this colleciton can contain (by limitation of 3 byte sequence implicit max is 16.7 million)
   max_nfts: Option<Int>,
+  /// The address all minted reference tokens must be sent to
+  nft_validator_address: Option<Address>,
+  /// The policy id that holds script references such as the minting policy and state spending validator.
+  script_reference_policy_id: Option<PolicyId>,
+}
+
+/// State used by the spending validator on the reference token created by collection minting policy 
+pub type CollectionState {
+  /// All the immutable information about the collection state that will never be modified
+  info: CollectionStateInfo,
   /// If true the policy can no longer be used to mint new NFTs though burning is still allowed.
   force_locked: Bool,
   /// The current number of NFTs this collection contains
-  current_nfts: Int,
-  /// A monotonically increasing next sequence number that increases every by 1 for every minted NFT. (Guarantee each NFT is unique)
+  nfts: Int,
+  /// A monotonically increasing sequence number that increases for every minted NFT. (Used in asset name to Guarantee each NFT is unique)
   next_sequence: Int,
-  /// The address all minted reference tokens must be sent to
-  reference_address: Option<Address>,
 }
 
+/// 
 /// Mostly just to give collection management token its own namespace so
 /// there is no conflict. It prevents minting a collectable that overlaps 
 /// in name with the management token since they both use (100) Reference tokens

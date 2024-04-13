@@ -1,8 +1,6 @@
 import { expect, test } from 'vitest';
 
 import {
-  Cip27RoyaltyDetail,
-  Cip27RoyaltyDetailField,
   Cip88Builder,
   FEATURE_DETAIL_FIELD,
   FEATURE_VERSION_FIELD,
@@ -79,19 +77,5 @@ test('Build CIP-88 metadata', async () => {
   expect(
     tokenDetail[TokenProjectDetailField.DESCRIPTION]?.join('') === info.description,
     'Token detail description chunks rejoin into original description'
-  );
-  // Some other fields I could check here
-
-  const royaltyWrapper = features[27] as Cip27RoyaltyDetail;
-  expect(royaltyWrapper[FEATURE_VERSION_FIELD] === 1, 'CIP-27 feature version field 1');
-
-  const royaltyDetail = royaltyWrapper[FEATURE_DETAIL_FIELD];
-  expect(
-    royaltyDetail[Cip27RoyaltyDetailField.RATE] === `${royalty.variableFee / 100}`,
-    'Royalty fee is string form of percentage'
-  );
-  expect(
-    royaltyDetail[Cip27RoyaltyDetailField.RECIPIENT].join('') === address,
-    'Rejoined royalty detail address matches original'
   );
 });

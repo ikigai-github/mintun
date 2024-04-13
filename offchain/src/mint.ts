@@ -2,14 +2,21 @@ import type { Address, Assets, Lucid, UTxO } from 'lucid-cardano';
 
 import { NftMetadataWrappedShape } from './cip-68';
 import { toRoyaltyUnit } from './cip-102';
+import { toOwnerUnit } from './collection';
 import {
   addMintsToCollectionState,
   asChainStateData,
   CollectionState,
   CollectionStateMetadataShape,
   extractCollectionState,
+  toStateUnit,
 } from './collection-state';
-import { MintRedeemerShape, StateValidatorRedeemerShape } from './contract';
+import {
+  fetchMintingPolicyReferenceUtxo,
+  fetchStateValidatorReferenceUtxo,
+  MintRedeemerShape,
+  StateValidatorRedeemerShape,
+} from './contract';
 import { Data } from './data';
 import { AddressedNft, MintunNft, prepareAssets } from './nft';
 import { fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script';
@@ -21,10 +28,13 @@ export const CIP_25_METADATA_LABEL = 721;
 export class MintTxBuilder {
   #lucid: Lucid;
   #seed?: TxReference;
+  #mintingPolicyId?: string;
   #cache?: ScriptCache;
   #recipient?: Address;
   #stateUtxo?: UTxO;
   #ownerUtxo?: UTxO;
+  #mintingPolicyReferenceUtxo?: UTxO;
+  #stateValidatorReferenceUtxo?: UTxO;
   #currentState?: CollectionState;
   #nfts: AddressedNft[] = [];
   #useCip25 = false;
@@ -35,6 +45,11 @@ export class MintTxBuilder {
 
   seed(seed: TxReference) {
     this.#seed = seed;
+    return this;
+  }
+
+  mintingPolicyId(mintingPolicyId: string) {
+    this.#mintingPolicyId = mintingPolicyId;
     return this;
   }
 
@@ -55,6 +70,16 @@ export class MintTxBuilder {
 
   ownerUtxo(utxo: UTxO) {
     this.#ownerUtxo = utxo;
+    return this;
+  }
+
+  mintingPolicyReferenceUtxo(utxo: UTxO) {
+    this.#mintingPolicyReferenceUtxo = utxo;
+    return this;
+  }
+
+  stateValidatorReferenceUtxo(utxo: UTxO) {
+    this.#stateValidatorReferenceUtxo = utxo;
     return this;
   }
 
@@ -91,30 +116,34 @@ export class MintTxBuilder {
       throw new Error('Cannot build a mint transaction with no NFTs to mint');
     }
 
-    let cache: ScriptCache;
-    if (this.#cache) {
-      cache = ScriptCache.copy(this.#lucid, this.#cache);
-    } else if (this.#seed) {
-      cache = ScriptCache.cold(this.#lucid, this.#seed);
-    } else {
-      throw new Error('Must either supply a seed utxo or a script cache to build transaction');
+    if (!this.#cache) {
+      if (this.#seed) {
+        this.#cache = ScriptCache.cold(this.#lucid, this.#seed);
+      } else if (this.#stateUtxo) {
+        const { state, cache } = await ScriptCache.fromStateUtxo(this.#lucid, this.#stateUtxo);
+        this.#cache = cache;
+        this.#currentState = state;
+      } else if (this.#mintingPolicyId) {
+        const { state, cache } = await ScriptCache.fromMintPolicyId(this.#lucid, this.#mintingPolicyId);
+        this.#cache = cache;
+        this.#currentState = state;
+      } else {
+        throw new Error(
+          'Must either supply a seed utxo, script cache, state utxo, or minting policy id to build transaction'
+        );
+      }
     }
 
-    const mint = cache.mint();
-    const spend = cache.state();
-    const unit = cache.unit();
-
     // Fetch the state token utxo
-    const stateUtxo = this.#stateUtxo ? this.#stateUtxo : await fetchStateUtxo(cache);
+    this.#stateUtxo = this.#stateUtxo ? this.#stateUtxo : await fetchStateUtxo(this.#cache);
 
-    if (!stateUtxo) {
+    if (!this.#stateUtxo) {
       throw new Error('Could not find the utxo holding state. It must be spent to mint');
     }
 
     // Fetch the owner UTxO, should be in the selected wallet otherwise we can't spend it.
-    let ownerUtxo = this.#ownerUtxo;
-    if (!ownerUtxo) {
-      const { utxo, wallet } = await fetchOwnerUtxo(cache);
+    if (!this.#ownerUtxo) {
+      const { utxo, wallet } = await fetchOwnerUtxo(this.#cache);
       if (!utxo) {
         throw new Error('Could not find the utxo holding the owner token');
       }
@@ -123,50 +152,88 @@ export class MintTxBuilder {
         throw new Error('Cannot spend owner token because it is not in the current selected lucid wallet');
       }
 
-      ownerUtxo = utxo;
+      this.#ownerUtxo = utxo;
+    }
+
+    if (!this.#mintingPolicyId) {
+      this.#mintingPolicyId = this.#cache.mint().policyId;
     }
 
     // Check if there is the royalty token because we need to add a royalty flag if there is one
-    const royaltyUnit = toRoyaltyUnit(mint.policyId);
+    const royaltyUnit = toRoyaltyUnit(this.#mintingPolicyId);
     const royaltyFindResult = await this.#lucid.utxoByUnit(royaltyUnit);
     const hasRoyalty = royaltyFindResult !== undefined;
 
     // Compute the updated state
-    const currentState = this.#currentState ? this.#currentState : await extractCollectionState(this.#lucid, stateUtxo);
-    const defaultRecipientAddress = this.#recipient || (await this.#lucid.wallet.address());
-    const referenceAddress = currentState.nftValidatorAddress;
+    const currentState = this.#currentState
+      ? this.#currentState
+      : await extractCollectionState(this.#lucid, this.#stateUtxo);
+    const recipientAddress = this.#recipient || (await this.#lucid.wallet.address());
+    const nftValidatorAddress = currentState.info.nftValidatorAddress;
 
-    // Update state to reflect the new mitns
+    // Get script references if the state indicates there is a policy
+    const { scriptReferencePolicyId } = currentState.info;
+    if (scriptReferencePolicyId) {
+      const lockAddress = this.#cache.lock().address;
+      if (!this.#mintingPolicyReferenceUtxo) {
+        this.#mintingPolicyReferenceUtxo = await fetchMintingPolicyReferenceUtxo(
+          this.#lucid,
+          lockAddress,
+          scriptReferencePolicyId
+        );
+      }
+
+      if (!this.#stateValidatorReferenceUtxo) {
+        this.#stateValidatorReferenceUtxo = await fetchStateValidatorReferenceUtxo(
+          this.#lucid,
+          lockAddress,
+          scriptReferencePolicyId
+        );
+      }
+    }
+
+    // Update state to reflect the new mints
     const nextState = addMintsToCollectionState(currentState, numMints);
     const chainState = asChainStateData(nextState);
 
     // Get user and reference token names for each nft as well as its on chain representation
     const prepared = prepareAssets(
       this.#nfts,
-      mint.policyId,
+      this.#mintingPolicyId,
       currentState.nextSequence,
-      defaultRecipientAddress,
+      recipientAddress,
       hasRoyalty,
-      referenceAddress
+      nftValidatorAddress
     );
 
     const mintRedeemer = Data.to('EndpointMint', MintRedeemerShape);
     const validatorRedeemer = Data.to('EndpointMint', StateValidatorRedeemerShape);
 
-    const ownerAsset = { [unit.owner]: 1n };
-    const stateAsset = { [unit.state]: 1n };
+    const ownerUnit = toOwnerUnit(this.#mintingPolicyId);
+    const ownerAsset = { [ownerUnit]: 1n };
+    const stateUnit = toStateUnit(this.#mintingPolicyId);
+    const stateAsset = { [stateUnit]: 1n };
     const stateOutput = { inline: Data.to(chainState, CollectionStateMetadataShape) };
 
-    // TODO: See if it is possible for genesis to output a script ref of the minting policy to leave room for minting more NFTs in a single batch
-    const tx = this.#lucid
-      .newTx()
-      .collectFrom([ownerUtxo])
-      .attachSpendingValidator(spend.script)
-      .collectFrom([stateUtxo], validatorRedeemer)
-      .attachMintingPolicy(mint.script)
-      .mintAssets(prepared.mints, mintRedeemer)
-      .payToAddress(defaultRecipientAddress, ownerAsset)
-      .payToAddressWithData(spend.address, stateOutput, stateAsset);
+    const tx = this.#lucid.newTx();
+
+    if (this.#stateValidatorReferenceUtxo) {
+      tx.readFrom([this.#stateValidatorReferenceUtxo]);
+    } else {
+      tx.attachSpendingValidator(this.#cache.state().script);
+    }
+
+    tx.collectFrom([this.#stateUtxo], validatorRedeemer);
+
+    if (this.#mintingPolicyReferenceUtxo) {
+      tx.readFrom([this.#mintingPolicyReferenceUtxo]);
+    } else {
+      tx.attachMintingPolicy(this.#cache.mint().script);
+    }
+
+    tx.mintAssets(prepared.mints, mintRedeemer)
+      .payToAddress(recipientAddress, ownerAsset)
+      .payToAddressWithData(this.#cache.state().address, stateOutput, stateAsset);
 
     for (const payout of prepared.referencePayouts) {
       // TODO: Add flag so can choose to inline or not
@@ -187,7 +254,14 @@ export class MintTxBuilder {
       tx.attachMetadata(CIP_25_METADATA_LABEL, prepared.cip25Metadata);
     }
 
-    return { tx, cache };
+    // Clear these utxos since they will likely be spent
+    this.#stateUtxo = undefined;
+    this.#ownerUtxo = undefined;
+
+    // Also clear nft array to make this builder fully reusable
+    this.#nfts = [];
+
+    return { tx, cache: this.#cache };
   }
 
   static create(lucid: Lucid) {

@@ -92,7 +92,6 @@ function TraitsField({ traits }: { traits?: string[] }) {
   useEffect(() => {
     if (traits && traits.length) {
       for (const trait of traits) {
-        console.log(trait);
         append({ name: trait, value: '', preset: true });
       }
     }

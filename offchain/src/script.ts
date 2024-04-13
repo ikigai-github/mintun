@@ -1,15 +1,17 @@
 /// Allow passing in as little or as much already computed data as possible
 /// This cache will be updated if a some part is missing. The only case where
 
-import { applyDoubleCborEncoding, type Credential, type Lucid, type Script } from 'lucid-cardano';
+import { applyDoubleCborEncoding, Lucid, UTxO, type Credential, type Script } from 'lucid-cardano';
 
 import contracts from '../contracts.json';
 import { toInfoUnit, toOwnerUnit } from './collection';
-import { toStateUnit } from './collection-state';
+import { extractCollectionState, toStateUnit } from './collection-state';
 import {
   paramaterizeImmutableInfoValidator,
   paramaterizeImmutableNftValidator,
+  paramaterizeLockValidator,
   paramaterizeMintingPolicy,
+  paramaterizePermissiveNftValidator,
   paramaterizeStateValidator,
 } from './contract';
 import { findUtxo, TxReference } from './utils';
@@ -75,6 +77,8 @@ export class ScriptCache {
   #state?: ScriptInfo;
   #immutableInfo?: ScriptInfo;
   #immutableNft?: ScriptInfo;
+  #permissiveNft?: ScriptInfo;
+  #lock?: ScriptInfo;
   #unit?: ManageUnitLookup;
 
   private constructor(lucid: Lucid, seed: TxReference) {
@@ -93,6 +97,24 @@ export class ScriptCache {
     cache.#unit = warmer.unit;
 
     return cache;
+  }
+
+  // Utility for when you already know the minting policy id
+  static async fromMintPolicyId(lucid: Lucid, policyId: string) {
+    const stateUtxo = await lucid.utxoByUnit(toStateUnit(policyId));
+    return ScriptCache.fromStateUtxo(lucid, stateUtxo);
+  }
+
+  // Utility for when you already have a state utxo
+  static async fromStateUtxo(lucid: Lucid, stateUtxo: UTxO) {
+    const state = await extractCollectionState(lucid, stateUtxo);
+
+    const cache = ScriptCache.cold(lucid, {
+      txHash: state.info.seed.hash,
+      outputIndex: state.info.seed.index,
+    });
+
+    return { state, cache };
   }
 
   static copy(lucid: Lucid, cache: ScriptCache) {
@@ -115,6 +137,15 @@ export class ScriptCache {
     }
 
     return this.#mint;
+  }
+
+  lock() {
+    if (!this.#lock) {
+      const mint = this.mint();
+      this.#lock = paramaterizeLockValidator(this.#lucid, mint.policyId);
+    }
+
+    return this.#lock;
   }
 
   state() {
@@ -145,6 +176,15 @@ export class ScriptCache {
     return this.#immutableNft;
   }
 
+  permissiveNft() {
+    if (!this.#permissiveNft) {
+      const mint = this.mint();
+      this.#permissiveNft = paramaterizePermissiveNftValidator(this.#lucid, mint.policyId);
+    }
+
+    return this.#permissiveNft;
+  }
+
   unit() {
     if (!this.#unit) {
       const mint = this.mint();
@@ -159,7 +199,7 @@ export class ScriptCache {
   }
 }
 
-async function fetchUtxo(lucid: Lucid, address: string, unit: string) {
+export async function fetchUtxo(lucid: Lucid, address: string, unit: string) {
   const utxos = await lucid.utxosAt(address);
   const utxo = utxos.find((utxo) => utxo.assets[unit]);
   return utxo;
