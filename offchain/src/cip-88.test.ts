@@ -10,14 +10,14 @@ import {
   TokenProjectDetail,
   TokenProjectDetailField,
 } from './cip-88';
-import { paramaterizeMintingPolicy } from './contract';
+import { parameterizeMintingPolicy } from './contract';
 import { TEST_COLLECTION_INFO } from './fixtures.test';
 import { createEmulatorLucid } from './support.test';
 
 test('Build CIP-88 metadata', async () => {
   const { lucid, seedUtxo } = await createEmulatorLucid();
 
-  const mintingPolicy = paramaterizeMintingPolicy(lucid, seedUtxo.txHash, seedUtxo.outputIndex);
+  const mintingPolicy = parameterizeMintingPolicy(lucid, seedUtxo.txHash, seedUtxo.outputIndex);
   const policyId = `0x${mintingPolicy.policyId}`;
   const address = await lucid.wallet.address();
   const info = TEST_COLLECTION_INFO;

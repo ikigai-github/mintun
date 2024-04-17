@@ -1,26 +1,19 @@
-import {
-  Address,
-  applyParamsToScript,
-  fromText,
-  getAddressDetails,
-  MintingPolicy,
-  PolicyId,
-  Script,
-  toLabel,
-  type Lucid,
-} from 'lucid-cardano';
+import { Address, applyParamsToScript, fromText, PolicyId, Script, toLabel, UTxO, type Lucid } from 'lucid-cardano';
 
-import { OutputReferenceSchema, PolicyIdSchema } from './aiken';
+import { OutputReferenceSchema, PolicyIdSchema, PubKeyHashSchema } from './aiken';
 import { Data } from './data';
-import { fetchUtxo, getScript, getScriptInfo } from './script';
+import { fetchOwnerUtxo, fetchUtxo, getScript, getScriptInfo, ScriptCache } from './script';
+import { submit } from './utils';
 
 export const ScriptName = {
-  MintingPolicy: 'mint.mint',
+  NftMintingPolicy: 'mint.mint',
+  DerivativeMintingPolicy: 'derivative.mint',
+  DelegateMintingPolicy: 'delegate.mint',
   MintingStateValidator: 'state.spend',
   ImmutableInfoValidator: 'immutable_info.spend',
   ImmutableNftValidator: 'immutable_nft.spend',
   PermissiveNftValidator: 'permissive_nft.spend',
-  LockedValidator: 'lock.spend',
+  SpendLockValidator: 'lock.spend',
 } as const;
 
 /// Minting policy paramaterization schema
@@ -32,6 +25,10 @@ const MintParameterShape = MintParameterSchema as unknown as MintParameterType;
 const PolicyIdValidatorParameterSchema = Data.Tuple([PolicyIdSchema]);
 type PolicyIdValidatorParameterType = Data.Static<typeof PolicyIdValidatorParameterSchema>;
 const PolicyIdValidatorParameterShape = PolicyIdValidatorParameterSchema as unknown as PolicyIdValidatorParameterType;
+
+const DelegateValidatorParameterSchema = Data.Tuple([PolicyIdSchema, PubKeyHashSchema]);
+type DelegateValidatorParameterType = Data.Static<typeof DelegateValidatorParameterSchema>;
+const DelegateValidatorParameterShape = DelegateValidatorParameterSchema as unknown as DelegateValidatorParameterType;
 
 /// Redeemer schema for minting
 const MintRedeemerSchema = Data.Enum([
@@ -50,22 +47,6 @@ export const MintRedeemerShape = MintRedeemerSchema as unknown as MintRedeemerTy
 const StateValidatorRedeemerSchema = Data.Enum([Data.Literal('EndpointMint'), Data.Literal('EndpointBurn')]);
 export type StateValidatorRedeemerType = Data.Static<typeof StateValidatorRedeemerSchema>;
 export const StateValidatorRedeemerShape = StateValidatorRedeemerSchema as unknown as StateValidatorRedeemerType;
-
-// Creates a native script minting policy using the passed in lucid instance wallet as the signer
-export async function createNativeMintingPolicy(lucid: Lucid, durationSeconds: number): Promise<MintingPolicy> {
-  const address = await lucid.wallet.address();
-  const details = getAddressDetails(address);
-  return lucid.utils.nativeScriptFromJson({
-    type: 'all',
-    scripts: [
-      { type: 'sig', keyHash: details.paymentCredential?.hash },
-      {
-        type: 'before',
-        slot: lucid.utils.unixTimeToSlot(Date.now() + durationSeconds * 1000),
-      },
-    ],
-  });
-}
 
 /// Given a minting policy, parameterizes the collection info reference token spending validator and returns its info
 function paramaterizePolicyIdValidator(lucid: Lucid, mintingPolicyId: string, scriptName: string) {
@@ -90,29 +71,46 @@ export function scriptReferenceUnit(policyId: string, assetName: string) {
 // script references and sends them to a locked spending validator unique to the main minting policy.
 export async function createScriptReference(
   lucid: Lucid,
-  mintingPolicy: MintingPolicy,
-  address: Address,
-  reference: { script: Script; assetName: string }[]
+  cache: ScriptCache,
+  scripts: { script: Script; name: string }[],
+  type: 'delegate' | 'derivative' = 'derivative',
+  delegate?: string,
+  ownerUtxo?: UTxO
 ) {
-  const policyId = lucid.utils.mintingPolicyToId(mintingPolicy);
+  const mintingPolicyInfo = getReferenceMintInfo(cache, type, delegate);
+  const mintingPolicyId = mintingPolicyInfo.policyId;
+  const lockAddress = cache.spendLock().address;
+
+  if (!ownerUtxo && type === 'derivative') {
+    const { utxo, wallet } = await fetchOwnerUtxo(cache);
+    if (!wallet) {
+      throw new Error('Selected wallet must hold the owner token of the collection');
+    }
+
+    ownerUtxo = utxo;
+  }
 
   const assets: Record<string, bigint> = {};
-  for (const { assetName } of reference) {
-    const unit = scriptReferenceUnit(policyId, assetName);
+  for (const { name } of scripts) {
+    const unit = scriptReferenceUnit(mintingPolicyId, name);
     assets[unit] = 1n;
   }
 
-  // Either shrink the scripts so they fit or do it in two transactions or just down the minting policy
   const tx = await lucid
     .newTx()
-    .mintAssets(assets)
-    .validTo(Date.now() + 2 * 60 * 1000)
-    .attachMintingPolicy(mintingPolicy);
+    .attachMintingPolicy(mintingPolicyInfo.script)
+    .mintAssets(assets, Data.void())
+    .validTo(Date.now() + 2 * 60 * 1000);
 
-  for (const { script, assetName } of reference) {
-    const unit = scriptReferenceUnit(policyId, assetName);
+  // Spend the owner token if it is included to prove ownership
+  if (ownerUtxo) {
+    tx.payToAddress(ownerUtxo.address, { [cache.unit().owner]: 1n });
+  }
+
+  for (const { script, name } of scripts) {
+    const unit = scriptReferenceUnit(mintingPolicyId, name);
     tx.payToContract(
-      address,
+      lockAddress,
       {
         inline: Data.void(),
         scriptRef: script,
@@ -121,9 +119,7 @@ export async function createScriptReference(
     );
   }
 
-  const completed = await tx.complete();
-  const signed = await completed.sign().complete();
-  return await signed.submit();
+  return await submit(tx);
 }
 
 /// Fetches reference utxos given a script name
@@ -133,7 +129,7 @@ export async function fetchReferenceUtxo(lucid: Lucid, address: string, policyId
 }
 
 /// Given a unique hash and index from the seed transaction parameterizes the minting policy and returns its info
-export function paramaterizeMintingPolicy(lucid: Lucid, hash: string, index: number) {
+export function parameterizeMintingPolicy(lucid: Lucid, hash: string, index: number) {
   const seed = {
     transaction_id: {
       hash,
@@ -141,7 +137,7 @@ export function paramaterizeMintingPolicy(lucid: Lucid, hash: string, index: num
     output_index: BigInt(index),
   };
 
-  const script = getScript(ScriptName.MintingPolicy);
+  const script = getScript(ScriptName.NftMintingPolicy);
   const paramertizedMintingPolicy = applyParamsToScript<MintParameterType>(
     script.compiledCode,
     [seed],
@@ -154,24 +150,28 @@ export function paramaterizeMintingPolicy(lucid: Lucid, hash: string, index: num
 
 /// Minting Policy
 export function mintingPolicyReferenceUnit(policyId: string) {
-  return scriptReferenceUnit(policyId, ScriptName.MintingPolicy);
+  return scriptReferenceUnit(policyId, ScriptName.NftMintingPolicy);
 }
 
 export async function fetchMintingPolicyReferenceUtxo(lucid: Lucid, address: Address, policyId: PolicyId) {
-  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.MintingPolicy);
+  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.NftMintingPolicy);
 }
 
 export async function createMintingPolicyReference(
   lucid: Lucid,
-  mintingPolicy: MintingPolicy,
-  address: Address,
-  script: Script
+  cache: ScriptCache,
+  type: 'delegate' | 'derivative' = 'derivative',
+  delegate?: string,
+  ownerUtxo?: UTxO
 ) {
-  return await createScriptReference(lucid, mintingPolicy, address, [{ script, assetName: ScriptName.MintingPolicy }]);
+  const script = cache.mint().script;
+  const name = ScriptName.NftMintingPolicy;
+
+  return await createScriptReference(lucid, cache, [{ script, name }], type, delegate, ownerUtxo);
 }
 
 /// State Validator
-export function paramaterizeStateValidator(lucid: Lucid, mintingPolicyId: string) {
+export function parameterizeStateValidator(lucid: Lucid, mintingPolicyId: string) {
   return paramaterizePolicyIdValidator(lucid, mintingPolicyId, ScriptName.MintingStateValidator);
 }
 
@@ -185,17 +185,19 @@ export async function fetchStateValidatorReferenceUtxo(lucid: Lucid, address: Ad
 
 export async function createStateValidatorReference(
   lucid: Lucid,
-  mintingPolicy: MintingPolicy,
-  address: Address,
-  script: Script
+  cache: ScriptCache,
+  type: 'delegate' | 'derivative' = 'derivative',
+  delegate?: string,
+  ownerUtxo?: UTxO
 ) {
-  return await createScriptReference(lucid, mintingPolicy, address, [
-    { script, assetName: ScriptName.MintingStateValidator },
-  ]);
+  const script = cache.state().script;
+  const name = ScriptName.MintingStateValidator;
+
+  return await createScriptReference(lucid, cache, [{ script, name }], type, delegate, ownerUtxo);
 }
 
 /// Immutable Info Validator
-export function paramaterizeImmutableInfoValidator(lucid: Lucid, mintingPolicyId: string) {
+export function parameterizeImmutableInfoValidator(lucid: Lucid, mintingPolicyId: string) {
   return paramaterizePolicyIdValidator(lucid, mintingPolicyId, ScriptName.ImmutableInfoValidator);
 }
 
@@ -208,7 +210,7 @@ export async function fetchImmutableInfoReferenceUtxo(lucid: Lucid, address: Add
 }
 
 /// Immutable NFT validator
-export function paramaterizeImmutableNftValidator(lucid: Lucid, mintingPolicyId: string) {
+export function parameterizeImmutableNftValidator(lucid: Lucid, mintingPolicyId: string) {
   return paramaterizePolicyIdValidator(lucid, mintingPolicyId, ScriptName.ImmutableNftValidator);
 }
 
@@ -221,7 +223,7 @@ export async function fetchImmutableNftReferenceUtxo(lucid: Lucid, address: Addr
 }
 
 /// Permissive NFT validator
-export function paramaterizePermissiveNftValidator(lucid: Lucid, mintingPolicyId: string) {
+export function parameterizePermissiveNftValidator(lucid: Lucid, mintingPolicyId: string) {
   return paramaterizePolicyIdValidator(lucid, mintingPolicyId, ScriptName.PermissiveNftValidator);
 }
 
@@ -234,14 +236,46 @@ export async function fetchPermissiveNftReferenceUtxo(lucid: Lucid, address: Add
 }
 
 /// Lock Validator
-export function paramaterizeLockValidator(lucid: Lucid, mintingPolicyId: string) {
-  return paramaterizePolicyIdValidator(lucid, mintingPolicyId, ScriptName.LockedValidator);
+export function parameterizeSpendLockValidator(lucid: Lucid, mintingPolicyId: string) {
+  return paramaterizePolicyIdValidator(lucid, mintingPolicyId, ScriptName.SpendLockValidator);
 }
 
 export function lockReferenceUnit(policyId: string) {
-  return scriptReferenceUnit(policyId, ScriptName.LockedValidator);
+  return scriptReferenceUnit(policyId, ScriptName.SpendLockValidator);
 }
 
 export async function fetchLockReferenceUtxo(lucid: Lucid, address: Address, policyId: PolicyId) {
-  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.LockedValidator);
+  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.SpendLockValidator);
+}
+
+// Reference minting policy
+export function parameterizeDerivativeMintingPolicy(lucid: Lucid, mintingPolicyId: string) {
+  return paramaterizePolicyIdValidator(lucid, mintingPolicyId, ScriptName.DerivativeMintingPolicy);
+}
+
+// Reference minting policy
+export function parameterizeDelegativeMintingPolicy(lucid: Lucid, mintingPolicyId: string, delegatePubKeyHash: string) {
+  const script = getScript(ScriptName.DelegateMintingPolicy);
+  const paramertizedMintingPolicy = applyParamsToScript<DelegateValidatorParameterType>(
+    script.compiledCode,
+    [mintingPolicyId, delegatePubKeyHash],
+    DelegateValidatorParameterShape
+  );
+  return getScriptInfo(lucid, script.title, paramertizedMintingPolicy);
+}
+
+// Utility for fetching minting policy given a type and script cache
+function getReferenceMintInfo(cache: ScriptCache, type: 'derivative' | 'delegate', delegate?: string) {
+  switch (type) {
+    case 'delegate':
+      if (delegate === undefined) {
+        throw new Error(
+          'Delegate public key hash must be set to generate correct policy even if owner token will be used as witness'
+        );
+      }
+
+      return cache.delegateMint(delegate);
+    case 'derivative':
+      return cache.derivativeMint();
+  }
 }

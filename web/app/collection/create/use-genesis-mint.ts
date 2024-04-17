@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { CollectionImage, ImagePurpose } from '@ikigai-github/mintun-offchain';
-import { getTime } from 'date-fns';
+import { getTime, min } from 'date-fns';
 import type { Lucid } from 'lucid-cardano';
 
 import { countImages } from '@/lib/image';
@@ -14,7 +14,7 @@ import { DataContract } from './schema';
 
 export default function useGenesisMint() {
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { contract, images, describe, social, traits } = useCreateCollectionContext();
+  const { contract, images, describe, social, traits, royalties } = useCreateCollectionContext();
   const { lucid } = useWallet();
   const numImages = useMemo(() => countImages(images), [images]);
 
@@ -90,23 +90,26 @@ export default function useGenesisMint() {
     const upload = uploadImages();
     const offchain = import('@ikigai-github/mintun-offchain');
     const [seed, uploaded, { GenesisTxBuilder }] = await Promise.all([find, upload, offchain]);
-    const tx = GenesisTxBuilder.create(lucid).seed(seed).useCip88(true);
+
+    const builder = GenesisTxBuilder.create(lucid).seed(seed).useCip88(true);
 
     if (contract.maxTokens) {
-      tx.maxNfts(contract.maxTokens);
+      builder.maxNfts(contract.maxTokens);
     }
 
     if (contract.window) {
       const fromMs = getTime(contract.window.from);
       const toMs = getTime(contract.window.to);
-      tx.mintWindow(fromMs, toMs);
+      builder.mintWindow(fromMs, toMs);
     }
 
     if (contract.contract === DataContract.Immutable) {
-      tx.useImmutableNftValidator(true);
+      builder.useImmutableNftValidator();
+    } else {
+      builder.usePermissiveNftValidator();
     }
 
-    tx.info({
+    builder.info({
       name: describe.collection,
       artist: describe.artist,
       project: describe.project,
@@ -117,12 +120,14 @@ export default function useGenesisMint() {
       traits: [...traits],
     });
 
-    // TODO: Add royalty here
+    for (const { address, percent, minFee, maxFee } of royalties) {
+      builder.royalty(address, Number(percent), minFee || undefined, maxFee || undefined);
+    }
 
-    const built = await tx.build();
+    const { tx } = await builder.build();
 
-    return built.tx;
-  }, [lucid, contract, describe, social, traits, findSeed, uploadImages]);
+    return tx;
+  }, [lucid, contract, describe, social, traits, royalties, findSeed, uploadImages]);
 
   return {
     uploadProgress,

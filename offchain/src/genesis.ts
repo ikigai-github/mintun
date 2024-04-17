@@ -33,6 +33,7 @@ export class GenesisTxBuilder {
     nextSequence: 0,
   };
   #useCip88 = false;
+  #delegate = '';
   #nftValidator: 'permissive' | 'immutable' | 'custom' = 'immutable';
   #royalties: Record<string, Royalty> = {};
   #royaltyValidatorAddress?: Address;
@@ -114,6 +115,11 @@ export class GenesisTxBuilder {
     return this;
   }
 
+  allowDelegateToCreateScriptReferences(delegate: string) {
+    this.#delegate = delegate;
+    return this;
+  }
+
   royaltyValidatorAddress(address: string) {
     if (address.startsWith('addr')) {
       this.#royaltyValidatorAddress = address;
@@ -135,15 +141,6 @@ export class GenesisTxBuilder {
     }
 
     throw Error('Owner address must be a bech32 encoded string');
-  }
-
-  scriptReferencePolicyId(policyId: string) {
-    if (checkPolicyId(policyId)) {
-      this.#state.info.scriptReferencePolicyId = policyId;
-      return this;
-    }
-
-    throw new Error('Group policy id must be a 28 bytes hex string');
   }
 
   // Don't bother translating till build step
@@ -250,6 +247,13 @@ export class GenesisTxBuilder {
       this.#state.info.nftValidatorAddress = cache.immutableNft().address;
     } else if (this.#nftValidator === 'permissive') {
       this.#state.info.nftValidatorAddress = cache.permissiveNft().address;
+    }
+
+    // Set the minting policy that create tokens that hold script references
+    if (this.#delegate) {
+      this.#state.info.scriptReferencePolicyId = cache.delegateMint(this.#delegate).policyId;
+    } else {
+      this.#state.info.scriptReferencePolicyId = cache.derivativeMint().policyId;
     }
 
     // Build out the gensis state and info datum

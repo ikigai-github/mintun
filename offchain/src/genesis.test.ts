@@ -35,7 +35,6 @@ test('All configuration genesis transaction', async () => {
     .group(groupPolicyId)
     .maxNfts(1)
     .mintWindow(0, endMs)
-    .scriptReferencePolicyId(groupPolicyId)
     .useImmutableNftValidator()
     .royaltyValidatorAddress(royaltyTokenAddress)
     .ownerAddress(ownerAddress)

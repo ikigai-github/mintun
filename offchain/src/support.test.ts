@@ -1,4 +1,4 @@
-import { Emulator, generateSeedPhrase, MintingPolicy, type Assets, type Lucid, type Tx } from 'lucid-cardano';
+import { Emulator, generateSeedPhrase, type Assets, type Lucid, type Tx } from 'lucid-cardano';
 import { expect } from 'vitest';
 
 import { extractCollectionInfo } from './collection-info';
@@ -53,13 +53,14 @@ export async function createEmulatorLucid() {
   };
 }
 
-export async function applyScriptRefTx(lucid: Lucid, mintingPolicy: MintingPolicy, cache: ScriptCache) {
-  const policyId = lucid.utils.mintingPolicyToId(mintingPolicy);
-  const address = cache.lock().address;
-  const mintReferenceTxHash = await createMintingPolicyReference(lucid, mintingPolicy, address, cache.mint().script);
+export async function applyScriptRefTx(lucid: Lucid, cache: ScriptCache) {
+  const address = cache.spendLock().address;
+  const policyId = cache.derivativeMint().policyId;
+
+  const mintReferenceTxHash = await createMintingPolicyReference(lucid, cache);
   await lucid.awaitTx(mintReferenceTxHash);
 
-  const stateReferenceTxHash = await createStateValidatorReference(lucid, mintingPolicy, address, cache.state().script);
+  const stateReferenceTxHash = await createStateValidatorReference(lucid, cache);
   await lucid.awaitTx(stateReferenceTxHash);
 
   // Use cache utils to check to tokens were distributed as expected

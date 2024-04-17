@@ -1,6 +1,5 @@
 import { expect, test } from 'vitest';
 
-import { createNativeMintingPolicy } from './contract';
 import { TEST_COLLECTION_INFO } from './fixtures.test';
 import { GenesisTxBuilder } from './genesis';
 import { MintTxBuilder } from './mint';
@@ -10,8 +9,6 @@ import { applyScriptRefTx, applyTx, createEmulatorLucid, generateNft } from './s
 export async function genesis() {
   const { lucid, seedUtxo, accounts } = await createEmulatorLucid();
 
-  const scriptReferencePolicy = await createNativeMintingPolicy(lucid, 180);
-  const scriptReferencePolicyId = lucid.utils.mintingPolicyToId(scriptReferencePolicy);
   // Use different address than selected wallet (account 0)
   const endMs = Date.now() + 1_000_000;
   const groupPolicyId = 'de2340edc45629456bf695200e8ea32f948a653b21ada10bc6f0c554';
@@ -20,11 +17,10 @@ export async function genesis() {
     .seed(seedUtxo)
     .group(groupPolicyId)
     .cache(cache)
-    .maxNfts(1)
+    .maxNfts(100)
     .mintWindow(0, endMs)
-    .scriptReferencePolicyId(scriptReferencePolicyId)
     .useImmutableNftValidator()
-    .royaltyValidatorAddress(cache.lock().address)
+    .royaltyValidatorAddress(cache.spendLock().address)
     .ownerAddress(await lucid.wallet.address())
     .info(TEST_COLLECTION_INFO)
     .useCip88(true)
@@ -33,43 +29,43 @@ export async function genesis() {
 
   const { ownerUtxo, stateUtxo, state } = await applyTx(lucid, tx, cache);
 
-  const { mintScriptReferenceUtxo, stateScriptReferenceUtxo } = await applyScriptRefTx(
-    lucid,
-    scriptReferencePolicy,
-    cache
-  );
+  const { mintScriptReferenceUtxo, stateScriptReferenceUtxo } = await applyScriptRefTx(lucid, cache);
 
   return { cache, lucid, accounts, stateUtxo, ownerUtxo, state, mintScriptReferenceUtxo, stateScriptReferenceUtxo };
 }
 
 test('Mint a token', async () => {
-  console.log('Creating genesis tx');
   const {
     cache,
     lucid,
     stateUtxo,
-    ownerUtxo,
     state: genesisState,
     mintScriptReferenceUtxo,
     stateScriptReferenceUtxo,
   } = await genesis();
 
-  const nft = generateNft();
-
-  console.log('Building the actual mint transaction');
+  // Max mints in a batch while emitting cip-25 metadata is around 15 nfts
+  // Max mints in a batch using just CIP-68 datum is around 30 nfts
+  // Limiting batch size to 15 without cip-25 should be a safe amount
+  // NOTE: Should Add a utility function to convert nfts to CBOR and get the byte size to give a
+  //       real data estime
+  const NUM_MINTS = 10;
+  const nfts = [];
+  for (let i = 0; i < NUM_MINTS; ++i) {
+    nfts.push(generateNft());
+  }
 
   const { tx } = await MintTxBuilder.create(lucid)
     .cache(cache)
     .stateUtxo(stateUtxo)
-    .ownerUtxo(ownerUtxo)
     .mintingPolicyReferenceUtxo(mintScriptReferenceUtxo)
     .stateValidatorReferenceUtxo(stateScriptReferenceUtxo)
     .state(genesisState)
     .useCip25(true)
-    .nft(nft)
+    .nfts(nfts)
     .build();
 
   const { state } = await applyTx(lucid, tx, cache);
-  expect(state.nfts).toEqual(1);
-  expect(state.nextSequence).toEqual(1);
+  expect(state.nfts).toEqual(NUM_MINTS);
+  expect(state.nextSequence).toEqual(NUM_MINTS);
 });

@@ -31,16 +31,23 @@ export const info: CollectionInfo = {
 } as const;
 
 const state: CollectionState = {
-  group: '3d2097b873831f345c06b1fcaad5a3d2e0fdbc201df5a175a689c032',
-  mintWindow: {
-    fromMs: 0,
-    toMs: 10000000000,
+  info: {
+    seed: {
+      hash: 'abc133',
+      index: 0,
+    },
+    group: '3d2097b873831f345c06b1fcaad5a3d2e0fdbc201df5a175a689c032',
+    mintWindow: {
+      fromMs: 0,
+      toMs: 10000000000,
+    },
+    maxNfts: 100,
+
+    nftValidatorAddress: 'addr1abc',
   },
-  maxNfts: 100,
   locked: false,
-  currentNfts: 20,
+  nfts: 20,
   nextSequence: 24,
-  nftValidatorAddress: 'addr1abc',
 };
 
 export default function CollectionInfo() {
@@ -75,9 +82,9 @@ export default function CollectionInfo() {
           <div className="font-heading text-xs">Minting Window</div>
           <div className="text-xs">32 days remain</div>
           <div className="font-heading text-sm">Policy</div>
-          <div className="truncate text-xs">{state.group}</div>
+          <div className="truncate text-xs">{state.info.group}</div>
           <div className="font-heading text-sm">Group</div>
-          <div className="truncate text-xs">{state.group}</div>
+          <div className="truncate text-xs">{state.info.group}</div>
           <div className="font-heading text-sm">Royalties</div>
           <div className="flex items-center gap-2 truncate text-xs">
             <span>2%</span> <InfoCircledIcon className="size-3" />
@@ -85,7 +92,7 @@ export default function CollectionInfo() {
           </div>
           <div className="font-heading text-sm">Minted</div>
           <div className="truncate text-xs">
-            {state.currentNfts}/{state.maxNfts} NFTs
+            {state.nfts}/{state.info.maxNfts} NFTs
           </div>
           <div className="font-heading text-sm">Drafts</div>
           <div className="truncate text-xs">10 NFTs ready to mint</div>

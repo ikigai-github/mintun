@@ -19,7 +19,7 @@ import {
 } from './contract';
 import { Data } from './data';
 import { AddressedNft, MintunNft, prepareAssets } from './nft';
-import { fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script';
+import { fetchStateUtxo, ScriptCache } from './script';
 import { TxReference } from './utils';
 
 // Don't have a dedicated cip-25.ts so just putting this here
@@ -32,7 +32,6 @@ export class MintTxBuilder {
   #cache?: ScriptCache;
   #recipient?: Address;
   #stateUtxo?: UTxO;
-  #ownerUtxo?: UTxO;
   #mintingPolicyReferenceUtxo?: UTxO;
   #stateValidatorReferenceUtxo?: UTxO;
   #currentState?: CollectionState;
@@ -68,11 +67,6 @@ export class MintTxBuilder {
     return this;
   }
 
-  ownerUtxo(utxo: UTxO) {
-    this.#ownerUtxo = utxo;
-    return this;
-  }
-
   mintingPolicyReferenceUtxo(utxo: UTxO) {
     this.#mintingPolicyReferenceUtxo = utxo;
     return this;
@@ -98,7 +92,6 @@ export class MintTxBuilder {
       metadata,
       recipient,
     }));
-
     this.#nfts = [...this.#nfts, ...mapped];
     return this;
   }
@@ -111,7 +104,7 @@ export class MintTxBuilder {
   }
 
   async build() {
-    const numMints = this.nfts.length;
+    const numMints = this.#nfts.length;
     if (numMints === 0) {
       throw new Error('Cannot build a mint transaction with no NFTs to mint');
     }
@@ -141,20 +134,6 @@ export class MintTxBuilder {
       throw new Error('Could not find the utxo holding state. It must be spent to mint');
     }
 
-    // Fetch the owner UTxO, should be in the selected wallet otherwise we can't spend it.
-    if (!this.#ownerUtxo) {
-      const { utxo, wallet } = await fetchOwnerUtxo(this.#cache);
-      if (!utxo) {
-        throw new Error('Could not find the utxo holding the owner token');
-      }
-
-      if (!wallet) {
-        throw new Error('Cannot spend owner token because it is not in the current selected lucid wallet');
-      }
-
-      this.#ownerUtxo = utxo;
-    }
-
     if (!this.#mintingPolicyId) {
       this.#mintingPolicyId = this.#cache.mint().policyId;
     }
@@ -174,7 +153,7 @@ export class MintTxBuilder {
     // Get script references if the state indicates there is a policy
     const { scriptReferencePolicyId } = currentState.info;
     if (scriptReferencePolicyId) {
-      const lockAddress = this.#cache.lock().address;
+      const lockAddress = this.#cache.spendLock().address;
       if (!this.#mintingPolicyReferenceUtxo) {
         this.#mintingPolicyReferenceUtxo = await fetchMintingPolicyReferenceUtxo(
           this.#lucid,
@@ -232,6 +211,7 @@ export class MintTxBuilder {
     }
 
     tx.mintAssets(prepared.mints, mintRedeemer)
+      // TODO: Maybe enforce this just goes back to the original utxo address to prevent accidentally sending this to some other wallet
       .payToAddress(recipientAddress, ownerAsset)
       .payToAddressWithData(this.#cache.state().address, stateOutput, stateAsset);
 
@@ -254,9 +234,8 @@ export class MintTxBuilder {
       tx.attachMetadata(CIP_25_METADATA_LABEL, prepared.cip25Metadata);
     }
 
-    // Clear these utxos since they will likely be spent
+    // Clear the state utxos because it will be spent when this transaction is submitted
     this.#stateUtxo = undefined;
-    this.#ownerUtxo = undefined;
 
     // Also clear nft array to make this builder fully reusable
     this.#nfts = [];

@@ -10,7 +10,8 @@ use mintun/cip102
 use mintun/cip68
 use mintun/collection.{CollectionName, CollectionState, NFT}
 use mintun/input as in
-use mintun/output as out
+
+//use mintun/output as out
 
 /// The redeemer indicates if this is a genesis transaction, mint, or burn.  
 type Endpoint {
@@ -209,25 +210,26 @@ fn validate_mint(transaction: Transaction, mint_policy_id: PolicyId) {
   // Make sure each pair has tokens matching the patterns:
   let tokens_valid = validate_mint_recursive(nfts, next_sequence)
 
-  trace @"Checking the datum is valid"
-  // Make sure each reference token includes a datum in the 222 shape
-  let datums_valid =
-    list.all(
-      nfts,
-      fn(asset) {
-        let (asset_name, _quantity) = asset.1st
-        expect [reference_token_output] =
-          out.find_by_asset(transaction.outputs, mint_policy_id, asset_name)
-        let reference_data =
-          cip68.from_222_reference_datum(
-            transaction,
-            reference_token_output.datum,
-          )
-        // Just need to check something here so the cast above doesn't get optimized out
-        reference_data.version > 0
-      },
-    )
-  tokens_valid? && datums_valid?
+  tokens_valid?
+  // trace @"Checking the datum is valid"
+  // // Make sure each reference token includes a datum in the 222 shape
+  // let datums_valid =
+  //   list.all(
+  //     nfts,
+  //     fn(asset) {
+  //       let (asset_name, _quantity) = asset.1st
+  //       expect [reference_token_output] =
+  //         out.find_by_asset(transaction.outputs, mint_policy_id, asset_name)
+  //       let reference_data =
+  //         cip68.from_222_reference_datum(
+  //           transaction,
+  //           reference_token_output.datum,
+  //         )
+  //       // Just need to check something here so the cast above doesn't get optimized out
+  //       reference_data.version > 0
+  //     },
+  //   )
+  // tokens_valid? && datums_valid?
 }
 
 // NOTE: Validating the sequence number increment per token may add extra work with little benefit.  Also, it is arguably the

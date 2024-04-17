@@ -10,6 +10,8 @@ export const PolicyIdSchema = Data.Bytes({ minLength: 28, maxLength: 28 });
 
 export const AssetNameSchema = Data.Bytes({ minLength: 0, maxLength: 32 });
 
+export const PubKeyHashSchema = Data.Bytes({ minLength: 28, maxLength: 28 });
+
 export const OutputReferenceSchema = Data.Object({
   transaction_id: Data.Object({
     hash: Data.Bytes(),

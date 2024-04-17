@@ -7,12 +7,14 @@ import contracts from '../contracts.json';
 import { toInfoUnit, toOwnerUnit } from './collection';
 import { extractCollectionState, toStateUnit } from './collection-state';
 import {
-  paramaterizeImmutableInfoValidator,
-  paramaterizeImmutableNftValidator,
-  paramaterizeLockValidator,
-  paramaterizeMintingPolicy,
-  paramaterizePermissiveNftValidator,
-  paramaterizeStateValidator,
+  parameterizeDelegativeMintingPolicy,
+  parameterizeDerivativeMintingPolicy,
+  parameterizeImmutableInfoValidator,
+  parameterizeImmutableNftValidator,
+  parameterizeMintingPolicy,
+  parameterizePermissiveNftValidator,
+  parameterizeSpendLockValidator,
+  parameterizeStateValidator,
 } from './contract';
 import { findUtxo, TxReference } from './utils';
 
@@ -78,7 +80,10 @@ export class ScriptCache {
   #immutableInfo?: ScriptInfo;
   #immutableNft?: ScriptInfo;
   #permissiveNft?: ScriptInfo;
-  #lock?: ScriptInfo;
+  #spendLock?: ScriptInfo;
+  #derivativeMint?: ScriptInfo;
+  #delegate: string = '';
+  #delegateMint?: ScriptInfo;
   #unit?: ManageUnitLookup;
 
   private constructor(lucid: Lucid, seed: TxReference) {
@@ -133,25 +138,25 @@ export class ScriptCache {
   mint() {
     if (!this.#mint) {
       const { txHash, outputIndex } = this.#seed;
-      this.#mint = paramaterizeMintingPolicy(this.#lucid, txHash, outputIndex);
+      this.#mint = parameterizeMintingPolicy(this.#lucid, txHash, outputIndex);
     }
 
     return this.#mint;
   }
 
-  lock() {
-    if (!this.#lock) {
+  spendLock() {
+    if (!this.#spendLock) {
       const mint = this.mint();
-      this.#lock = paramaterizeLockValidator(this.#lucid, mint.policyId);
+      this.#spendLock = parameterizeSpendLockValidator(this.#lucid, mint.policyId);
     }
 
-    return this.#lock;
+    return this.#spendLock;
   }
 
   state() {
     if (!this.#state) {
       const mint = this.mint();
-      this.#state = paramaterizeStateValidator(this.#lucid, mint.policyId);
+      this.#state = parameterizeStateValidator(this.#lucid, mint.policyId);
     }
 
     return this.#state;
@@ -161,7 +166,7 @@ export class ScriptCache {
   immutableInfo() {
     if (!this.#immutableInfo) {
       const mint = this.mint();
-      this.#immutableInfo = paramaterizeImmutableInfoValidator(this.#lucid, mint.policyId);
+      this.#immutableInfo = parameterizeImmutableInfoValidator(this.#lucid, mint.policyId);
     }
 
     return this.#immutableInfo;
@@ -170,7 +175,7 @@ export class ScriptCache {
   immutableNft() {
     if (!this.#immutableNft) {
       const mint = this.mint();
-      this.#immutableNft = paramaterizeImmutableNftValidator(this.#lucid, mint.policyId);
+      this.#immutableNft = parameterizeImmutableNftValidator(this.#lucid, mint.policyId);
     }
 
     return this.#immutableNft;
@@ -179,10 +184,29 @@ export class ScriptCache {
   permissiveNft() {
     if (!this.#permissiveNft) {
       const mint = this.mint();
-      this.#permissiveNft = paramaterizePermissiveNftValidator(this.#lucid, mint.policyId);
+      this.#permissiveNft = parameterizePermissiveNftValidator(this.#lucid, mint.policyId);
     }
 
     return this.#permissiveNft;
+  }
+
+  derivativeMint() {
+    if (!this.#derivativeMint) {
+      const mint = this.mint();
+      this.#derivativeMint = parameterizeDerivativeMintingPolicy(this.#lucid, mint.policyId);
+    }
+
+    return this.#derivativeMint;
+  }
+
+  delegateMint(delegate: string) {
+    if (!this.#delegateMint || this.#delegate !== delegate) {
+      const mint = this.mint();
+      this.#delegate = delegate;
+      this.#delegateMint = parameterizeDelegativeMintingPolicy(this.#lucid, mint.policyId, delegate);
+    }
+
+    return this.#delegateMint;
   }
 
   unit() {
