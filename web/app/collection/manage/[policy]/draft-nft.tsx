@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { valibotResolver } from '@hookform/resolvers/valibot';
-import { PlusIcon } from '@radix-ui/react-icons';
+import { HobbyKnifeIcon, PlusIcon } from '@radix-ui/react-icons';
 import { useForm } from 'react-hook-form';
 import { useMediaQuery } from 'usehooks-ts';
 
-import { DefaultImageDetail, ImageDetail } from '@/lib/image';
+import { DefaultImageDetail, getWebImageUrl, ImageDetail } from '@/lib/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,12 +21,50 @@ import { useManageCollectionContext } from './context';
 import DraftTagContent from './draft-tag-content';
 import DraftTraitContent from './draft-trait-content';
 import { DraftTokenData, DraftTokenSchema } from './types';
+import useDraft from './use-draft';
 import useSaveDraft from './use-save-draft';
 
-type DraftNftProps = { key?: string };
+type DraftNftProps = { uid?: string };
 type DraftNftFormProps = DraftNftProps & { onSaving: () => void; onSaved: () => void };
 
-function DraftNftCard({ key }: DraftNftProps) {
+function DraftNftCard({ uid }: DraftNftProps) {
+  const { image, id, name } = useDraft(uid);
+  const { info } = useManageCollectionContext();
+
+  const url = useMemo(() => {
+    if (typeof image.data !== 'string') {
+      return URL.createObjectURL(image.data);
+    } else {
+      return getWebImageUrl(image.data);
+    }
+  }, [image.data]);
+
+  const displayName = useMemo(() => {
+    if (name) {
+      return name;
+    } else if (id) {
+      return id;
+    } else if (info?.name) {
+      return `${info.name} #TBA`;
+    } else {
+      return 'Generated on Mint';
+    }
+  }, [name, id, info?.name]);
+
+  if (uid) {
+    return (
+      <Card className="hover:bg-foreground/10 h-56 min-w-36 max-w-60 transition-colors">
+        <div className="relative h-44 rounded-t-xl">
+          <Image fill={true} sizes="228px" src={url} className="rounded-t-xl object-cover" alt={name} />
+        </div>
+        <div className="flex justify-between p-4">
+          <div className="font-heading truncate text-left leading-none">{displayName}</div>
+          <HobbyKnifeIcon className="self-end" />
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="hover:bg-foreground/10 group flex h-56 min-w-36 max-w-60 cursor-pointer flex-col transition-colors">
       <div className="bg-primary group-hover:bg-primary/90 flex h-44 items-center justify-center rounded-t-xl border-b">
@@ -38,10 +77,12 @@ function DraftNftCard({ key }: DraftNftProps) {
   );
 }
 
-function DraftNftCardForm({ key, onSaving, onSaved }: DraftNftFormProps) {
+function DraftNftCardForm({ uid, onSaving, onSaved }: DraftNftFormProps) {
   const [status, setStatus] = useState<'edit' | 'saving'>('edit');
   const { info } = useManageCollectionContext();
-  const { draft, saveDraft } = useSaveDraft(key);
+  const draft = useDraft(uid);
+  const { saveDraft } = useSaveDraft(draft.uid);
+
   const form = useForm<DraftTokenData>({
     resolver: valibotResolver(DraftTokenSchema),
     defaultValues: draft,
@@ -82,7 +123,7 @@ function DraftNftCardForm({ key, onSaving, onSaved }: DraftNftFormProps) {
       onSaved();
       setStatus('edit');
     },
-    [onSaving, onSaved]
+    [onSaving, onSaved, saveDraft]
   );
 
   const onError = useCallback((error: any) => {
@@ -92,12 +133,12 @@ function DraftNftCardForm({ key, onSaving, onSaved }: DraftNftFormProps) {
   const label = useMemo(() => {
     if (status === 'saving') {
       return 'Saving...';
-    } else if (key) {
+    } else if (uid) {
       return 'Save Draft';
     } else {
       return 'Create Draft';
     }
-  }, [status]);
+  }, [status, uid]);
 
   return (
     <Form {...form}>
@@ -115,6 +156,7 @@ function DraftNftCardForm({ key, onSaving, onSaved }: DraftNftFormProps) {
                   containerClassName={'w-full col-start-1 row-start-1'}
                   onImageChange={onImageChange}
                   className="w-full object-cover"
+                  selectedImage={draft.image}
                   dropMessage={
                     <div className="flex w-full items-center justify-center">Drop a file or click to add an Image</div>
                   }
@@ -254,7 +296,7 @@ function DraftNftCardForm({ key, onSaving, onSaved }: DraftNftFormProps) {
   );
 }
 
-export default function DraftNft({ key }: DraftNftProps) {
+export default function DraftNft({ uid }: DraftNftProps) {
   const [status, setStatus] = useState<'closed' | 'view' | 'saving'>('closed');
 
   const isDesktop = useMediaQuery('(min-width: 600px)', {
@@ -268,8 +310,6 @@ export default function DraftNft({ key }: DraftNftProps) {
 
   const handleOpen = useCallback(
     (open: boolean) => {
-      console.log(open);
-      console.log(status);
       if (open && status === 'closed') {
         setStatus('view');
       } else if (!open && status !== 'saving') {
@@ -292,7 +332,7 @@ export default function DraftNft({ key }: DraftNftProps) {
     return (
       <Dialog open={status !== 'closed'} onOpenChange={handleOpen}>
         <DialogTrigger>
-          <DraftNftCard key={key} />
+          <DraftNftCard uid={uid} />
         </DialogTrigger>
         <DialogContent
           className="p-4"
@@ -300,7 +340,7 @@ export default function DraftNft({ key }: DraftNftProps) {
           onEscapeKeyDown={handleClose}
           hideCloseIcon={closeDisabled}
         >
-          <DraftNftCardForm key={key} onSaved={handleSaved} onSaving={handleSaving} />
+          <DraftNftCardForm uid={uid} onSaved={handleSaved} onSaving={handleSaving} />
         </DialogContent>
       </Dialog>
     );
@@ -309,10 +349,10 @@ export default function DraftNft({ key }: DraftNftProps) {
   return (
     <Drawer open={status !== 'closed'} onOpenChange={handleOpen}>
       <DrawerTrigger>
-        <DraftNftCard key={key} />
+        <DraftNftCard uid={uid} />
       </DrawerTrigger>
-      <DrawerContent onInteractOutside={handleClose} onEscapeKeyDown={handleClose} hideCloseIcon={closeDisabled}>
-        <DraftNftCardForm key={key} onSaved={handleSaved} onSaving={handleSaving} />
+      <DrawerContent onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
+        <DraftNftCardForm uid={uid} onSaved={handleSaved} onSaving={handleSaving} />
       </DrawerContent>
     </Drawer>
   );

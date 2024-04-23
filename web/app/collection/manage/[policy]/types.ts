@@ -10,7 +10,7 @@ export type CollectionNft = {
 };
 
 export const DraftTokenSchema = object({
-  key: string(), // Internal random id for finding / updating
+  uid: string(), // Internal random id for finding / updating
   image: ImageDetailSchema,
   name: string('Name can be at most 64 characters in length', [maxLength(64)]),
   description: string('Description can be at most 64 characters', [maxLength(64)]),

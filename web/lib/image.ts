@@ -84,9 +84,14 @@ export function getWebImageUrl(url: string | undefined) {
     const id = url.substring(5);
     return `https://arweave.net/${id}`;
   } else {
-    const cid = url.replaceAll('ipfs://ipfs/', '').replaceAll('ipfs://', '');
-    // TODO: This should be a w3s.link instead of re-using pinata
-    return `https://ipfs.grabbit.market/ipfs/${cid}?pinataGatewayToken=aIEWTKfwAwdmav4oVVCCQLMokn4yliahcmeF4KLyiFm5J8-luyvpvtevnzWwYvQY`;
+    const paths = url.replaceAll('ipfs://ipfs/', '').replaceAll('ipfs://', '').split('/', 2);
+    const cid = paths[0];
+    const name = paths[1];
+
+    if (name) {
+      return `https://${cid}.ipfs.w3s.link/${name}`;
+    }
+    return `https://${cid}.ipfs.w3s.link`;
   }
 }
 

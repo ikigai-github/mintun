@@ -1,35 +1,14 @@
-import { useCallback, useMemo, useState } from 'react';
-import { uid } from 'uid';
+import { useCallback, useState } from 'react';
 
-import { DefaultImageDetail, ImageDetail } from '@/lib/image';
+import { getWebImageUrl, ImageDetail } from '@/lib/image';
 import { createWebClient } from '@/lib/storage/client';
 
 import { useManageCollectionContext } from './context';
 import { DraftTokenData } from './types';
 
-export default function useSaveDraft(presetKey?: string) {
+export default function useSaveDraft(uid: string) {
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { drafts, setDrafts } = useManageCollectionContext();
-
-  const key = useMemo(() => presetKey || uid(), [presetKey]);
-  const draft = useMemo(() => {
-    const draft = drafts.find((draft) => draft.key == key);
-
-    if (!draft) {
-      return {
-        key,
-        thumbnail: DefaultImageDetail,
-        image: DefaultImageDetail,
-        name: '',
-        description: '',
-        id: '',
-        tags: [],
-        traits: [],
-      };
-    }
-
-    return draft;
-  }, [drafts]);
+  const { setDrafts } = useManageCollectionContext();
 
   const uploadImages = useCallback(
     async (images: Record<string, ImageDetail>) => {
@@ -50,7 +29,7 @@ export default function useSaveDraft(presetKey?: string) {
         }
       }
 
-      if (files) {
+      if (files.length) {
         const result = await client.uploadDirectory(files, {
           onUploadProgress: (status) => {
             setUploadProgress((status.loaded * 100) / status.total);
@@ -62,6 +41,7 @@ export default function useSaveDraft(presetKey?: string) {
           const image = uploaded[key];
           if (typeof image.data === 'string') {
             image.data = image.data.replace('<cid>', cid);
+            image.preview = getWebImageUrl(image.data);
           }
         }
 
@@ -80,10 +60,7 @@ export default function useSaveDraft(presetKey?: string) {
     async (draft: DraftTokenData) => {
       const images: Record<string, ImageDetail> = {};
       images.image = draft.image;
-      // if (draft.thumbnail.name !== draft.image.name) {
-      //   images.thumbnail = draft.thumbnail;
-      // }
-
+      // TODO: Either call thumbnail api here or figure out a way to use the builtin next process for optimizing images to get a thumbnail
       const uploaded = await uploadImages(images);
 
       const uploadedDraft = {
@@ -92,7 +69,7 @@ export default function useSaveDraft(presetKey?: string) {
       };
 
       setDrafts((drafts) => {
-        const index = drafts.findIndex((draft) => draft.key == key);
+        const index = drafts.findIndex((draft) => draft.uid == uid);
         if (index >= 0) {
           return drafts.toSpliced(index, 1, uploadedDraft);
         } else {
@@ -100,11 +77,10 @@ export default function useSaveDraft(presetKey?: string) {
         }
       });
     },
-    [setDrafts]
+    [setDrafts, uid, uploadImages]
   );
 
   return {
-    draft,
     saveDraft,
     uploadProgress,
   };
