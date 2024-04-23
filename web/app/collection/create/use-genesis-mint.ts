@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { CollectionImage, ImagePurpose } from '@ikigai-github/mintun-offchain';
-import { getTime, min } from 'date-fns';
+import { getTime } from 'date-fns';
 import type { Lucid } from 'lucid-cardano';
 
 import { countImages } from '@/lib/image';
@@ -40,11 +40,12 @@ export default function useGenesisMint() {
       for (const [mode, values] of Object.entries(images)) {
         for (const [purpose, detail] of Object.entries(values)) {
           if (detail) {
-            const fileName =
-              mode === 'desktop'
+            const fileName = detail.name
+              ? `${detail.name}.${detail.ext}`
+              : mode === 'desktop'
                 ? `${purpose.toLowerCase()}.${detail.ext}`
                 : `${mode}/${purpose.toLowerCase()}.${detail.ext}`;
-            const file = new File([detail.file], fileName, { type: detail.mime });
+            const file = new File([detail.data], fileName, { type: detail.mime });
             files.push(file);
 
             uploaded.push({
@@ -124,9 +125,11 @@ export default function useGenesisMint() {
       builder.royalty(address, Number(percent), minFee || undefined, maxFee || undefined);
     }
 
-    const { tx } = await builder.build();
+    const { tx, cache } = await builder.build();
 
-    return tx;
+    const policyId = cache.mint().policyId;
+
+    return { tx, policyId };
   }, [lucid, contract, describe, social, traits, royalties, findSeed, uploadImages]);
 
   return {

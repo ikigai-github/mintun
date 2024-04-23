@@ -40,7 +40,7 @@ function Trait({ name, value, frequency }: { name: string; value: string | numbe
   );
 }
 
-export function Traits(props: { traits?: MintunNftTraits }) {
+export default function Traits(props: { traits?: MintunNftTraits }) {
   const traits = props.traits ? Object.entries(props.traits) : [];
 
   if (traits.length) {

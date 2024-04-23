@@ -1,6 +1,8 @@
 'use client';
 
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Router } from 'next/router';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
 import { useInterval, useMediaQuery } from 'usehooks-ts';
@@ -51,6 +53,7 @@ export default function Mint({ allowOpen }: MintProps) {
 function MintDialogButton({ allowOpen }: MintProps) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<MintStatus>('ready');
+
   const isDesktop = useMediaQuery('(min-width: 768px)', {
     defaultValue: true,
     initializeWithValue: false,
@@ -87,7 +90,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
     }
   }, [status]);
 
-  const closeDisabled = useMemo(() => status !== 'ready' && status !== 'complete', [status]);
+  const closeDisabled = useMemo(() => status !== 'ready', [status]);
 
   const handleClose = useCallback(
     (e: Event) => {
@@ -105,11 +108,10 @@ function MintDialogButton({ allowOpen }: MintProps) {
           <Button>{mintButtonLabel}</Button>
         </DialogTrigger>
         <DialogContent
-          data-state="disabled"
           className="sm:max-w-[425px]"
           onInteractOutside={handleClose}
           onEscapeKeyDown={handleClose}
-          hideCloseIcon={status !== 'ready' && status !== 'complete'}
+          hideCloseIcon={closeDisabled}
         >
           <DialogHeader>
             <DialogTitle>{mintTitle}</DialogTitle>
@@ -139,7 +141,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
         <DrawerFooter className="pt-2">
           <MintButton setStatus={setStatus} status={status} />
           <DrawerClose asChild disabled={closeDisabled}>
-            <Button variant="outline">Cancel</Button>
+            {status !== 'complete' ? <Button variant="outline">Cancel</Button> : undefined}
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
@@ -153,11 +155,15 @@ type MintStateProps = {
 };
 
 function MintButton({ status, setStatus }: MintStateProps) {
+  const router = useRouter();
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('Mint');
+  const [policyId, setPolicyId] = useState('');
   const { prepareTx, uploadProgress } = useGenesisMint();
 
   const { lucid } = useWallet();
+
+  const handleManage = useCallback(() => router.push(`/collection/manage/${policyId}`), [router, policyId]);
 
   const isUploading = useMemo(() => uploadProgress < 100 && status === 'preparing', [uploadProgress, status]);
 
@@ -184,9 +190,10 @@ function MintButton({ status, setStatus }: MintStateProps) {
   const handleMint = useCallback(async () => {
     try {
       setStatus('preparing');
-      const tx = await prepareTx();
+      const { tx, policyId } = await prepareTx();
       const completed = await tx.complete();
 
+      setPolicyId(policyId);
       setStatus('signing');
       const signed = await timeout(
         completed.sign().complete(),
@@ -250,7 +257,7 @@ function MintButton({ status, setStatus }: MintStateProps) {
   }
 
   if (status === 'complete') {
-    return <Button>Manage Collection</Button>;
+    return <Button onClick={handleManage}>Manage Collection</Button>;
   }
 
   return (

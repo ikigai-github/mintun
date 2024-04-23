@@ -1,7 +1,7 @@
 /// TODO: Just import this section from offchain/image.ts  library once I have integrated it.
 
 import { CollectionInfo } from '@ikigai-github/mintun-offchain';
-import { Input, instance, maxSize, mimeType, minLength, minValue, number, object, string } from 'valibot';
+import { blob, Input, maxSize, mimeType, minLength, minValue, number, object, string, union } from 'valibot';
 
 export const ImageSchema = object({
   src: string('Image not in string format', [minLength(1)]),
@@ -11,12 +11,19 @@ export const ImageSchema = object({
 });
 
 export const ImageDetailSchema = object({
-  file: instance(File, [mimeType(['image/*']), maxSize(1024 * 1024 * 10)]),
+  data: union([
+    blob('Please select an image', [
+      mimeType(['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif', 'image/webp'], 'Please select an image'),
+      maxSize(1024 * 1024 * 10, 'Please select a file smaller than 10 MB.'),
+    ]),
+    string([minLength(1, 'Please select an image')]),
+  ]),
   preview: string(),
   width: number(),
   height: number(),
   mime: string(),
   ext: string(),
+  name: string(),
 });
 
 export type ImageData = Input<typeof ImageSchema>;
@@ -44,16 +51,14 @@ export type ImageLookup = {
   };
 };
 
-export const EmptyFileName = 'xyzpdq.empty.file';
-export const EmptyFile = new File([], EmptyFileName);
-
 export const DefaultImageDetail: ImageDetail = {
-  file: EmptyFile,
+  data: '',
   preview: '',
   mime: '',
   ext: '',
   width: 0,
   height: 0,
+  name: '',
 };
 
 export function countImages(lookup: ImageLookup) {
@@ -70,8 +75,19 @@ export function getPreviews(lookup: ImageLookup) {
     .map((value) => value?.preview);
 }
 
-export function ipfsToUrl(ipfs: string | undefined) {
-  return `https://ipfs.grabbit.market/ipfs/${ipfs?.split('ipfs://').join('')}?pinataGatewayToken=aIEWTKfwAwdmav4oVVCCQLMokn4yliahcmeF4KLyiFm5J8-luyvpvtevnzWwYvQY`;
+export function getWebImageUrl(url: string | undefined) {
+  if (url === undefined || url === '') {
+    return '';
+  } else if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image')) {
+    return url;
+  } else if (url.startsWith('ar://')) {
+    const id = url.substring(5);
+    return `https://arweave.net/${id}`;
+  } else {
+    const cid = url.replaceAll('ipfs://ipfs/', '').replaceAll('ipfs://', '');
+    // TODO: This should be a w3s.link instead of re-using pinata
+    return `https://ipfs.grabbit.market/ipfs/${cid}?pinataGatewayToken=aIEWTKfwAwdmav4oVVCCQLMokn4yliahcmeF4KLyiFm5J8-luyvpvtevnzWwYvQY`;
+  }
 }
 
 export function getCollectionImageSrc(collection: CollectionInfo) {
@@ -79,5 +95,5 @@ export function getCollectionImageSrc(collection: CollectionInfo) {
     collection.images?.find((image) => image.purpose === 'Brand' || image.purpose === 'Thumbnail') ||
     collection.images?.[0];
 
-  return ipfsToUrl(image?.src);
+  return getWebImageUrl(image?.src);
 }

@@ -8,7 +8,7 @@ function Tag({ tag }: { tag: string }) {
   );
 }
 
-export function Tags({ tags }: { tags?: string[] }) {
+export default function Tags({ tags }: { tags?: string[] }) {
   if (tags && tags.length) {
     return (
       <div className="flex gap-2">

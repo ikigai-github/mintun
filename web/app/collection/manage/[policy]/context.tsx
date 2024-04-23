@@ -2,6 +2,9 @@
 
 import { createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useState } from 'react';
 import type { CollectionInfo, CollectionState, MintunNft } from '@ikigai-github/mintun-offchain';
+import { useLocalStorage } from 'usehooks-ts';
+
+import { DraftTokenData } from './types';
 
 export type ManageCollectionContextProps = {
   policy: string;
@@ -16,8 +19,8 @@ export type ManageCollectionContextType = {
   setState: Dispatch<SetStateAction<CollectionState | undefined>>;
   minted: MintunNft[];
   setMinted: Dispatch<SetStateAction<MintunNft[]>>;
-  drafts: MintunNft[];
-  setDrafts: Dispatch<SetStateAction<MintunNft[]>>;
+  drafts: DraftTokenData[];
+  setDrafts: Dispatch<SetStateAction<DraftTokenData[]>>;
   minting: MintunNft[];
   setMinting: Dispatch<SetStateAction<MintunNft[]>>;
 };
@@ -42,9 +45,8 @@ export function ManageCollectionContextProvider(props: ManageCollectionContextPr
   const [info, setInfo] = useState<CollectionInfo | undefined>();
   const [state, setState] = useState<CollectionState | undefined>();
   const [minted, setMinted] = useState<MintunNft[]>([]);
-  const [drafts, setDrafts] = useState<MintunNft[]>([]);
+  const [drafts, setDrafts] = useLocalStorage<DraftTokenData[]>(`mintun:drafts:${policy}`, []);
   const [minting, setMinting] = useState<MintunNft[]>([]);
-
   return (
     <ManageCollectionContext.Provider
       value={{

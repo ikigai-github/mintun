@@ -1,33 +1,31 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { valibotResolver } from '@hookform/resolvers/valibot';
-import type { CollectionInfo } from '@ikigai-github/mintun-offchain';
-import { Cross1Icon, Cross2Icon, PlusIcon } from '@radix-ui/react-icons';
-import { useFieldArray, useForm, useFormContext } from 'react-hook-form';
-import { array, boolean, maxLength, minLength, object, record, string, union, Input as ValibotInput } from 'valibot';
+import { PlusIcon } from '@radix-ui/react-icons';
+import { useForm } from 'react-hook-form';
+import { useMediaQuery } from 'usehooks-ts';
 
-import { DefaultImageDetail, ImageDetail, ImageDetailSchema } from '@/lib/image';
-import { Badge } from '@/components/ui/badge';
+import { DefaultImageDetail, ImageDetail } from '@/lib/image';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import ImageDropzone from '@/components/image-dropzone';
 
-export const CreateTokenSchema = object({
-  thumbnail: ImageDetailSchema,
-  image: ImageDetailSchema,
-  name: string('Name can be at most 64 characters in length', [minLength(0), maxLength(64)]),
-  id: string('Id must be less than 64 characters', [minLength(0), maxLength(64)]),
-  traits: array(object({ name: string(), value: string(), preset: boolean() })),
-  tags: array(object({ tag: string() })),
-});
+import { useManageCollectionContext } from './context';
+import DraftTagContent from './draft-tag-content';
+import DraftTraitContent from './draft-trait-content';
+import { DraftTokenData, DraftTokenSchema } from './types';
+import useSaveDraft from './use-save-draft';
 
-export type CreateTokenData = ValibotInput<typeof CreateTokenSchema>;
+type DraftNftProps = { key?: string };
+type DraftNftFormProps = DraftNftProps & { onSaving: () => void; onSaved: () => void };
 
-function DraftNftCard() {
+function DraftNftCard({ key }: DraftNftProps) {
   return (
     <Card className="hover:bg-foreground/10 group flex h-56 min-w-36 max-w-60 cursor-pointer flex-col transition-colors">
       <div className="bg-primary group-hover:bg-primary/90 flex h-44 items-center justify-center rounded-t-xl border-b">
@@ -40,139 +38,73 @@ function DraftNftCard() {
   );
 }
 
-function TagFields() {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { fields, append, remove } = useFieldArray<CreateTokenData, 'tags'>({ name: 'tags' });
-
-  const onAddTag = useCallback(
-    (tag: string) => {
-      // TODO: Prevent duplicates
-      if (tag) {
-        append({ tag });
-      }
-    },
-    [append]
-  );
-
-  return (
-    <>
-      <div className="flex gap-2">
-        <Input placeholder="Optional" ref={inputRef} />
-        <Button
-          type="button"
-          size="icon"
-          onClick={() => {
-            const tag = inputRef.current?.value;
-            if (tag !== undefined) {
-              onAddTag(tag);
-            }
-          }}
-        >
-          <PlusIcon />
-        </Button>
-      </div>
-
-      {fields.length > 0 ? (
-        <div className="flex gap-1">
-          {fields.map((field, index) => (
-            <Badge key={`${field.id}-badge}`} onClick={() => remove(index)} variant="secondary" className="capitalize">
-              {field.tag}
-            </Badge>
-          ))}
-        </div>
-      ) : undefined}
-    </>
-  );
-}
-
-function TraitsField({ traits }: { traits?: string[] }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { fields, append, remove } = useFieldArray<CreateTokenData, 'traits'>({ name: 'traits' });
-
-  useEffect(() => {
-    if (traits && traits.length) {
-      for (const trait of traits) {
-        append({ name: trait, value: '', preset: true });
-      }
-    }
-  }, [append, traits]);
-
-  const onAddTrait = useCallback(
-    (trait: string) => {
-      // TODO: Prevent duplicates
-      if (trait) {
-        append({ name: trait, value: '', preset: false });
-      }
-    },
-    [append]
-  );
-
-  return (
-    <>
-      {fields.length > 0 ? (
-        <div className="grid grid-cols-[auto_1fr_auto] flex-col items-center gap-2">
-          {fields.map((field, index) => (
-            <>
-              <span key={`${field.id}-trait-name}`} className="font-heading text-sm">
-                {field.name}
-              </span>
-              <Input key={`${field.id}-trait-value}`} {...field} />
-              <Button size="icon" className="size-5" onClick={() => remove(index)}>
-                <Cross2Icon />
-              </Button>
-            </>
-          ))}
-        </div>
-      ) : undefined}
-
-      <div className="flex gap-2">
-        <Input placeholder="Optional" ref={inputRef} />
-        <Button
-          type="button"
-          size="icon"
-          onClick={() => {
-            const trait = inputRef.current?.value;
-            if (trait !== undefined) {
-              onAddTrait(trait);
-            }
-          }}
-        >
-          <PlusIcon />
-        </Button>
-      </div>
-    </>
-  );
-}
-
-function DraftNftCardForm({ info }: { info: CollectionInfo }) {
-  const form = useForm<CreateTokenData>({
-    resolver: valibotResolver(CreateTokenSchema),
-    defaultValues: {
-      tags: [],
-    },
+function DraftNftCardForm({ key, onSaving, onSaved }: DraftNftFormProps) {
+  const [status, setStatus] = useState<'edit' | 'saving'>('edit');
+  const { info } = useManageCollectionContext();
+  const { draft, saveDraft } = useSaveDraft(key);
+  const form = useForm<DraftTokenData>({
+    resolver: valibotResolver(DraftTokenSchema),
+    defaultValues: draft,
   });
 
-  const { setValue } = form;
+  const { setValue, clearErrors, watch } = form;
+
+  const name = watch('name');
+  const id = watch('id');
+  const description = watch('description');
+  const tags = watch('tags');
+  const traits = watch('traits');
+
+  const watches = useMemo(() => traits.map((_, index) => `traits.${index}.trait` as const), [traits]);
+  const traitValues = watch(watches);
+  const missingTraitValueCount = useMemo(
+    () => traitValues.reduce((prev, next) => (Boolean(next) ? prev : prev + 1), 0),
+    [traitValues]
+  );
 
   const onImageChange = useCallback(
     (image?: ImageDetail) => {
+      clearErrors('image.data');
       if (image) {
         setValue('image', image);
       } else {
         setValue('image', DefaultImageDetail);
       }
     },
-    [setValue]
+    [setValue, clearErrors]
   );
 
-  const onSubmit = useCallback((draft: CreateTokenData) => {}, []);
+  const onSubmit = useCallback(
+    async (draft: DraftTokenData) => {
+      onSaving();
+      setStatus('saving');
+      await saveDraft(draft);
+      onSaved();
+      setStatus('edit');
+    },
+    [onSaving, onSaved]
+  );
+
+  const onError = useCallback((error: any) => {
+    console.log(error);
+  }, []);
+
+  const label = useMemo(() => {
+    if (status === 'saving') {
+      return 'Saving...';
+    } else if (key) {
+      return 'Save Draft';
+    } else {
+      return 'Create Draft';
+    }
+  }, [status]);
 
   return (
     <Form {...form}>
-      <form className="flex flex-col gap-3" onSubmit={form.handleSubmit(onSubmit)}>
+      <form className="flex flex-col gap-3 p-4" onSubmit={form.handleSubmit(onSubmit, onError)}>
         <FormField
           control={form.control}
-          name="image"
+          name="image.data"
           render={() => (
             <FormItem>
               <FormControl>
@@ -188,100 +120,200 @@ function DraftNftCardForm({ info }: { info: CollectionInfo }) {
                   }
                 />
               </FormControl>
-              <FormDescription>
+              <FormDescription className="px-2">
                 You can use a high resolution image here. A thumbnail image will be generated as needed during minting
-                of the NFT
+                of the token.
               </FormDescription>
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormDescription>
-                It is common for a collection of tokens to have the same name with an incrementing number for
-                uniqueness. If this field is blank the collection name followed by a sequence number will be used for
-                the name.
-              </FormDescription>
-              <FormControl>
-                <Input placeholder={`ex. ${info.name} #12345`} {...field} />
-              </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Identifier</FormLabel>
-              <FormDescription>
-                An identifier can be used as way to uniquely link to to an external system. For example a database could
-                hold extra data about your token and you could use this id to reference that data. If you leave the name
-                field blank and set an id it will also be used as the name.
-              </FormDescription>
-              <FormControl>
-                <Input placeholder={`ex. abc123`} {...field} />
-              </FormControl>
+        <Accordion type="single" collapsible orientation="horizontal" defaultValue="name">
+          <AccordionItem value="name">
+            <AccordionTrigger className="max-w-[454px] gap-2">
+              <span className="min-w-24 text-left font-light">Name</span>
+              {name ? (
+                <span className="font-heading flex-1 overflow-hidden truncate text-left font-bold">{name}</span>
+              ) : undefined}
+            </AccordionTrigger>
+            <AccordionContent>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="px-2 py-1">
+                    <FormDescription>
+                      It is common for a collection of tokens to have the same name with an incrementing number for
+                      uniqueness. If this field is blank the collection name followed by a sequence number will be used
+                      for the name.
+                    </FormDescription>
+                    <FormControl>
+                      <Input placeholder={`ex. ${info?.name ?? 'Example'} #12345`} maxLength={64} {...field} />
+                    </FormControl>
 
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="tags"
-          render={() => (
-            <FormItem>
-              <FormLabel>Tags</FormLabel>
-              <FormDescription className="inline-flex w-full justify-between">
-                Tags can serve a similar purpose to traits. They can also be used as filters by token search tools to
-                help find particular tokens in your collection.
-              </FormDescription>
-              <FormControl>
-                <TagFields />
-              </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="id">
+            <AccordionTrigger className="max-w-[454px] gap-2">
+              <span className="min-w-24 text-left font-light">Identifier</span>
+              {id ? (
+                <span className="font-heading font-semi-bold flex-1 overflow-hidden truncate text-left">{id}</span>
+              ) : undefined}
+            </AccordionTrigger>
+            <AccordionContent>
+              <FormField
+                control={form.control}
+                name="id"
+                render={({ field }) => (
+                  <FormItem className="px-2 py-1">
+                    <FormDescription>
+                      An identifier can be used as way to uniquely link to to an external system. For example a database
+                      could hold extra data about your token and you could use this id to reference that data. If you
+                      leave the name field blank and set an id it will also be used as the name.
+                    </FormDescription>
+                    <FormControl>
+                      <Input placeholder={`ex. abc123`} {...field} />
+                    </FormControl>
 
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="traits"
-          render={() => (
-            <FormItem>
-              <FormLabel>Traits</FormLabel>
-              <FormDescription className="inline-flex w-full justify-between">
-                <span>Tags to add to the token</span>
-              </FormDescription>
-              <FormControl>
-                <TraitsField traits={info.traits} />
-              </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="description">
+            <AccordionTrigger className="max-w-[454px] gap-2">
+              <span className="min-w-24 text-left font-light">Description</span>
+              {description ? (
+                <span className="flex flex-1 overflow-hidden  ">
+                  <span className="text-muted-foreground overflow-hidden truncate pr-2 text-left ">{description}</span>
+                </span>
+              ) : undefined}
+            </AccordionTrigger>
+            <AccordionContent>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem className="px-2 py-1">
+                    <FormDescription>
+                      Usually a collection description is sufficient but it is sometimes desireable to add an token
+                      specific description.
+                    </FormDescription>
+                    <FormControl>
+                      <Input placeholder={`Optional`} {...field} />
+                    </FormControl>
 
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="tags">
+            <AccordionTrigger className="max-w-[454px] gap-2">
+              <span className="min-w-24 text-left font-light">Tags</span>
+              {tags.length ? (
+                <span className="flex-1 text-left">
+                  {tags.length} Tag{tags.length !== 1 ? 's' : undefined}
+                </span>
+              ) : undefined}
+            </AccordionTrigger>
+            <AccordionContent>
+              <DraftTagContent />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="traits">
+            <AccordionTrigger className="max-w-[454px] gap-2">
+              <span className="min-w-24 text-left font-light">Traits </span>
+              {traits.length ? (
+                <span className="flex-1 text-left">
+                  {traits.length} Trait{traits.length !== 1 ? 's' : undefined}
+                  {missingTraitValueCount ? (
+                    <span className="text-destructive font-heading pl-2 text-xs">
+                      ({missingTraitValueCount} Missing values)
+                    </span>
+                  ) : undefined}
+                </span>
+              ) : undefined}
+            </AccordionTrigger>
+            <AccordionContent>
+              <DraftTraitContent />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+        <Button disabled={missingTraitValueCount > 0} type="submit" className="mt-3">
+          {label}
+        </Button>
       </form>
     </Form>
   );
 }
 
-export default function DraftNft(props: { info: CollectionInfo }) {
+export default function DraftNft({ key }: DraftNftProps) {
+  const [status, setStatus] = useState<'closed' | 'view' | 'saving'>('closed');
+
+  const isDesktop = useMediaQuery('(min-width: 600px)', {
+    defaultValue: true,
+    initializeWithValue: false,
+  });
+
+  const closeDisabled = useMemo(() => status === 'saving', [status]);
+  const handleSaving = useCallback(() => setStatus('saving'), [setStatus]);
+  const handleSaved = useCallback(() => setStatus('closed'), [setStatus]);
+
+  const handleOpen = useCallback(
+    (open: boolean) => {
+      console.log(open);
+      console.log(status);
+      if (open && status === 'closed') {
+        setStatus('view');
+      } else if (!open && status !== 'saving') {
+        setStatus('closed');
+      }
+    },
+    [status]
+  );
+
+  const handleClose = useCallback(
+    (e: Event) => {
+      if (closeDisabled) {
+        e.preventDefault();
+      }
+    },
+    [closeDisabled]
+  );
+
+  if (isDesktop) {
+    return (
+      <Dialog open={status !== 'closed'} onOpenChange={handleOpen}>
+        <DialogTrigger>
+          <DraftNftCard key={key} />
+        </DialogTrigger>
+        <DialogContent
+          className="p-4"
+          onInteractOutside={handleClose}
+          onEscapeKeyDown={handleClose}
+          hideCloseIcon={closeDisabled}
+        >
+          <DraftNftCardForm key={key} onSaved={handleSaved} onSaving={handleSaving} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog>
-      <DialogTrigger>
-        <DraftNftCard />
-      </DialogTrigger>
-      <DialogContent hideCloseIcon={true}>
-        <DraftNftCardForm info={props.info} />
-      </DialogContent>
-    </Dialog>
+    <Drawer open={status !== 'closed'} onOpenChange={handleOpen}>
+      <DrawerTrigger>
+        <DraftNftCard key={key} />
+      </DrawerTrigger>
+      <DrawerContent onInteractOutside={handleClose} onEscapeKeyDown={handleClose} hideCloseIcon={closeDisabled}>
+        <DraftNftCardForm key={key} onSaved={handleSaved} onSaving={handleSaving} />
+      </DrawerContent>
+    </Drawer>
   );
 }

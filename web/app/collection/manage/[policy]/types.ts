@@ -1,9 +1,25 @@
-import type { MintunNft } from '@ikigai-github/mintun-offchain';
+import { randomUUID } from 'crypto';
+import type { CollectionInfo, MintunNft } from '@ikigai-github/mintun-offchain';
+import { array, boolean, Input, maxLength, object, string } from 'valibot';
+
+import { DefaultImageDetail, ImageDetail, ImageDetailSchema } from '@/lib/image';
 
 export type CollectionNft = {
   nft: MintunNft;
   status: 'draft' | 'minted-editable' | 'minting' | 'minted-locked';
 };
+
+export const DraftTokenSchema = object({
+  key: string(), // Internal random id for finding / updating
+  image: ImageDetailSchema,
+  name: string('Name can be at most 64 characters in length', [maxLength(64)]),
+  description: string('Description can be at most 64 characters', [maxLength(64)]),
+  id: string('Id must be less than 64 characters', [maxLength(64)]),
+  tags: array(object({ tag: string() }), [maxLength(4)]),
+  traits: array(object({ label: string(), trait: string(), preexisting: boolean() })),
+});
+
+export type DraftTokenData = Input<typeof DraftTokenSchema>;
 
 // BELOW IS TEMPORARY for testing will move to a test or remove
 export const drafts: MintunNft[] = [

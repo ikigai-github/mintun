@@ -1,7 +1,7 @@
 import Image from 'next/image';
-import { HobbyKnifeIcon, PlusIcon } from '@radix-ui/react-icons';
+import { HobbyKnifeIcon } from '@radix-ui/react-icons';
 
-import { ipfsToUrl } from '@/lib/image';
+import { getWebImageUrl } from '@/lib/image';
 import { Card } from '@/components/ui/card';
 import {
   Dialog,
@@ -12,17 +12,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-import { Tags } from './tags';
-import { Traits } from './traits';
+import Tags from './tags';
+import Traits from './traits';
 import { CollectionNft } from './types';
 
 function NftCard({ nft, status }: CollectionNft) {
-  const url = ipfsToUrl(nft.image);
+  const url = getWebImageUrl(nft.image);
 
   return (
     <Card className="hover:bg-foreground/10 h-56 min-w-36 max-w-60 transition-colors">
       <div className="relative h-44 rounded-t-xl">
-        <Image fill={true} src={url} className="rounded-t-xl object-cover" alt={nft.name} />
+        <Image fill={true} sizes="228px" src={url} className="rounded-t-xl object-cover" alt={nft.name} />
       </div>
       <div className="flex justify-between p-4">
         <div className="font-heading truncate text-left leading-none">{nft.name}</div>
@@ -33,7 +33,7 @@ function NftCard({ nft, status }: CollectionNft) {
 }
 
 function NftCardDetail({ nft, status }: CollectionNft) {
-  const url = ipfsToUrl(nft.image);
+  const url = getWebImageUrl(nft.image);
 
   return (
     <div className="flex flex-col gap-4">

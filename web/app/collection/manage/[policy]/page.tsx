@@ -1,4 +1,4 @@
-import { Collection } from './collection';
+import Collection from './collection';
 import CollectionInfo from './collection-info';
 
 export default function CreateCollection({ params }: { params: { policy: string } }) {

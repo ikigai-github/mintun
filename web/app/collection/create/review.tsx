@@ -64,7 +64,7 @@ function DescribeAccordionItem() {
         {describe.collection}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
+        <div className="bg-accent grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
           {describe.artist && (
             <>
               <div className="text-xs font-bold">Artist</div>
@@ -118,7 +118,7 @@ function ContractAccordionItem() {
         {displayContractName}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid grid-cols-[auto_1fr] items-end gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
+        <div className="bg-accent grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
           {configuration.window && (
             <>
               <div className="text-xs font-bold">Minting Window</div>
@@ -211,23 +211,15 @@ function RoyaltiesAccordionItem() {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <div className="text-foreground" key={`royalty-percent-${index}`}>
+              <div key={`royalty-percent-${index}`} className="text-foreground">
                 {royalty.percent}%
               </div>
-              {royalty.minFee ? (
-                <div className="text-foreground whitespace-nowrap" key={`royalty-min-fee-${index}`}>
-                  {royalty.minFee} ₳
-                </div>
-              ) : (
-                <div key={`royalty-min-fee-${index}`}></div>
-              )}
-              {royalty.maxFee ? (
-                <div className="text-foreground whitespace-nowrap" key={`royalty-max-fee-${index}`}>
-                  {royalty.maxFee} ₳
-                </div>
-              ) : (
-                <div key={`royalty-min-fee-${index}`}></div>
-              )}
+              <div key={`royalty-min-fee-${index}`} className="text-foreground whitespace-nowrap">
+                {royalty.minFee ? `${royalty.minFee} ₳` : '-'}
+              </div>
+              <div key={`royalty-max-fee-${index}`} className="text-foreground whitespace-nowrap">
+                {royalty.maxFee ? `${royalty.maxFee} ₳` : '-'}
+              </div>
             </>
           ))}
         </div>

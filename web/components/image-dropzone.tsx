@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 
@@ -38,22 +38,23 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
     },
     ref
   ) => {
-    const { preview, getRootProps, getInputProps, isReady, width, height, file, ext, mime, error, reset } =
+    const { preview, getRootProps, getInputProps, isReady, width, height, data, name, ext, mime, error, reset } =
       useImageDropzone(selectedImage);
 
     // Fire image ready anytime the component has fully loaded its image
     useEffect(() => {
-      if (isReady && file && onImageChange) {
+      if (isReady && data && onImageChange) {
         onImageChange({
-          file,
+          data,
           preview,
+          name,
           ext,
           mime,
           width,
           height,
         });
       }
-    }, [file, ext, mime, width, height, isReady, onImageChange, preview]);
+    }, [data, ext, mime, width, height, isReady, onImageChange, preview]);
 
     // Display a toast whenever an error occurs
     useEffect(() => {
