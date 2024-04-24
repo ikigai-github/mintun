@@ -43,7 +43,7 @@ export default function Mint({ allowOpen }: MintProps) {
       </div>
 
       <CardDescription>
-        Fill out as much or as little as you like about your colleciton in the tabs below. When you feel you have enough
+        Fill out as much or as little as you like about your collection in the tabs below. When you feel you have enough
         information filled out press ready to mint.
       </CardDescription>
     </Card>

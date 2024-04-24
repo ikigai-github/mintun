@@ -55,7 +55,7 @@ export default function CreateCollection() {
       <Tabs defaultValue="describe" value={tab} onValueChange={handleViewChange} className="flex-1">
         <TabsList className="grid h-fit w-full grid-cols-3 sm:grid-cols-6">
           <TabsTrigger value="describe">Descriptions</TabsTrigger>
-          <TabsTrigger value="images">Images</TabsTrigger>
+          <TabsTrigger value="images">Banners</TabsTrigger>
           <TabsTrigger value="contract">Contract</TabsTrigger>
           <TabsTrigger value="royalties">Royalties</TabsTrigger>
           <TabsTrigger value="traits">Traits</TabsTrigger>

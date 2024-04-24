@@ -67,9 +67,15 @@ export const ContractSchema = object({
 
 export const RoyaltySchema = object(
   {
-    address: string('Address not in string format', [minLength(1)]),
+    address: string('Address not in string format', [minLength(1, 'Must be a wallet or script address')]),
     percent: coerce(
-      union([number('Percentage not in number format', [maxValue(100), minValue(0.01)]), literal('')]),
+      union([
+        number('Percentage not in number format', [
+          maxValue(100, 'Percent must between 0 and 100'),
+          minValue(0, 'Percent must between 0 and 100'),
+        ]),
+        literal(''),
+      ]),
       (str) => {
         const num = Number(str);
         return Number.isNaN(num) ? '' : num;
@@ -91,6 +97,11 @@ export const RoyaltySchema = object(
         'Max fee must be greater than or equal to min fee'
       ),
       ['maxFee']
+    ),
+    // TODO: Figure out why this doesn't work
+    forward(
+      custom((royalty) => royalty.minFee == 0 && royalty.percent == 0, 'Must set a min fee or a percent fee'),
+      ['minFee']
     ),
   ]
 );

@@ -88,7 +88,7 @@ pub type CollectionStateInfo {
   group: Option<PolicyId>,
   /// The time range in which mints are possible for this collection
   mint_window: Option<Interval<PosixTime>>,
-  /// The maximum number of NFTs this colleciton can contain (by limitation of 3 byte sequence implicit max is 16.7 million)
+  /// The maximum number of NFTs this collection can contain (by limitation of 3 byte sequence implicit max is 16.7 million)
   max_nfts: Option<Int>,
   /// The address all minted reference tokens must be sent to
   nft_validator_address: Option<Address>,

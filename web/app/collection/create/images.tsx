@@ -18,10 +18,8 @@ export default function Images() {
             <CardTitle className="pb-2">Add market images</CardTitle>
           </div>
           <CardDescription>
-            When markets display your collection they often use additional images to personalize the collection page.
-            This includes things like brand, banner, and thumbnail images. You can add those types of images in the area
-            below and preview the banners at different potential resolutions. The desktop resolution is also the default
-            image if you set a different image for mobile and tablet it will override the default at that resolution.
+            Add images below that you would like markets to use when displaying your collection. Use the tabs below to
+            override the defaults as needed.
           </CardDescription>
         </CardHeader>
 

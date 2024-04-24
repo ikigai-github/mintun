@@ -35,6 +35,7 @@ export default function TraitsContent() {
     <Card>
       <TraitsHeader />
       <CardContent className="flex flex-col gap-5">
+        <div className="font-heading font-bold">Collection Traits</div>
         <Form {...form}>
           <form className="flex gap-4" onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
@@ -55,16 +56,12 @@ export default function TraitsContent() {
 
         {traits.length ? (
           <div>
-            <div className="font-heading font-bold">
-              Collection Traits
-              <span className="font-base text-foreground/70 pl-2 text-sm font-light italic">
-                click on a trait to remove it
-              </span>
-            </div>
+            <span className="font-base text-foreground/70 text-sm font-light italic">
+              Click on a trait to remove it
+            </span>
             <div className="mt-3 flex gap-2 rounded-xl border p-3">
               {traits.map((trait) => (
                 <Badge
-                  variant="secondary"
                   className="cursor-pointer capitalize"
                   onClick={() => setTraits(traits.filter((t) => t !== trait))}
                   key={trait}
@@ -83,22 +80,22 @@ export default function TraitsContent() {
 function TraitsHeader() {
   return (
     <CardHeader>
-      <CardTitle className="pb-2">Add some traits</CardTitle>
+      <CardTitle className="pb-2">Why add traits</CardTitle>
       <CardDescription>
         <div>
-          Sometimes collections include data for each NFT that describes it&apos;s image or other attributes. This data
-          is interchangeably referred to as attributes, properties, or traits. We will refer to them as traits. As an
-          example an NFT might have a background color trait that simply indicates the background color used for the
-          image.
+          Sometimes collections include data for each NFT that describe its components. This data is interchangeably
+          referred to as attributes, properties, or traits. As an example an NFT might have a background color trait
+          that simply indicates the background color used for the image. This helps marketplaces to more easily extract
+          data about your collection.
         </div>
         <br />
         <div>
-          Technically different sets of traits can be added to each NFT in a collection but generally every NFT inside a
-          collection has the same set of traits with varying values for each trait. For example two NFTs might have the
-          traits <b>hat</b> and <b>shirt</b>. But the <b>hat</b> and <b>shirt</b> of each NFT could be different. In
-          other words, you can declare what traits every NFT in the collection will have at the collection level. This
-          helps marketplaces to more easily extract data about your collection without inspecting each individual NFT.
+          For example, if you have different background colors you could add a <Badge>Background</Badge> trait. Trait
+          values are assigned when you draft tokens after minting your collection. This is when you would set the
+          backgroud value to something like <span className="text-md font-bold italic">red</span> or{' '}
+          <span className="text-md font-bold italic">blue</span>
         </div>
+        <br />
       </CardDescription>
     </CardHeader>
   );

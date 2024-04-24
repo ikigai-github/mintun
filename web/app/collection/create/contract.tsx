@@ -57,7 +57,7 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
               name="contract"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Data Contract</FormLabel>
+                  <FormLabel>NFT Type</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -70,14 +70,9 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    The <span className="font-bold">Static</span> contract enforces data associated with the NFT cannot
-                    change. The <span className="font-bold">Permissive Evolution</span> contract allows you to change
-                    any data of an NFT after minting. It is most common for NFTs to have static data. There are other
-                    possible approaches to evolving NFTs over time that are not yet supported. You can read more about
-                    these metadata rules and other evolution appraches{' '}
-                    <Link className="font-bold" href="/" target="_blank">
-                      here
-                    </Link>
+                    The <span className="font-bold">Static</span> NFT cannot change.{' '}
+                    <span className="font-bold">Permissive Evolution</span> allows you to change any data of an NFT
+                    after minting. It is most common for NFTs to have static data.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -159,29 +154,6 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="group"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Collection Group Policy Id</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Optional" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    A collection group can be used to verify multiple collections are created by the same creator. This
-                    is done by each collection referencing the group to which it belongs. The collection group also must
-                    be updated with the policy id of this new collection to completley prove the collection is in the
-                    group. If you don&apos;t have a collection group and would like one then you can{' '}
-                    <Link className="font-bold" target="_blank" href="/">
-                      {/* TODO: Rather than making them exit the flow let them check a box indicating they want to make a group policy as well.  Also, I need to actually write the contract for group policy */}
-                      create a collection group by clicking here
-                    </Link>
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </form>
         </Form>
       </CardContent>
@@ -192,40 +164,39 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
 function ContractHeader() {
   return (
     <CardHeader>
-      <CardTitle className="pb-2">Configure your contracts</CardTitle>
-      <CardDescription>
-        Contracts provide a way to guarantee some properties of your collection to your token holders.{' '}
-        <Tooltip>
-          <TooltipTrigger>
-            <span className="font-bold">Minting Contracts</span>
-          </TooltipTrigger>
-          <TooltipContent className="bg-secondary text-foreground shadow-foreground/10 shadow-md">
-            <div className="max-w-72 p-2">
-              Minting contracts refer to a smart contract that implements a minting policy. There are four types of
-              smart contracts though most NFT collections only deal with minting and spending contracts.
-            </div>
-          </TooltipContent>
-        </Tooltip>{' '}
-        constrain the creation of tokens while{' '}
-        <Tooltip>
-          <TooltipTrigger>
-            <span className="font-bold">Data Contracts</span>
-          </TooltipTrigger>
-          <TooltipContent className="bg-secondary text-foreground shadow-foreground/10 shadow-md">
-            <div className="max-w-72 p-2">
-              The term data contracts is used for simplicity. The more technical definition is a spending validator
-              contract which holds one or more reference assets along with datum associated with the user held NFT.
-            </div>
-          </TooltipContent>
-        </Tooltip>{' '}
-        constrain how the tokens data can be changed after minting. Common minting constraints include limiting the
-        maximum NFTs or the time window when new NFTs can be minted. Metadata rules can be used to declare how the data
-        on the NFTs in the collection will change over time. These rules are enforced by sending a token holding the
-        data to a validator.
-      </CardDescription>
+      <CardTitle className="pb-2">Configure your token rules</CardTitle>
+      <CardDescription>Constraints on quantity and time add value to your collection.</CardDescription>
     </CardHeader>
   );
 }
+
+// function GroupPolicyItem() {
+//   return (
+//     <FormField
+//       control={form.control}
+//       name="group"
+//       render={({ field }) => (
+//         <FormItem>
+//           <FormLabel>Collection Group Policy Id</FormLabel>
+//           <FormControl>
+//             <Input placeholder="Optional" {...field} />
+//           </FormControl>
+//           <FormDescription>
+//             A collection group can be used to verify multiple collections are created by the same creator. This is done
+//             by each collection referencing the group to which it belongs. The collection group also must be updated with
+//             the policy id of this new collection to completley prove the collection is in the group. If you don&apos;t
+//             have a collection group and would like one then you can{' '}
+//             <Link className="font-bold" target="_blank" href="/">
+//               {/* TODO: Rather than making them exit the flow let them check a box indicating they want to make a group policy as well.  Also, I need to actually write the contract for group policy */}
+//               create a collection group by clicking here
+//             </Link>
+//           </FormDescription>
+//           <FormMessage />
+//         </FormItem>
+//       )}
+//     />
+//   );
+// }
 
 ContractContent.displayName = 'ContractContent';
 
