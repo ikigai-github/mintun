@@ -54,9 +54,6 @@ export async function createEmulatorLucid() {
 }
 
 export async function applyScriptRefTx(lucid: Lucid, cache: ScriptCache) {
-  const address = cache.spendLock().address;
-  const policyId = cache.derivativeMint().policyId;
-
   const mintReferenceTxHash = await createMintingPolicyReference(lucid, cache);
   await lucid.awaitTx(mintReferenceTxHash);
 
@@ -64,10 +61,10 @@ export async function applyScriptRefTx(lucid: Lucid, cache: ScriptCache) {
   await lucid.awaitTx(stateReferenceTxHash);
 
   // Use cache utils to check to tokens were distributed as expected
-  const mintScriptReferenceUtxo = await fetchMintingPolicyReferenceUtxo(lucid, address, policyId);
+  const mintScriptReferenceUtxo = await fetchMintingPolicyReferenceUtxo(cache);
   expect(mintScriptReferenceUtxo, 'Failed to create a minting policy script reference utxo');
 
-  const stateScriptReferenceUtxo = await fetchStateValidatorReferenceUtxo(lucid, address, policyId);
+  const stateScriptReferenceUtxo = await fetchStateValidatorReferenceUtxo(cache);
   expect(stateScriptReferenceUtxo, 'Failed to create a state validator script reference utxo');
 
   // NOTE: Typescript won't detect that the vitest expect will terminate the

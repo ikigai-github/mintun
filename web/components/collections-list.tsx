@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { CollectionInfo } from '@ikigai-github/mintun-offchain';
 
+import { getCollectionsInfo } from '@/lib/collection';
 import { getCollectionImageSrc } from '@/lib/image';
-import { getCollectionsInfo } from '@/lib/utils';
 import { useWallet } from '@/lib/wallet';
 
 import { Card, CardContent, CardFooter } from './ui/card';

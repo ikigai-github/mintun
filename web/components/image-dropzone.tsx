@@ -54,7 +54,7 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
           height,
         });
       }
-    }, [data, ext, mime, width, height, isReady, onImageChange, preview]);
+    }, [data, preview, name, ext, mime, width, height, isReady, onImageChange]);
 
     // Display a toast whenever an error occurs
     useEffect(() => {

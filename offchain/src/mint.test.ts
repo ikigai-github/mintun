@@ -3,6 +3,7 @@ import { expect, test } from 'vitest';
 import { TEST_COLLECTION_INFO } from './fixtures.test';
 import { GenesisTxBuilder } from './genesis';
 import { MintTxBuilder } from './mint';
+import { fetchNftReferenceUtxos, toNftData } from './nft';
 import { ScriptCache } from './script';
 import { applyScriptRefTx, applyTx, createEmulatorLucid, generateNft } from './support.test';
 
@@ -68,4 +69,12 @@ test('Mint a token', async () => {
   const { state } = await applyTx(lucid, tx, cache);
   expect(state.nfts).toEqual(NUM_MINTS);
   expect(state.nextSequence).toEqual(NUM_MINTS);
+
+  const utxos = await fetchNftReferenceUtxos(lucid, cache.mint().policyId, cache.immutableNft().address);
+  expect(utxos.length === NUM_MINTS);
+
+  const chainNft = await toNftData(lucid, utxos[0]);
+  const orignalNft = nfts.find((nft) => nft.name === chainNft.name);
+
+  expect(orignalNft).toEqual(chainNft);
 });

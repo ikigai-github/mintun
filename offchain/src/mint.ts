@@ -153,21 +153,12 @@ export class MintTxBuilder {
     // Get script references if the state indicates there is a policy
     const { scriptReferencePolicyId } = currentState.info;
     if (scriptReferencePolicyId) {
-      const lockAddress = this.#cache.spendLock().address;
       if (!this.#mintingPolicyReferenceUtxo) {
-        this.#mintingPolicyReferenceUtxo = await fetchMintingPolicyReferenceUtxo(
-          this.#lucid,
-          lockAddress,
-          scriptReferencePolicyId
-        );
+        this.#mintingPolicyReferenceUtxo = await fetchMintingPolicyReferenceUtxo(this.#cache);
       }
 
       if (!this.#stateValidatorReferenceUtxo) {
-        this.#stateValidatorReferenceUtxo = await fetchStateValidatorReferenceUtxo(
-          this.#lucid,
-          lockAddress,
-          scriptReferencePolicyId
-        );
+        this.#stateValidatorReferenceUtxo = await fetchStateValidatorReferenceUtxo(this.#cache);
       }
     }
 

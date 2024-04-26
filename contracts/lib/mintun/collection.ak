@@ -93,7 +93,7 @@ pub type CollectionStateInfo {
   /// The address all minted reference tokens must be sent to
   nft_validator_address: Option<Address>,
   /// The policy id that holds script references such as the minting policy and state spending validator.
-  script_reference_policy_id: Option<PolicyId>,
+  script_reference_policy_id: PolicyId,
 }
 
 /// State used by the spending validator on the reference token created by collection minting policy 

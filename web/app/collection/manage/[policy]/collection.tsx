@@ -17,9 +17,7 @@ export default function Collection() {
   }, []);
 
   // This is a conditional rendering that returns null if the component is not mounted yet
-  if (!isMounted) {
-    return null;
-  }
+  if (!isMounted) return null;
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">

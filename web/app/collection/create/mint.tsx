@@ -2,13 +2,11 @@
 
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Router } from 'next/router';
 import { DialogDescription } from '@radix-ui/react-dialog';
-import { toast } from 'sonner';
 import { useInterval, useMediaQuery } from 'usehooks-ts';
 
 import { timeout } from '@/lib/utils';
-import { isWalletInternalApiError, useWallet } from '@/lib/wallet';
+import { notifyError, useWallet } from '@/lib/wallet';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -219,16 +217,7 @@ function MintButton({ status, setStatus }: MintStateProps) {
 
       setStatus('complete');
     } catch (e: unknown) {
-      console.log(e);
-      if (isWalletInternalApiError(e)) {
-        toast.error(e.info);
-      } else if (e instanceof Error) {
-        toast.error(e.message);
-      } else if (typeof e === 'string') {
-        toast.error(e);
-      } else {
-        toast.error('An unknown error occurred while creating the mint transaction');
-      }
+      notifyError(e);
       setStatus('ready');
     }
   }, [prepareTx, lucid, setStatus]);

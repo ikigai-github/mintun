@@ -1,7 +1,14 @@
-import { fromText, type Address, type Assets } from 'lucid-cardano';
+import { fromText, Lucid, toLabel, UTxO, type Address, type Assets } from 'lucid-cardano';
 
-import { createReferenceData, NftMetadataShape, NftMetadataType, NftMetadataWrappedType } from './cip-68';
-import { toNftReferenceAssetName, toNftUserAssetName } from './collection';
+import {
+  createReferenceData,
+  NftMetadataShape,
+  NftMetadataType,
+  NftMetadataWrappedShape,
+  NftMetadataWrappedType,
+  REFERENCE_TOKEN_LABEL,
+} from './cip-68';
+import { COLLECTION_TOKEN_PURPOSE, toNftReferenceAssetName, toNftUserAssetName, toPurposeHex } from './collection';
 import { TxMetadataPrimitive } from './common';
 import { Data } from './data';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
@@ -16,6 +23,8 @@ type MintunFile = {
   purpose?: ImagePurpose;
 };
 
+type MintunChainFile = Omit<MintunFile, 'src'> & { src: string[] };
+
 export type MintunNftTraits = Record<string, TxMetadataPrimitive>;
 
 // Exands on CIP/25 metadata with id, attributes, and tags.
@@ -28,6 +37,11 @@ export type MintunNft = {
   id?: string;
   traits?: MintunNftTraits;
   tags?: string[];
+};
+
+type MintunChainNft = Omit<MintunNft, 'description' | 'files'> & {
+  description?: string[];
+  files?: MintunChainFile[];
 };
 
 export type AddressedNft = { metadata: MintunNft; recipient?: string };
@@ -118,12 +132,34 @@ export class NftBuilder {
   }
 }
 
-// Just splits
+// Just splits > 64 length strings for cip-25
 function asChainNftData(nft: MintunNft) {
-  const desription = nft.description ? chunk(nft.description) : [];
+  const description = nft.description ? chunk(nft.description) : [];
   const files = nft.files ? nft.files.map((file) => ({ ...file, src: chunk(file.src) })) : [];
-  const metadata = { ...nft, desription, files };
+  const metadata = { ...nft, description, files };
   return Data.castFrom<NftMetadataType>(Data.fromJson(metadata), NftMetadataShape);
+}
+
+export async function fetchNftReferenceUtxos(lucid: Lucid, policyId: string, address: string) {
+  const addressUtxos = await lucid.utxosAt(address);
+  const unit = `${policyId}${toLabel(REFERENCE_TOKEN_LABEL)}${toPurposeHex(COLLECTION_TOKEN_PURPOSE.NFT)}`;
+  const utxos = [];
+  for (const utxo of addressUtxos) {
+    if (Object.keys(utxo.assets).find((asset) => asset.startsWith(unit))) {
+      utxos.push(utxo);
+    }
+  }
+
+  return utxos;
+}
+
+export async function toNftData(lucid: Lucid, utxo: UTxO): Promise<MintunNft> {
+  const { metadata } = await lucid.datumOf(utxo, NftMetadataWrappedShape);
+  const nft = Data.toJson(metadata) as MintunChainNft;
+  const description = nft.description ? nft.description.join('') : undefined;
+  const files = nft.files ? nft.files.map((file) => ({ ...file, src: file.src.join('') })) : [];
+
+  return { ...nft, description, files };
 }
 
 /// Get NFT units, group them by address

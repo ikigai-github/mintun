@@ -3,6 +3,8 @@ import { DiscordLogoIcon, GlobeIcon, InfoCircledIcon, InstagramLogoIcon, Twitter
 
 import { Button } from '@/components/ui/button';
 
+import StoreMintingPolicy from './store-minting-policy';
+
 export const info: CollectionInfo = {
   name: 'Rasendriya Unlimited Artworks',
   artist: 'Rasendriya',
@@ -42,7 +44,7 @@ const state: CollectionState = {
       toMs: 10000000000,
     },
     maxNfts: 100,
-
+    scriptReferencePolicyId: '3d2097b873831f345c06b1fcaad5a3d2e0fdbc201df5a175a689c032',
     nftValidatorAddress: 'addr1abc',
   },
   locked: false,
@@ -100,6 +102,7 @@ export default function CollectionInfo() {
           <div className="truncate text-xs">2 mints in progress</div>
         </div>
         <div className="flex flex-col gap-4">
+          <StoreMintingPolicy />
           <Button>Mint Drafts</Button>
         </div>
       </div>

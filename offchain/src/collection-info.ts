@@ -3,6 +3,7 @@ import { fromText, toText, type Lucid, type UTxO } from 'lucid-cardano';
 import { createReferenceData } from './cip-68';
 import { Data } from './data';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
+import { ScriptCache } from './script';
 import { asChunkedHex, toJoinedText } from './utils';
 
 /// On chain data schema for image purpose
@@ -186,4 +187,15 @@ export function toCollectionInfo(chainInfo: CollectionInfoMetadataType): Collect
 export async function extractCollectionInfo(lucid: Lucid, utxo: UTxO) {
   const chainInfo = await lucid.datumOf(utxo, CollectionInfoMetadataShape);
   return toCollectionInfo(chainInfo);
+}
+
+export async function fetchCollectionInfo(cache: ScriptCache) {
+  const lucid = cache.lucid();
+  const unit = cache.unit().info;
+  const utxo = await lucid.utxoByUnit(unit);
+  if (utxo) {
+    return extractCollectionInfo(lucid, utxo);
+  } else {
+    return undefined;
+  }
 }

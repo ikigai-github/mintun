@@ -27,6 +27,7 @@ export class GenesisTxBuilder {
         hash: '',
         index: 0,
       },
+      scriptReferencePolicyId: '',
     },
     locked: false,
     nfts: 0,

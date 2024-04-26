@@ -1,4 +1,4 @@
-import { Address, applyParamsToScript, fromText, PolicyId, Script, toLabel, UTxO, type Lucid } from 'lucid-cardano';
+import { applyParamsToScript, fromText, Script, toLabel, UTxO, type Lucid } from 'lucid-cardano';
 
 import { OutputReferenceSchema, PolicyIdSchema, PubKeyHashSchema } from './aiken';
 import { Data } from './data';
@@ -122,8 +122,10 @@ export async function createScriptReference(
   return await submit(tx);
 }
 
-/// Fetches reference utxos given a script name
-export async function fetchReferenceUtxo(lucid: Lucid, address: string, policyId: string, scriptName: string) {
+export async function fetchReferenceUtxo(cache: ScriptCache, scriptName: string, delegate?: string) {
+  const lucid = cache.lucid();
+  const address = cache.spendLock().address;
+  const policyId = delegate ? cache.delegateMint(delegate).policyId : cache.derivativeMint().policyId;
   const unit = scriptReferenceUnit(policyId, scriptName);
   return await fetchUtxo(lucid, address, unit);
 }
@@ -153,8 +155,8 @@ export function mintingPolicyReferenceUnit(policyId: string) {
   return scriptReferenceUnit(policyId, ScriptName.NftMintingPolicy);
 }
 
-export async function fetchMintingPolicyReferenceUtxo(lucid: Lucid, address: Address, policyId: PolicyId) {
-  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.NftMintingPolicy);
+export async function fetchMintingPolicyReferenceUtxo(cache: ScriptCache, delegate?: string) {
+  return await fetchReferenceUtxo(cache, ScriptName.NftMintingPolicy, delegate);
 }
 
 export async function createMintingPolicyReference(
@@ -179,8 +181,8 @@ export function stateValidatorReferenceUnit(policyId: string) {
   return scriptReferenceUnit(policyId, ScriptName.MintingStateValidator);
 }
 
-export async function fetchStateValidatorReferenceUtxo(lucid: Lucid, address: Address, policyId: PolicyId) {
-  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.MintingStateValidator);
+export async function fetchStateValidatorReferenceUtxo(cache: ScriptCache, delegate?: string) {
+  return await fetchReferenceUtxo(cache, ScriptName.MintingStateValidator, delegate);
 }
 
 export async function createStateValidatorReference(
@@ -205,8 +207,8 @@ export function immutableInfoReferenceUnit(policyId: string) {
   return scriptReferenceUnit(policyId, ScriptName.ImmutableInfoValidator);
 }
 
-export async function fetchImmutableInfoReferenceUtxo(lucid: Lucid, address: Address, policyId: PolicyId) {
-  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.ImmutableInfoValidator);
+export async function fetchImmutableInfoReferenceUtxo(cache: ScriptCache, delegate?: string) {
+  return await fetchReferenceUtxo(cache, ScriptName.ImmutableInfoValidator, delegate);
 }
 
 /// Immutable NFT validator
@@ -218,8 +220,8 @@ export function immutableNftReferenceUnit(policyId: string) {
   return scriptReferenceUnit(policyId, ScriptName.ImmutableNftValidator);
 }
 
-export async function fetchImmutableNftReferenceUtxo(lucid: Lucid, address: Address, policyId: PolicyId) {
-  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.ImmutableNftValidator);
+export async function fetchImmutableNftReferenceUtxo(cache: ScriptCache, delegate?: string) {
+  return await fetchReferenceUtxo(cache, ScriptName.ImmutableNftValidator, delegate);
 }
 
 /// Permissive NFT validator
@@ -231,8 +233,8 @@ export function permissiveNftReferenceUnit(policyId: string) {
   return scriptReferenceUnit(policyId, ScriptName.PermissiveNftValidator);
 }
 
-export async function fetchPermissiveNftReferenceUtxo(lucid: Lucid, address: Address, policyId: PolicyId) {
-  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.PermissiveNftValidator);
+export async function fetchPermissiveNftReferenceUtxo(cache: ScriptCache, delegate?: string) {
+  return await fetchReferenceUtxo(cache, ScriptName.PermissiveNftValidator, delegate);
 }
 
 /// Lock Validator
@@ -244,8 +246,8 @@ export function lockReferenceUnit(policyId: string) {
   return scriptReferenceUnit(policyId, ScriptName.SpendLockValidator);
 }
 
-export async function fetchLockReferenceUtxo(lucid: Lucid, address: Address, policyId: PolicyId) {
-  return await fetchReferenceUtxo(lucid, address, policyId, ScriptName.SpendLockValidator);
+export async function fetchLockReferenceUtxo(cache: ScriptCache, delegate?: string) {
+  return await fetchReferenceUtxo(cache, ScriptName.SpendLockValidator, delegate);
 }
 
 // Reference minting policy

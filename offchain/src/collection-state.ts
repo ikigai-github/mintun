@@ -23,7 +23,7 @@ const CollectionStateInfoSchema = Data.Object({
   mint_window: Data.Nullable(PosixTimeIntervalSchema),
   max_nfts: Data.Nullable(Data.Integer({ minimum: 1, maximum: SEQUENCE_MAX_VALUE })),
   nft_validator_address: Data.Nullable(ChainAddressSchema),
-  script_reference_policy_id: Data.Nullable(PolicyIdSchema),
+  script_reference_policy_id: PolicyIdSchema,
 });
 
 /// fields see smart contract library docs.
@@ -56,7 +56,7 @@ export type CollectionStateInfo = {
   mintWindow?: TimeWindow;
   maxNfts?: number;
   nftValidatorAddress?: string;
-  scriptReferencePolicyId?: string;
+  scriptReferencePolicyId: string;
 };
 
 /// The collection state in offchain format.
@@ -89,7 +89,7 @@ export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetad
     nftValidatorAddress: chainInfo.nft_validator_address
       ? toBech32Address(lucid, chainInfo.nft_validator_address)
       : undefined,
-    scriptReferencePolicyId: chainInfo.script_reference_policy_id ?? undefined,
+    scriptReferencePolicyId: chainInfo.script_reference_policy_id,
   };
 
   const locked = metadata.force_locked;
@@ -133,7 +133,7 @@ function asChainStateInfo(info?: CollectionStateInfo) {
   const mint_window = info.mintWindow ? asChainTimeWindow(info.mintWindow.fromMs, info.mintWindow.toMs) : null;
   const max_nfts = info.maxNfts ? BigInt(info.maxNfts) : null;
   const nft_validator_address = info.nftValidatorAddress ? asChainAddress(info.nftValidatorAddress) : null;
-  const script_reference_policy_id = info.scriptReferencePolicyId ?? null;
+  const script_reference_policy_id = info.scriptReferencePolicyId;
 
   return {
     seed,

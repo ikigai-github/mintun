@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext, useFormState } from 'react-hook-form';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ export default function DraftTagContent() {
   const onAddTag = useCallback(
     (tag: string) => {
       const lowerCaseTag = tag.toLowerCase();
-      if (!fields.map((field) => field.tag).includes(lowerCaseTag)) {
+      if (!fields.map((field) => field.tag).includes(lowerCaseTag) && fields.length < 8) {
         append({ tag: lowerCaseTag });
       }
     },
@@ -31,7 +31,7 @@ export default function DraftTagContent() {
       </FormDescription>
 
       <div className="flex items-center gap-2">
-        <Input placeholder="ex. Prismatic " ref={inputRef} />
+        <Input placeholder="ex. Prismatic " maxLength={20} ref={inputRef} />
         <Button
           type="button"
           size="sm"

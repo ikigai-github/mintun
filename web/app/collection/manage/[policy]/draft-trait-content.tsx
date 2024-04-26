@@ -32,7 +32,7 @@ export default function DraftTraitContent() {
       </FormDescription>
 
       <div className="flex items-center gap-2">
-        <Input placeholder="Add a NFT specific trait (not recommended)" ref={inputRef} />
+        <Input placeholder="Add a NFT specific trait (not recommended)" maxLength={20} ref={inputRef} />
         <Button
           type="button"
           onClick={() => {
@@ -49,7 +49,7 @@ export default function DraftTraitContent() {
         </Button>
       </div>
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-2">
-        {fields.map(({ label, trait, preexisting, id }, index) => {
+        {fields.map(({ label, preexisting, id }, index) => {
           return (
             <React.Fragment key={id}>
               <div className="font-heading capitalize">{label}</div>
@@ -59,7 +59,7 @@ export default function DraftTraitContent() {
                 render={({ field }) => (
                   <FormItem className={preexisting ? 'col-span-2' : ''}>
                     <FormControl>
-                      <Input {...field} className="!bg-secondary" />
+                      <Input {...field} maxLength={20} className="!bg-secondary" />
                     </FormControl>
                   </FormItem>
                 )}

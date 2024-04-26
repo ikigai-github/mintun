@@ -12,11 +12,23 @@ export type CollectionNft = {
 export const DraftTokenSchema = object({
   uid: string(), // Internal random id for finding / updating
   image: ImageDetailSchema,
-  name: string('Name can be at most 64 characters in length', [maxLength(64)]),
-  description: string('Description can be at most 64 characters', [maxLength(64)]),
-  id: string('Id must be less than 64 characters', [maxLength(64)]),
-  tags: array(object({ tag: string() }), [maxLength(4)]),
-  traits: array(object({ label: string(), trait: string(), preexisting: boolean() })),
+  name: string('Name can be at most 64 characters in length', [
+    maxLength(64, 'Name can be at most 64 characters in length'),
+  ]),
+  description: string('Description can be at most 64 characters', [
+    maxLength(64, 'Description can be at most 64 characters'),
+  ]),
+  id: string('Id must be less than 64 characters', [maxLength(64, 'Id must be less than 64 characters')]),
+  tags: array(object({ tag: string([maxLength(20, 'Tag cannot exceed 24 characters')]) }), [
+    maxLength(8, 'Only up to 8 tags supported'),
+  ]),
+  traits: array(
+    object({
+      label: string([maxLength(64, 'Trait label cannot be more thant 64 character')]),
+      trait: string([maxLength(64, 'Trait value cannot be more thant 64 character')]),
+      preexisting: boolean(),
+    })
+  ),
 });
 
 export type DraftTokenData = Input<typeof DraftTokenSchema>;

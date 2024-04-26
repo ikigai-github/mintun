@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ReactNode, useCallback, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import { HobbyKnifeIcon, PlusIcon } from '@radix-ui/react-icons';
 import { useForm } from 'react-hook-form';
+import { uid as createUid } from 'uid';
 import { useMediaQuery } from 'usehooks-ts';
 
 import { DefaultImageDetail, getWebImageUrl, ImageDetail } from '@/lib/image';
@@ -12,9 +13,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerTrigger } from '@/components/ui/drawer';
+import { Form, FormControl, FormDescription, FormField, FormItem } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import DrawerDialog from '@/components/drawer-dialog';
 import ImageDropzone from '@/components/image-dropzone';
 
 import { useManageCollectionContext } from './context';
@@ -24,10 +26,20 @@ import { DraftTokenData, DraftTokenSchema } from './types';
 import useDraft from './use-draft';
 import useSaveDraft from './use-save-draft';
 
-type DraftNftProps = { uid?: string };
-type DraftNftFormProps = DraftNftProps & { onSaving: () => void; onSaved: () => void };
+function DraftNewNftCard() {
+  return (
+    <Card className="hover:bg-foreground/10 group flex h-56 min-w-36 max-w-60 cursor-pointer flex-col transition-colors">
+      <div className="bg-primary group-hover:bg-primary/90 flex h-44 items-center justify-center rounded-t-xl border-b">
+        <PlusIcon className="text-primary-foreground size-24" />
+      </div>
+      <div className="flex-1 rounded-b-xl transition-colors">
+        <div className="font-heading p-4 font-medium leading-none">Draft a new token</div>
+      </div>
+    </Card>
+  );
+}
 
-function DraftNftCard({ uid }: DraftNftProps) {
+function DraftNftCard({ uid }: { uid: string }) {
   const { image, id, name } = useDraft(uid);
   const { info } = useManageCollectionContext();
 
@@ -51,33 +63,20 @@ function DraftNftCard({ uid }: DraftNftProps) {
     }
   }, [name, id, info?.name]);
 
-  if (uid) {
-    return (
-      <Card className="hover:bg-foreground/10 h-56 min-w-36 max-w-60 transition-colors">
-        <div className="relative h-44 rounded-t-xl">
-          <Image fill={true} sizes="228px" src={url} className="rounded-t-xl object-cover" alt={name} />
-        </div>
-        <div className="flex justify-between p-4">
-          <div className="font-heading truncate text-left leading-none">{displayName}</div>
-          <HobbyKnifeIcon className="self-end" />
-        </div>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="hover:bg-foreground/10 group flex h-56 min-w-36 max-w-60 cursor-pointer flex-col transition-colors">
-      <div className="bg-primary group-hover:bg-primary/90 flex h-44 items-center justify-center rounded-t-xl border-b">
-        <PlusIcon className="text-primary-foreground size-24" />
+    <Card className="hover:bg-foreground/10 h-56 min-w-36 max-w-60 transition-colors">
+      <div className="relative h-44 rounded-t-xl">
+        <Image fill={true} sizes="228px" src={url} className="rounded-t-xl object-cover" alt={name} />
       </div>
-      <div className="flex-1 rounded-b-xl transition-colors">
-        <div className="font-heading p-4 font-medium leading-none">Draft a new token</div>
+      <div className="flex justify-between p-4">
+        <div className="font-heading truncate text-left leading-none">{displayName}</div>
+        <HobbyKnifeIcon className="self-end" />
       </div>
     </Card>
   );
 }
 
-function DraftNftCardForm({ uid, onSaving, onSaved }: DraftNftFormProps) {
+function DraftNftCardForm({ uid, onSaving, onSaved }: { uid: string; onSaving: () => void; onSaved: () => void }) {
   const [status, setStatus] = useState<'edit' | 'saving'>('edit');
   const { info } = useManageCollectionContext();
   const draft = useDraft(uid);
@@ -166,16 +165,15 @@ function DraftNftCardForm({ uid, onSaving, onSaved }: DraftNftFormProps) {
                 You can use a high resolution image here. A thumbnail image will be generated as needed during minting
                 of the token.
               </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />
         <Accordion type="single" collapsible orientation="horizontal" defaultValue="name">
           <AccordionItem value="name">
-            <AccordionTrigger className="max-w-[454px] gap-2">
-              <span className="min-w-24 text-left font-light">Name</span>
+            <AccordionTrigger className="gap-2">
+              <span className="w-24 min-w-24 max-w-24 text-left font-light">Name</span>
               {name ? (
-                <span className="font-heading flex-1 overflow-hidden truncate text-left font-bold">{name}</span>
+                <span className="font-heading max-w-[300px] overflow-hidden truncate text-left font-bold">{name}</span>
               ) : undefined}
             </AccordionTrigger>
             <AccordionContent>
@@ -192,18 +190,18 @@ function DraftNftCardForm({ uid, onSaving, onSaved }: DraftNftFormProps) {
                     <FormControl>
                       <Input placeholder={`ex. ${info?.name ?? 'Example'} #12345`} maxLength={64} {...field} />
                     </FormControl>
-
-                    <FormMessage />
                   </FormItem>
                 )}
               />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="id">
-            <AccordionTrigger className="max-w-[454px] gap-2">
-              <span className="min-w-24 text-left font-light">Identifier</span>
+            <AccordionTrigger className="gap-2">
+              <span className="w-24 min-w-24 max-w-24 text-left font-light">Identifier</span>
               {id ? (
-                <span className="font-heading font-semi-bold flex-1 overflow-hidden truncate text-left">{id}</span>
+                <span className="font-heading font-semi-bold max-w-[300px] overflow-hidden truncate text-left">
+                  {id}
+                </span>
               ) : undefined}
             </AccordionTrigger>
             <AccordionContent>
@@ -218,21 +216,19 @@ function DraftNftCardForm({ uid, onSaving, onSaved }: DraftNftFormProps) {
                       leave the name field blank and set an id it will also be used as the name.
                     </FormDescription>
                     <FormControl>
-                      <Input placeholder={`ex. abc123`} {...field} />
+                      <Input placeholder={`ex. abc123`} maxLength={64} {...field} />
                     </FormControl>
-
-                    <FormMessage />
                   </FormItem>
                 )}
               />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="description">
-            <AccordionTrigger className="max-w-[454px] gap-2">
-              <span className="min-w-24 text-left font-light">Description</span>
+            <AccordionTrigger className="gap-2">
+              <span className="w-24 min-w-24 max-w-24 text-left font-light">Description</span>
               {description ? (
-                <span className="flex flex-1 overflow-hidden  ">
-                  <span className="text-muted-foreground overflow-hidden truncate pr-2 text-left ">{description}</span>
+                <span className="text-muted-foreground font-heading font-semi-bold max-w-[300px] overflow-hidden truncate text-left ">
+                  {description}
                 </span>
               ) : undefined}
             </AccordionTrigger>
@@ -247,22 +243,23 @@ function DraftNftCardForm({ uid, onSaving, onSaved }: DraftNftFormProps) {
                       specific description.
                     </FormDescription>
                     <FormControl>
-                      <Input placeholder={`Optional`} {...field} />
+                      <Input placeholder={`Optional`} maxLength={64} {...field} />
                     </FormControl>
-
-                    <FormMessage />
                   </FormItem>
                 )}
               />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="tags">
-            <AccordionTrigger className="max-w-[454px] gap-2">
+            <AccordionTrigger className="gap-2">
               <span className="min-w-24 text-left font-light">Tags</span>
               {tags.length ? (
-                <span className="flex-1 text-left">
-                  {tags.length} Tag{tags.length !== 1 ? 's' : undefined}
-                </span>
+                <>
+                  <span className="flex-1 text-left">
+                    {tags.length} Tag{tags.length !== 1 ? 's' : undefined}
+                  </span>
+                  <span className="text-muted-foreground text-xs">Max of 8 Tags</span>
+                </>
               ) : undefined}
             </AccordionTrigger>
             <AccordionContent>
@@ -270,7 +267,7 @@ function DraftNftCardForm({ uid, onSaving, onSaved }: DraftNftFormProps) {
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="traits">
-            <AccordionTrigger className="max-w-[454px] gap-2">
+            <AccordionTrigger className="gap-2">
               <span className="min-w-24 text-left font-light">Traits </span>
               {traits.length ? (
                 <span className="flex-1 text-left">
@@ -288,6 +285,7 @@ function DraftNftCardForm({ uid, onSaving, onSaved }: DraftNftFormProps) {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+
         <Button disabled={missingTraitValueCount > 0} type="submit" className="mt-3">
           {label}
         </Button>
@@ -296,14 +294,10 @@ function DraftNftCardForm({ uid, onSaving, onSaved }: DraftNftFormProps) {
   );
 }
 
-export default function DraftNft({ uid }: DraftNftProps) {
+export default function DraftNft(props: { uid?: string }) {
   const [status, setStatus] = useState<'closed' | 'view' | 'saving'>('closed');
 
-  const isDesktop = useMediaQuery('(min-width: 600px)', {
-    defaultValue: true,
-    initializeWithValue: false,
-  });
-
+  const uid = useMemo(() => props.uid || createUid(), [props.uid]);
   const closeDisabled = useMemo(() => status === 'saving', [status]);
   const handleSaving = useCallback(() => setStatus('saving'), [setStatus]);
   const handleSaved = useCallback(() => setStatus('closed'), [setStatus]);
@@ -319,41 +313,14 @@ export default function DraftNft({ uid }: DraftNftProps) {
     [status]
   );
 
-  const handleClose = useCallback(
-    (e: Event) => {
-      if (closeDisabled) {
-        e.preventDefault();
-      }
-    },
-    [closeDisabled]
-  );
-
-  if (isDesktop) {
-    return (
-      <Dialog open={status !== 'closed'} onOpenChange={handleOpen}>
-        <DialogTrigger>
-          <DraftNftCard uid={uid} />
-        </DialogTrigger>
-        <DialogContent
-          className="p-4"
-          onInteractOutside={handleClose}
-          onEscapeKeyDown={handleClose}
-          hideCloseIcon={closeDisabled}
-        >
-          <DraftNftCardForm uid={uid} onSaved={handleSaved} onSaving={handleSaving} />
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
-    <Drawer open={status !== 'closed'} onOpenChange={handleOpen}>
-      <DrawerTrigger>
-        <DraftNftCard uid={uid} />
-      </DrawerTrigger>
-      <DrawerContent onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
-        <DraftNftCardForm uid={uid} onSaved={handleSaved} onSaving={handleSaving} />
-      </DrawerContent>
-    </Drawer>
+    <DrawerDialog
+      open={status !== 'closed'}
+      onOpenChange={handleOpen}
+      closeDisabled={closeDisabled}
+      trigger={props.uid ? <DraftNftCard uid={props.uid} /> : <DraftNewNftCard />}
+    >
+      <DraftNftCardForm uid={uid} onSaved={handleSaved} onSaving={handleSaving} />
+    </DrawerDialog>
   );
 }

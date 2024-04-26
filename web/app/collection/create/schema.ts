@@ -100,8 +100,8 @@ export const RoyaltySchema = object(
     ),
     // TODO: Figure out why this doesn't work
     forward(
-      custom((royalty) => royalty.minFee == 0 && royalty.percent == 0, 'Must set a min fee or a percent fee'),
-      ['minFee']
+      custom((royalty) => +royalty.minFee > 0 || +royalty.percent > 0, 'Must set a min fee or a percent fee'),
+      ['percent']
     ),
   ]
 );

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { DiscordLogoIcon, GlobeIcon, InstagramLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
 import { format } from 'date-fns';
 
@@ -197,8 +197,8 @@ function RoyaltiesAccordionItem() {
       <AccordionContent>
         <div className="bg-accent grid grid-cols-[auto_1fr_1fr_1fr] gap-x-10 gap-y-2 rounded-[0.5rem] p-4">
           {royalties.map((royalty, index) => (
-            <>
-              <div key={`royalty-address-${index}`} className="text-primary cursor-pointer truncate">
+            <React.Fragment key={`royalty-review-${index}`}>
+              <div className="text-primary cursor-pointer truncate">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span>{royalty.address}</span>
@@ -211,16 +211,10 @@ function RoyaltiesAccordionItem() {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <div key={`royalty-percent-${index}`} className="text-foreground">
-                {royalty.percent}%
-              </div>
-              <div key={`royalty-min-fee-${index}`} className="text-foreground whitespace-nowrap">
-                {royalty.minFee ? `${royalty.minFee} ₳` : '-'}
-              </div>
-              <div key={`royalty-max-fee-${index}`} className="text-foreground whitespace-nowrap">
-                {royalty.maxFee ? `${royalty.maxFee} ₳` : '-'}
-              </div>
-            </>
+              <div className="text-foreground">{royalty.percent}%</div>
+              <div className="text-foreground whitespace-nowrap">{royalty.minFee ? `${royalty.minFee} ₳` : '-'}</div>
+              <div className="text-foreground whitespace-nowrap">{royalty.maxFee ? `${royalty.maxFee} ₳` : '-'}</div>
+            </React.Fragment>
           ))}
         </div>
       </AccordionContent>

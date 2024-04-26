@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
-import { uid as createUid } from 'uid';
 
 import { DefaultImageDetail } from '@/lib/image';
 
 import { useManageCollectionContext } from './context';
 
-export default function useDraft(presetUid?: string) {
+export default function useDraft(uid: string) {
   const { drafts } = useManageCollectionContext();
-  const uid = useMemo(() => presetUid || createUid(), [presetUid]);
 
   const draft = useMemo(() => {
     const draft = drafts.find((draft) => draft.uid == uid);
