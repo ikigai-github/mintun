@@ -318,7 +318,7 @@ export default function DraftNft(props: { uid?: string }) {
       open={status !== 'closed'}
       onOpenChange={handleOpen}
       closeDisabled={closeDisabled}
-      trigger={props.uid ? <DraftNftCard uid={props.uid} /> : <DraftNewNftCard />}
+      trigger={<button>{props.uid ? <DraftNftCard uid={props.uid} /> : <DraftNewNftCard />}</button>}
     >
       <DraftNftCardForm uid={uid} onSaved={handleSaved} onSaving={handleSaving} />
     </DrawerDialog>

@@ -54,10 +54,12 @@ export async function createEmulatorLucid() {
 }
 
 export async function applyScriptRefTx(lucid: Lucid, cache: ScriptCache) {
-  const mintReferenceTxHash = await createMintingPolicyReference(lucid, cache);
+  const mintReferenceTx = await createMintingPolicyReference(lucid, cache);
+  const mintReferenceTxHash = await submit(mintReferenceTx);
   await lucid.awaitTx(mintReferenceTxHash);
 
-  const stateReferenceTxHash = await createStateValidatorReference(lucid, cache);
+  const stateReferenceTx = await createStateValidatorReference(lucid, cache);
+  const stateReferenceTxHash = await submit(stateReferenceTx);
   await lucid.awaitTx(stateReferenceTxHash);
 
   // Use cache utils to check to tokens were distributed as expected

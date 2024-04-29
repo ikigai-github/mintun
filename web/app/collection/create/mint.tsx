@@ -59,9 +59,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
 
   const handleOpen = useCallback(
     async (open: boolean) => {
-      if (!open) {
-        setOpen(open);
-      } else if (await allowOpen()) {
+      if (await allowOpen()) {
         setOpen(open);
       }
     },
@@ -103,7 +101,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
     return (
       <Dialog open={open} onOpenChange={handleOpen}>
         <DialogTrigger asChild>
-          <Button>{mintButtonLabel}</Button>
+          <Button onClick={allowOpen}>{mintButtonLabel}</Button>
         </DialogTrigger>
         <DialogContent
           className="sm:max-w-[425px]"
@@ -123,7 +121,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={handleOpen}>
       <DrawerTrigger asChild>
         <Button>{mintButtonLabel}</Button>
       </DrawerTrigger>
@@ -159,9 +157,12 @@ function MintButton({ status, setStatus }: MintStateProps) {
   const [policyId, setPolicyId] = useState('');
   const { prepareTx, uploadProgress } = useGenesisMint();
 
-  const { lucid } = useWallet();
+  const { lucid, network } = useWallet();
 
-  const handleManage = useCallback(() => router.push(`/collection/manage/${policyId}`), [router, policyId]);
+  const handleManage = useCallback(
+    () => router.push(`/collection/manage/${network.toLowerCase()}/${policyId}`),
+    [router, policyId, network]
+  );
 
   const isUploading = useMemo(() => uploadProgress < 100 && status === 'preparing', [uploadProgress, status]);
 

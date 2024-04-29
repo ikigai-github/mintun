@@ -36,7 +36,7 @@ export default function DrawerDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogTrigger>{trigger}</DialogTrigger>
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
         <DialogContent
           className="p-4"
           onInteractOutside={handleClose}
@@ -51,7 +51,7 @@ export default function DrawerDialog({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerTrigger>{trigger}</DrawerTrigger>
+      <DrawerTrigger asChild>{trigger}</DrawerTrigger>
       <DrawerContent onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
         {children}
         <DrawerFooter className="pt-0">

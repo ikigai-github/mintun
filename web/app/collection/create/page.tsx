@@ -50,7 +50,7 @@ export default function CreateCollection() {
   );
 
   return (
-    <div className="flex w-full max-w-[1280px] flex-col gap-2">
+    <div className="flex w-full max-w-screen-xl flex-col gap-2">
       <Mint allowOpen={handleViewChange} />
       <Tabs defaultValue="describe" value={tab} onValueChange={handleViewChange} className="flex-1">
         <TabsList className="grid h-fit w-full grid-cols-3 sm:grid-cols-6">

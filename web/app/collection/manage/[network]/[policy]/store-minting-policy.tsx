@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { timeout } from '@/lib/utils';
 import { notifyError, useWallet } from '@/lib/wallet';
@@ -28,13 +28,24 @@ export default function StoreMintingPolicy() {
 
       const offchain = await import('@ikigai-github/mintun-offchain');
       const { cache } = await offchain.ScriptCache.fromMintPolicyId(lucid, policy);
+      const tx = await offchain.createMintingPolicyReference(lucid, cache);
+      const completed = await tx.complete();
 
       setStatus('signing');
-      // FIXME: because this funciton submits the tx I can't wrap it in a timeout so move that functionality out of this function
-      const txHash = await offchain.createMintingPolicyReference(lucid, cache);
+      const signed = await timeout(
+        completed.sign().complete(),
+        60 * 1000,
+        'Timed out waiting for signature. Please try again.'
+      );
+
+      const txHash = await timeout(
+        signed.submit(),
+        60 * 1000,
+        'Timed out trying to submit transaction. Please try again.'
+      );
 
       setStatus('verifying');
-      await timeout(lucid.awaitTx(txHash), 5 * 60 * 1000, 'Timed out verifying transaction. Click Store to try again.');
+      await timeout(lucid.awaitTx(txHash), 5 * 60 * 1000, 'Timed out verifying transaction. Please try again.');
 
       setStatus('complete');
     } catch (e: unknown) {
@@ -42,6 +53,13 @@ export default function StoreMintingPolicy() {
       setStatus('ready');
     }
   }, [lucid, policy, setStatus]);
+
+  useEffect(() => {
+    if (status === 'complete') {
+      setStatus('ready');
+      // TODO: Callc some function to refetch the reference UTXO so the button dissappears
+    }
+  }, [status]);
 
   return (
     <TransactionDialog

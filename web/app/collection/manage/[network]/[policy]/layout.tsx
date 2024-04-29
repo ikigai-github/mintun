@@ -1,10 +1,10 @@
 import { ManageCollectionContextProvider } from './context';
 
-export default function ManageCollectionLayout({
+export default async function ManageCollectionLayout({
   params,
   children,
 }: Readonly<{
-  params: { policy: string };
+  params: { policy: string; network: string };
   children: React.ReactNode;
 }>) {
   return (

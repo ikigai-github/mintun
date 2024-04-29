@@ -107,6 +107,14 @@ export class ScriptCache {
   // Utility for when you already know the minting policy id
   static async fromMintPolicyId(lucid: Lucid, policyId: string) {
     const stateUtxo = await lucid.utxoByUnit(toStateUnit(policyId));
+
+    // TODO: If contract code has changed the policy that we use here won't match
+    //       the constructed script cache.  Need to add versioning to the contract.json and
+    //       write that version as the 0 of the cbor so it is always readable.  That way
+    //       we can reproduce the correct script.  Ideally contract won't change too often
+    //       but need a way to handle it.  It would suck though to bloat the library with every
+    //       version of the contract so instead would need to upload contract versions to like IPFS
+    //       and fetch them on library init or something gross like that.
     return ScriptCache.fromStateUtxo(lucid, stateUtxo);
   }
 

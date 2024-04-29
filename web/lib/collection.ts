@@ -1,8 +1,5 @@
-import { COLLECTION_TOKEN_PURPOSE, toPurposeHex, type CollectionInfo } from '@ikigai-github/mintun-offchain';
-import { toLabel, type Lucid } from 'lucid-cardano';
-import { object } from 'valibot';
-
-import { REFERENCE_TOKEN_LABEL } from '../../offchain/dist/cip-68';
+import type { CollectionInfo } from '@ikigai-github/mintun-offchain';
+import type { Lucid } from 'lucid-cardano';
 
 const ownerAssetName = '0006f0a000436f6c6c656374696f6e';
 const referenceAssetName = '000643b000436f6c6c656374696f6e';

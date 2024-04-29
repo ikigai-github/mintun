@@ -64,7 +64,7 @@ function DescribeAccordionItem() {
         {describe.collection}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
+        <div className="bg-accent grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 rounded-lg p-2">
           {describe.artist && (
             <>
               <div className="text-xs font-bold">Artist</div>
@@ -118,7 +118,7 @@ function ContractAccordionItem() {
         {displayContractName}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 rounded-[0.5rem] p-2">
+        <div className="bg-accent grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 rounded-lg p-2">
           {configuration.window && (
             <>
               <div className="text-xs font-bold">Minting Window</div>
@@ -158,7 +158,7 @@ function ImagesAccordionItem() {
         className="font-heading text-foreground font-light leading-none"
       >{`${previews.length} Images`}</AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent flex flex-wrap items-end gap-2 rounded-[0.5rem] p-2">
+        <div className="bg-accent flex flex-wrap items-end gap-2 rounded-lg p-2">
           {previews.map((image, index) => (
             <img
               key={`review-image-${index}`}
@@ -195,7 +195,7 @@ function RoyaltiesAccordionItem() {
         {label}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent grid grid-cols-[auto_1fr_1fr_1fr] gap-x-10 gap-y-2 rounded-[0.5rem] p-4">
+        <div className="bg-accent grid grid-cols-[auto_1fr_1fr_1fr] gap-x-10 gap-y-2 rounded-lg p-4">
           {royalties.map((royalty, index) => (
             <React.Fragment key={`royalty-review-${index}`}>
               <div className="text-primary cursor-pointer truncate">
@@ -241,7 +241,7 @@ function TraitsAccordionItem() {
         {label}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent flex gap-2 rounded-[0.5rem] p-2">
+        <div className="bg-accent flex gap-2 rounded-lg p-2">
           {traits.map((trait, index) => (
             <Badge variant="outline" className="bg-background capitalize" key={`review-trait-${index}`}>
               {trait}
@@ -281,7 +281,7 @@ function SocialAccordionItem() {
         {label}
       </AccordionTrigger>
       <AccordionContent>
-        <div className="bg-accent text-foreground grid grid-cols-[auto_1fr] items-center gap-4 rounded-[0.5rem] p-2">
+        <div className="bg-accent text-foreground grid grid-cols-[auto_1fr] items-center gap-4 rounded-lg p-2">
           {social.website ? (
             <>
               <GlobeIcon className="size-5" />

@@ -3,7 +3,6 @@ import { applyParamsToScript, fromText, Script, toLabel, UTxO, type Lucid } from
 import { OutputReferenceSchema, PolicyIdSchema, PubKeyHashSchema } from './aiken';
 import { Data } from './data';
 import { fetchOwnerUtxo, fetchUtxo, getScript, getScriptInfo, ScriptCache } from './script';
-import { submit } from './utils';
 
 export const ScriptName = {
   NftMintingPolicy: 'mint.mint',
@@ -119,7 +118,7 @@ export async function createScriptReference(
     );
   }
 
-  return await submit(tx);
+  return tx;
 }
 
 export async function fetchReferenceUtxo(cache: ScriptCache, scriptName: string, delegate?: string) {

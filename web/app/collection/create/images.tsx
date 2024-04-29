@@ -143,7 +143,7 @@ function TabletImageZone() {
   );
 
   return (
-    <div className="min-w-[768px] max-w-[1024px] p-4">
+    <div className="min-w-[768px] max-w-screen-lg p-4">
       <div className="grid-span-1 grid grid-cols-1">
         <ImageDropzone
           shapeClassName="w-full h-48 rounded-t-lg"
