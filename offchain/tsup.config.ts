@@ -14,6 +14,7 @@ export const tsup: Options = {
   sourcemap: true,
   treeshake: true,
   shims: true,
+  external: ['lucid-cardano', '@sinclair/typebox'],
   entryPoints: ['src/index.ts'],
   entry: ['src/**/*.ts', '!src/**/*.test.ts'],
 };

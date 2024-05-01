@@ -36,10 +36,8 @@
     "typescript": "^5",
     "vitest": "^0.34.6"
   },
-  "dependencies": {
-    "@sinclair/typebox": "^0.32.27"
-  },
   "peerDependencies": {
+    "@sinclair/typebox": "^0.32.27",
     "lucid-cardano": "^0.10.7"
   }
 }

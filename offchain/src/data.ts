@@ -4,20 +4,20 @@
  *  I think pomething to do with how lucid exports typebox but for now easiest workaround is to just use NPM version of typebox.
  */
 import {
-  Static as _Static,
   Literal,
-  TEnum,
-  TLiteral,
-  TLiteralValue,
-  TProperties,
-  TSchema,
   Tuple,
   Array as TypeArray,
   Object as TypeObject,
   Union,
   Unsafe,
+  type Static as _Static,
+  type TEnum,
+  type TLiteral,
+  type TLiteralValue,
+  type TProperties,
+  type TSchema,
 } from '@sinclair/typebox';
-import { C, Datum, Exact, fromHex, fromText, Json, Redeemer, toHex } from 'lucid-cardano';
+import { C, fromHex, fromText, toHex, type Datum, type Exact, type Json, type Redeemer } from 'lucid-cardano';
 
 export class Constr<T> {
   index: number;
