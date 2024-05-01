@@ -8,8 +8,8 @@
     "build:offchain": "pnpm --filter {offchain} build",
     "build:aiken": "aiken build contracts && mv contracts/plutus.json offchain/contracts.json",
     "build:aiken:trace": "aiken build contracts --trace-level verbose && mv contracts/plutus.json offchain/contracts.json",
-    "build:full": "pnpm build:offchain && pnpm build:web",
-    "build": "pnpm build:aiken && pnpm build:offchain && pnpm build:web",
+    "build:full": "pnpm build:aiken && pnpm build:offchain && pnpm build:web",
+    "build": "pnpm build:offchain && pnpm build:web",
     "build:full:trace": "pnpm build:aiken:trace && pnpm build:offchain && pnpm build:web",
     "dev": "pnpm --filter {web} dev",
     "test": "pnpm build:aiken:trace && pnpm --filter {offchain} test"
