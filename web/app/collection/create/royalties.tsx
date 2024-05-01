@@ -13,6 +13,7 @@ import {
   FormDescription,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
   FormRootMessage,
 } from '@/components/ui/form';
@@ -83,8 +84,9 @@ export default function RoyaltiesContent() {
               name="address"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <Input placeholder="Required" {...field} />
+                    <Input placeholder="example: addr1abc...ddy" {...field} />
                   </FormControl>
                   <FormDescription className="inline-flex w-full justify-between">
                     <span>The address of the royalty beneficiary.</span>
@@ -113,11 +115,12 @@ export default function RoyaltiesContent() {
               name="percent"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Percent Fee</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} max={100} placeholder="Required" {...field} />
+                    <Input type="number" min={0} max={100} placeholder="example: 1.5" {...field} />
                   </FormControl>
                   <FormDescription>
-                    A number between 0 and 100 representing the percent of a sale that should go to the beneficiary.
+                    A number between 0 and 100 representing the percent of a sale that should go to the address.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -128,6 +131,7 @@ export default function RoyaltiesContent() {
               name="minFee"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Minimum Fee</FormLabel>
                   <FormControl>
                     <Input type="number" min={0} placeholder="Optional Minimum Fee Ada" {...field} />
                   </FormControl>
@@ -143,6 +147,7 @@ export default function RoyaltiesContent() {
               name="maxFee"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Maximum Fee</FormLabel>
                   <FormControl>
                     <Input type="number" min={0} placeholder="Optional Maximum Fee Ada" {...field} />
                   </FormControl>
@@ -180,9 +185,8 @@ export default function RoyaltiesContent() {
                   <Tooltip key={`royalty-address-review-${royalty.address}`}>
                     <TooltipTrigger asChild>
                       <TableRow
-                        className="font-heading cursor-pointer text-[0.8rem] font-light"
+                        className="cursor-pointer text-[0.8rem] font-light"
                         onClick={() => {
-                          console.log('removin index ' + index);
                           setTotal((prev) => prev - Number(royalties[index].percent));
                           const newRoyalties = [...royalties];
                           newRoyalties.splice(index, 1);
@@ -217,13 +221,20 @@ function RoyaltiesHeader() {
   return (
     <CardHeader>
       <CardTitle className="font-heading pb-2">Add collection royalties</CardTitle>
-      <CardDescription className="font-heading">
-        If your collection is intended to be bought and sold you may want to add in royalties for each resale. Royalties
-        require a percentage of any sale of NFTs in the collection go to the specified beneficiaries. Beneficiaries can
-        be any address which may be a charity script address or personal wallet. Keep in mind large royalties can
-        discourage buying and selling. For this reason it is advisable to keep the total royalties to a small
-        percentage. Royalties are enforced at the discretion of the each marketplace. Most marketplaces support
-        royalties but it is not guaranteed to be enforced.
+      <CardDescription>
+        If your collection is intended to be bought and sold you may want to add in royalties for each resale.{' '}
+        <Tooltip>
+          <TooltipTrigger>
+            <span className="font-bold">How do royalties work?</span>
+          </TooltipTrigger>
+          <TooltipContent className="bg-secondary text-foreground shadow-foreground/10 shadow-md">
+            <div className="max-w-72 p-2">
+              Royalties require a percentage of any sale of NFTs in the collection go to the specified wallet address.
+              Keep in mind large royalties can discourage buying and selling. Royalties are enforced at the discretion
+              of the each marketplace.
+            </div>
+          </TooltipContent>
+        </Tooltip>
       </CardDescription>
     </CardHeader>
   );

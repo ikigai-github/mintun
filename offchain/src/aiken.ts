@@ -10,6 +10,8 @@ export const PolicyIdSchema = Data.Bytes({ minLength: 28, maxLength: 28 });
 
 export const AssetNameSchema = Data.Bytes({ minLength: 0, maxLength: 32 });
 
+export const PubKeyHashSchema = Data.Bytes({ minLength: 28, maxLength: 28 });
+
 export const OutputReferenceSchema = Data.Object({
   transaction_id: Data.Object({
     hash: Data.Bytes(),
@@ -75,7 +77,7 @@ export type ChainAddress = Data.Static<typeof ChainAddressSchema>;
 export const ChainAddress = ChainAddressSchema as unknown as ChainAddress;
 
 export const CHAIN_FALSE = new Constr(0, []);
-export const CHIAN_TRUE = new Constr(1, []);
+export const CHAIN_TRUE = new Constr(1, []);
 /// Constructs Aiken representation of a time interval using upper and lower bounds in milliseconds.
 /// Defaults to inclusive upper and lower bounds.
 export function asChainTimeWindow(

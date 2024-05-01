@@ -8,7 +8,7 @@ export function SiteHeader() {
   return (
     <header className="bg-background sticky top-0 z-40 border-b p-2 px-10">
       <div className="flex items-center">
-        <div className="flex flex-1 gap-2">
+        <div className="flex flex-1 items-center gap-2">
           <ThemeToggle />
           <Link href="/">
             <h1 className="font-heading flex-1 text-3xl">Mintun</h1>

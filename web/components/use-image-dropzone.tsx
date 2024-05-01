@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import filetypeinfo from 'magic-bytes.js';
-import { DropEvent, DropzoneInputProps, DropzoneRootProps, FileRejection, useDropzone } from 'react-dropzone';
+import { DropzoneInputProps, DropzoneRootProps, FileRejection, useDropzone } from 'react-dropzone';
 
 import { ImageDetail } from '@/lib/image';
 
 const MAX_IMAGE_DROP_FILE_SIZE = 1024 * 1024 * 10; // 10 MB
 
 export type ImageDropzoneProps = {
-  file: File | null;
+  data: Blob | string;
   error: string;
   mime: string;
+  name: string;
   ext: string;
   width: number;
   height: number;
@@ -23,8 +24,9 @@ export type ImageDropzoneProps = {
 // Make the general useDropzone specific to handling single file images with some extra steps to
 // grab out the mime info and dimensions of the image.
 export function useImageDropzone(preselectedImage?: ImageDetail): ImageDropzoneProps {
-  const [file, setFile] = useState<File | null>(preselectedImage?.file ?? null);
+  const [data, setData] = useState<Blob | string>(preselectedImage?.data ?? '');
   const [error, setError] = useState('');
+  const [name, setName] = useState(preselectedImage?.name ?? '');
   const [mime, setMime] = useState(preselectedImage?.mime ?? '');
   const [ext, setExt] = useState(preselectedImage?.ext ?? '');
   const [width, setWidth] = useState(preselectedImage?.width ?? 0);
@@ -35,15 +37,16 @@ export function useImageDropzone(preselectedImage?: ImageDetail): ImageDropzoneP
   const [isReady, setReady] = useState(false);
 
   useEffect(() => {
-    if (mimeDone && dimDone && file) {
+    if (mimeDone && dimDone && data) {
       setReady(true);
     } else {
       setReady(false);
     }
-  }, [setReady, mimeDone, dimDone, file]);
+  }, [setReady, mimeDone, dimDone, data]);
 
   const reset = useCallback(() => {
-    setFile(null);
+    setData('');
+    setName('');
     setError('');
     setMime('');
     setExt('');
@@ -59,10 +62,10 @@ export function useImageDropzone(preselectedImage?: ImageDetail): ImageDropzoneP
     setMimeDone(false);
     setDimDone(false);
     setReady(false);
-  }, [setFile, setError, setMime, setExt, setWidth, setHeight, setPreview, setMimeDone, setDimDone, setReady]);
+  }, [setData, setError, setMime, setExt, setWidth, setHeight, setPreview, setMimeDone, setDimDone, setReady]);
 
   const onDropRejected = useCallback(
-    (fileRejections: FileRejection[], event: DropEvent) => {
+    (fileRejections: FileRejection[]) => {
       reset();
       const rejection = fileRejections[0];
       setError(rejection.errors[0].message);
@@ -75,7 +78,8 @@ export function useImageDropzone(preselectedImage?: ImageDetail): ImageDropzoneP
       reset();
       const file = files[0];
 
-      setFile(file);
+      setData(file);
+      setName(file.name.replace(/\.[^/.]+$/, ''));
 
       file.arrayBuffer().then((buffer) => {
         let foundExt = false;
@@ -127,7 +131,7 @@ export function useImageDropzone(preselectedImage?: ImageDetail): ImageDropzoneP
         return preview;
       });
     },
-    [reset, setFile, setMime, setExt, setError, setPreview, setWidth, setHeight, setMimeDone, setDimDone]
+    [reset, setData, setMime, setExt, setError, setPreview, setWidth, setHeight, setMimeDone, setDimDone]
   );
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -142,7 +146,8 @@ export function useImageDropzone(preselectedImage?: ImageDetail): ImageDropzoneP
   });
 
   return {
-    file,
+    data,
+    name,
     mime,
     ext,
     error,

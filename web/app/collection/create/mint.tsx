@@ -1,12 +1,12 @@
 'use client';
 
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { DialogDescription } from '@radix-ui/react-dialog';
-import { toast } from 'sonner';
 import { useInterval, useMediaQuery } from 'usehooks-ts';
 
 import { timeout } from '@/lib/utils';
-import { isWalletInternalApiError, useWallet } from '@/lib/wallet';
+import { notifyError, useWallet } from '@/lib/wallet';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -41,7 +41,7 @@ export default function Mint({ allowOpen }: MintProps) {
       </div>
 
       <CardDescription>
-        Fill out as much or as little as you like about your colleciton in the tabs below. When you feel you have enough
+        Fill out as much or as little as you like about your collection in the tabs below. When you feel you have enough
         information filled out press ready to mint.
       </CardDescription>
     </Card>
@@ -51,6 +51,7 @@ export default function Mint({ allowOpen }: MintProps) {
 function MintDialogButton({ allowOpen }: MintProps) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<MintStatus>('ready');
+
   const isDesktop = useMediaQuery('(min-width: 768px)', {
     defaultValue: true,
     initializeWithValue: false,
@@ -58,9 +59,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
 
   const handleOpen = useCallback(
     async (open: boolean) => {
-      if (!open) {
-        setOpen(open);
-      } else if (await allowOpen()) {
+      if (await allowOpen()) {
         setOpen(open);
       }
     },
@@ -87,7 +86,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
     }
   }, [status]);
 
-  const closeDisabled = useMemo(() => status !== 'ready' && status !== 'complete', [status]);
+  const closeDisabled = useMemo(() => status !== 'ready', [status]);
 
   const handleClose = useCallback(
     (e: Event) => {
@@ -102,20 +101,17 @@ function MintDialogButton({ allowOpen }: MintProps) {
     return (
       <Dialog open={open} onOpenChange={handleOpen}>
         <DialogTrigger asChild>
-          <Button>{mintButtonLabel}</Button>
+          <Button onClick={allowOpen}>{mintButtonLabel}</Button>
         </DialogTrigger>
         <DialogContent
-          data-state="disabled"
           className="sm:max-w-[425px]"
           onInteractOutside={handleClose}
           onEscapeKeyDown={handleClose}
-          hideCloseIcon={status !== 'ready' && status !== 'complete'}
+          hideCloseIcon={closeDisabled}
         >
           <DialogHeader>
             <DialogTitle>{mintTitle}</DialogTitle>
-            <DialogDescription className="font-heading text-muted-foreground text-sm">
-              {mintDescription}
-            </DialogDescription>
+            <DialogDescription className="text-muted-foreground text-sm">{mintDescription}</DialogDescription>
           </DialogHeader>
           <ReviewAccordion />
           <MintButton setStatus={setStatus} status={status} />
@@ -125,16 +121,14 @@ function MintDialogButton({ allowOpen }: MintProps) {
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={handleOpen}>
       <DrawerTrigger asChild>
         <Button>{mintButtonLabel}</Button>
       </DrawerTrigger>
       <DrawerContent onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
         <DrawerHeader className="text-left">
           <DrawerTitle>{mintTitle}</DrawerTitle>
-          <DrawerDescription className="font-heading text-muted-foreground text-sm">
-            {mintDescription}
-          </DrawerDescription>
+          <DrawerDescription className="text-muted-foreground text-sm">{mintDescription}</DrawerDescription>
         </DrawerHeader>
         <div className="p-4">
           <ReviewAccordion />
@@ -143,7 +137,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
         <DrawerFooter className="pt-2">
           <MintButton setStatus={setStatus} status={status} />
           <DrawerClose asChild disabled={closeDisabled}>
-            <Button variant="outline">Cancel</Button>
+            {status !== 'complete' ? <Button variant="outline">Cancel</Button> : undefined}
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
@@ -157,11 +151,18 @@ type MintStateProps = {
 };
 
 function MintButton({ status, setStatus }: MintStateProps) {
+  const router = useRouter();
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('Mint');
+  const [policyId, setPolicyId] = useState('');
   const { prepareTx, uploadProgress } = useGenesisMint();
 
-  const { lucid } = useWallet();
+  const { lucid, network } = useWallet();
+
+  const handleManage = useCallback(
+    () => router.push(`/collection/manage/${network.toLowerCase()}/${policyId}`),
+    [router, policyId, network]
+  );
 
   const isUploading = useMemo(() => uploadProgress < 100 && status === 'preparing', [uploadProgress, status]);
 
@@ -188,9 +189,10 @@ function MintButton({ status, setStatus }: MintStateProps) {
   const handleMint = useCallback(async () => {
     try {
       setStatus('preparing');
-      const tx = await prepareTx();
+      const { tx, policyId } = await prepareTx();
       const completed = await tx.complete();
 
+      setPolicyId(policyId);
       setStatus('signing');
       const signed = await timeout(
         completed.sign().complete(),
@@ -216,15 +218,7 @@ function MintButton({ status, setStatus }: MintStateProps) {
 
       setStatus('complete');
     } catch (e: unknown) {
-      if (isWalletInternalApiError(e)) {
-        toast.error(e.info);
-      } else if (e instanceof Error) {
-        toast.error(e.message);
-      } else if (typeof e === 'string') {
-        toast.error(e);
-      } else {
-        toast.error('An unknown error occurred while creating the mint transaction');
-      }
+      notifyError(e);
       setStatus('ready');
     }
   }, [prepareTx, lucid, setStatus]);
@@ -253,7 +247,7 @@ function MintButton({ status, setStatus }: MintStateProps) {
   }
 
   if (status === 'complete') {
-    return <Button>Manage Collection</Button>;
+    return <Button onClick={handleManage}>Manage Collection</Button>;
   }
 
   return (

@@ -60,7 +60,10 @@ fn validate_spend(
 
   // Ensure that the state tokens validity range constraint is met, if that constraint exists.
   let mint_window_valid =
-    common.time_contains(transaction.validity_range, input_data.mint_window)
+    common.time_contains(
+      transaction.validity_range,
+      input_data.info.mint_window,
+    )
 
   // If the contract is locked you can no longer spend the reference token (which means you can't update the datum)
   let contract_is_not_locked = input_data.force_locked == False
@@ -95,14 +98,14 @@ fn validate_lock(
   output_data: CollectionState,
 ) {
   let nothing_minted = mint |> value.from_minted_value() |> value.is_zero()
-  let immutable_unchanged = validate_immutable_parts(input_data, output_data)
+  let info_unchanged = input_data.info == output_data.info
   let lock_enabled = output_data.force_locked == True
-  let count_unchanged = output_data.current_nfts == input_data.current_nfts
+  let count_unchanged = output_data.nfts == input_data.nfts
   let sequence_unchanged = output_data.next_sequence == input_data.next_sequence
 
   and {
     nothing_minted?,
-    immutable_unchanged?,
+    info_unchanged?,
     lock_enabled?,
     count_unchanged?,
     sequence_unchanged?,
@@ -121,7 +124,7 @@ fn validate_mint(
   trace string.concat(@"Mint count is ", string.from_int(mints))
   trace string.concat(@"Burn count is ", string.from_int(burns))
 
-  let current_nfts = input_data.current_nfts + mints - burns
+  let current_nfts = input_data.nfts + mints - burns
   let next_sequence = input_data.next_sequence + mints
 
   // Make sure the mints will not cause the sequence number to overflow its max value
@@ -129,20 +132,19 @@ fn validate_mint(
   expect sequence_has_not_overflowed?
   // Check that the output count hasn't exceeded max token count
   expect
-    when input_data.max_nfts is {
+    when input_data.info.max_nfts is {
       Some(max_nfts) -> current_nfts <= max_nfts
       None -> True
     }
   // Give each validation a name for easier tracing
-  let immutable_unchanged = validate_immutable_parts(input_data, output_data)
-
+  let info_unchanged = input_data.info == output_data.info
   let lock_unchanged = output_data.force_locked == input_data.force_locked
-  let updated_nft_count_correct = output_data.current_nfts == current_nfts
+  let updated_nft_count_correct = output_data.nfts == current_nfts
   let updated_sequence_correct = output_data.next_sequence == next_sequence
 
   // Validate the output state has only mutated the token count and updated the next sequence
   and {
-    immutable_unchanged?,
+    info_unchanged?,
     lock_unchanged?,
     updated_nft_count_correct?,
     updated_sequence_correct?,
@@ -176,22 +178,4 @@ fn count_mints(mint: MintedValue, mint_policy_id: PolicyId) {
       }
     },
   )
-}
-
-/// Make certain the parts of the state datum that should never change remain unchanged in new state
-fn validate_immutable_parts(prev: CollectionState, next: CollectionState) {
-  // Note: Might be less work to replace next mutable fields with the prev value and then check equality.
-  // Give each validation a name for easier tracing
-  let group_unchanged = prev.group == next.group
-  let mint_window_unchanged = prev.mint_window == next.mint_window
-  let max_nfts_unchanged = prev.max_nfts == next.max_nfts
-  let reference_address_unchanged =
-    prev.reference_address == next.reference_address
-  // Validate the output state has only mutated the token count and updated the next sequence
-  and {
-    group_unchanged?,
-    mint_window_unchanged?,
-    max_nfts_unchanged?,
-    reference_address_unchanged?,
-  }
 }

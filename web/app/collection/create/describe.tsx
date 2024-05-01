@@ -59,8 +59,18 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                     <Input placeholder="Required" {...field} />
                   </FormControl>
                   <FormDescription>
-                    The primary name associated with the collection. If this is a small collection of many collections
-                    sometimes the artist or project name can be a good choice.
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <span className="font-bold">Primary name </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-secondary text-foreground shadow-foreground/10 shadow-md">
+                        <div className="max-w-72 p-2">
+                          The name could be the theme of your collection or if your collection will not have a theme
+                          then you can just use the artist name or purpose.
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>{' '}
+                    associated with the collection
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -75,10 +85,7 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                   <FormControl>
                     <Input placeholder="Optional" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    The name of the artist that created the collection. Feel free to leave this blank if you don&apos;t
-                    want to associate an artist with the collection for any reason.
-                  </FormDescription>
+                  <FormDescription>Name of the artist that created the collection</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -88,13 +95,27 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
               name="project"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Name</FormLabel>
+                  <FormLabel>Brand Name</FormLabel>
                   <FormControl>
                     <Input placeholder="Optional" {...field} />
                   </FormControl>
+                  <FormDescription>Brand name is used to group collections under a common name</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Optional" {...field} />
+                  </FormControl>
                   <FormDescription>
-                    A project can be the team or group that made the collection. It usually spans more than one
-                    collection or has some evolution over time.
+                    A brief description might include the purpose, backstory, or utility of the collection
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -112,28 +133,7 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                     </FormControl>
                     <FormLabel>Not safe for work</FormLabel>
                   </div>
-                  <FormDescription>
-                    This optional flag lets markets and tools know some assets in your collection may not be safe for
-                    viewing at work.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem className="">
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Optional" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    A brief description of the collection might include the collection purpose, backstory, or utility of
-                    the collection.
-                  </FormDescription>
+                  <FormDescription>Used for informing markets and tools about your content</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -148,12 +148,12 @@ const DescribeContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
 function DescribeCollectionHeader() {
   return (
     <CardHeader>
-      <CardTitle className="font-heading pb-2">Describe your collection</CardTitle>
-      <CardDescription className="font-heading">
+      <CardTitle className="pb-2">Describe your collection</CardTitle>
+      <CardDescription>
         A collection is one or more NFTs (non-fungible tokens) minted under the same{' '}
         <Tooltip>
           <TooltipTrigger>
-            <span className="font-bold">policy id</span>
+            <span className="font-bold">policy id.</span>
           </TooltipTrigger>
           <TooltipContent className="bg-secondary text-foreground shadow-foreground/10 shadow-md">
             <div className="max-w-72 p-2">
@@ -162,8 +162,6 @@ function DescribeCollectionHeader() {
             </div>
           </TooltipContent>
         </Tooltip>
-        . Below you can fill out some basic information that markets and other tools can use for displaying information
-        about your collection.
       </CardDescription>
     </CardHeader>
   );

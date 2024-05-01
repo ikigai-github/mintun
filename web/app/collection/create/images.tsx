@@ -15,13 +15,11 @@ export default function Images() {
       <Tabs defaultValue="default">
         <CardHeader>
           <div className="justify-between sm:flex">
-            <CardTitle className="font-heading pb-2">Add market images</CardTitle>
+            <CardTitle className="pb-2">Add market images</CardTitle>
           </div>
-          <CardDescription className="font-heading">
-            When markets display your collection they often use additional images to personalize the collection page.
-            This includes things like brand, banner, and thumbnail images. You can add those types of images in the area
-            below and preview the banners at different potential resolutions. The desktop resolution is also the default
-            image if you set a different image for mobile and tablet it will override the default at that resolution.
+          <CardDescription>
+            Add images below that you would like markets to use when displaying your collection. Use the tabs below to
+            override the defaults as needed.
           </CardDescription>
         </CardHeader>
 
@@ -102,7 +100,7 @@ function DesktopImageZone() {
           }
         >
           <div className="ml-64 mr-4 grid h-full grid-cols-1 grid-rows-1 items-center">
-            <div className="col-start-1 row-start-1 w-fit rounded-md p-2 backdrop-blur-md">
+            <div className="col-start-1 row-start-1 w-fit rounded-xl p-2 backdrop-blur-md">
               <div className="text-shadow text-3xl font-bold">{describe.collection}</div>
               <div className="text-shadow text-xl">{describe.project}</div>
             </div>
@@ -145,7 +143,7 @@ function TabletImageZone() {
   );
 
   return (
-    <div className="min-w-[768px] max-w-[1024px] p-4">
+    <div className="min-w-[768px] max-w-screen-lg p-4">
       <div className="grid-span-1 grid grid-cols-1">
         <ImageDropzone
           shapeClassName="w-full h-48 rounded-t-lg"
@@ -164,7 +162,7 @@ function TabletImageZone() {
           }
         >
           <div className="ml-64 mr-4 grid h-full grid-cols-1 grid-rows-1 items-center">
-            <div className="col-start-1 row-start-1 w-fit rounded-md p-2 backdrop-blur-md">
+            <div className="col-start-1 row-start-1 w-fit rounded-xl p-2 backdrop-blur-md">
               <div className="text-shadow text-3xl font-bold">{describe.collection}</div>
               <div className="text-shadow text-xl">{describe.project}</div>
             </div>
@@ -280,7 +278,7 @@ function ThumbnailImageZone() {
         }
       />
       <CardContent className="flex h-36 flex-col p-3">
-        <div className="font-heading text-lg font-bold">{describe.collection}</div>
+        <div className="text-lg font-bold">{describe.collection}</div>
         <div className="font-thin italic">{describe.project}</div>
         <div className="flex-1 content-end self-end">{describe.artist}</div>
       </CardContent>

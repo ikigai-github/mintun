@@ -1,3 +1,5 @@
+import { toast } from 'sonner';
+
 import { networkName, NetworkType } from './util';
 
 const WALLET_API_ERROR_TYPE = {
@@ -153,6 +155,23 @@ export function isWalletInternalApiError(error: unknown): error is WalletInterna
   }
 
   return false;
+}
+
+export function getErrorMessage(error: unknown) {
+  if (isWalletInternalApiError(error)) {
+    return error.info;
+  } else if (error instanceof Error) {
+    return error.message;
+  } else if (typeof error === 'string') {
+    return error;
+  } else {
+    return 'An unknown error occurred';
+  }
+}
+
+export function notifyError(error: unknown) {
+  console.log(error);
+  toast.error(getErrorMessage(error));
 }
 
 function walletApiErrorCode(code: number | undefined) {

@@ -3,6 +3,7 @@ import { fromText, toText, type Lucid, type UTxO } from 'lucid-cardano';
 import { createReferenceData } from './cip-68';
 import { Data } from './data';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
+import { ScriptCache } from './script';
 import { asChunkedHex, toJoinedText } from './utils';
 
 /// On chain data schema for image purpose
@@ -40,6 +41,7 @@ export const CollectionInfoSchema = Data.Object({
   description: Data.Array(Data.Bytes()),
   images: Data.Array(CollectionImageSchema),
   links: Data.Map(Data.Bytes(), Data.Array(Data.Bytes())),
+  traits: Data.Array(Data.Bytes()),
   extra: Data.Map(Data.Bytes(), Data.Any()),
 });
 
@@ -70,6 +72,7 @@ export type CollectionInfo = {
   nsfw: boolean;
   description?: string;
   images?: CollectionImage[];
+  traits?: string[];
   links?: Record<string, string>;
   extra?: Record<string, unknown>;
 };
@@ -113,7 +116,9 @@ export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoMetad
   const nsfw = info.nsfw ? true : false;
   const description = info.description ? asChunkedHex(info.description) : [];
   const images = info.images ? info.images.map(asChainCollectionImage) : [];
+  const traits = info.traits ? info.traits.map(fromText) : [];
   const links = new Map<string, string[]>();
+
   if (info.links) {
     for (const [key, value] of Object.entries(info.links)) {
       links.set(fromText(key), asChunkedHex(value));
@@ -130,6 +135,7 @@ export function asChainCollectionInfo(info: CollectionInfo): CollectionInfoMetad
     description,
     images,
     links,
+    traits,
     extra,
   };
 
@@ -144,6 +150,7 @@ export function toCollectionInfo(chainInfo: CollectionInfoMetadataType): Collect
   const nsfw = metadata.nsfw;
   const description = metadata.description.length ? toJoinedText(metadata.description) : undefined;
   const images = metadata.images.length ? metadata.images.map(toCollectionImage) : undefined;
+  const traits = metadata.traits.length ? metadata.traits.map(toText) : undefined;
 
   let links: Record<string, string> | undefined = undefined;
   if (metadata.links) {
@@ -171,6 +178,7 @@ export function toCollectionInfo(chainInfo: CollectionInfoMetadataType): Collect
     description,
     images,
     links,
+    traits,
     extra,
   };
 }
@@ -179,4 +187,15 @@ export function toCollectionInfo(chainInfo: CollectionInfoMetadataType): Collect
 export async function extractCollectionInfo(lucid: Lucid, utxo: UTxO) {
   const chainInfo = await lucid.datumOf(utxo, CollectionInfoMetadataShape);
   return toCollectionInfo(chainInfo);
+}
+
+export async function fetchCollectionInfo(cache: ScriptCache) {
+  const lucid = cache.lucid();
+  const unit = cache.unit().info;
+  const utxo = await lucid.utxoByUnit(unit);
+  if (utxo) {
+    return extractCollectionInfo(lucid, utxo);
+  } else {
+    return undefined;
+  }
 }

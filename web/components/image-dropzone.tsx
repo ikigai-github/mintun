@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 
@@ -38,23 +38,23 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
     },
     ref
   ) => {
-    const { preview, getRootProps, getInputProps, isReady, width, height, file, ext, mime, error, reset } =
+    const { preview, getRootProps, getInputProps, isReady, width, height, data, name, ext, mime, error, reset } =
       useImageDropzone(selectedImage);
 
     // Fire image ready anytime the component has fully loaded its image
     useEffect(() => {
-      if (isReady && file && onImageChange) {
-        console.log(`on Image Change: width: ${width} and height: ${height}`);
+      if (isReady && data && onImageChange) {
         onImageChange({
-          file,
+          data,
           preview,
+          name,
           ext,
           mime,
           width,
           height,
         });
       }
-    }, [file, ext, mime, width, height, isReady, onImageChange, preview]);
+    }, [data, preview, name, ext, mime, width, height, isReady, onImageChange]);
 
     // Display a toast whenever an error occurs
     useEffect(() => {
@@ -64,7 +64,7 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
     }, [error]);
 
     return (
-      <div className={cn(containerClassName, shapeClassName)} {...getRootProps()}>
+      <div className={cn('cursor-pointer', containerClassName, shapeClassName)} {...getRootProps()}>
         <input {...getInputProps()} />
         {preview ? (
           <div className="grid grid-cols-1 grid-rows-1">
@@ -92,11 +92,11 @@ const ImageDropzone = React.forwardRef<HTMLImageElement, React.HTMLAttributes<HT
                     }
                     reset();
                   }}
-                  variant="secondary"
+                  variant="ghost"
                   size="icon"
-                  className="m-1 hidden items-center justify-center group-hover:flex"
+                  className="m-2 hidden items-center justify-center rounded-full group-hover:flex"
                 >
-                  <Cross2Icon className="size-6" />
+                  <Cross2Icon className="size-4" />
                 </Button>
               </div>
             ) : undefined}

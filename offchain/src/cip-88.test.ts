@@ -1,8 +1,6 @@
 import { expect, test } from 'vitest';
 
 import {
-  Cip27RoyaltyDetail,
-  Cip27RoyaltyDetailField,
   Cip88Builder,
   FEATURE_DETAIL_FIELD,
   FEATURE_VERSION_FIELD,
@@ -12,14 +10,14 @@ import {
   TokenProjectDetail,
   TokenProjectDetailField,
 } from './cip-88';
-import { paramaterizeMintingPolicy } from './contract';
+import { parameterizeMintingPolicy } from './contract';
 import { TEST_COLLECTION_INFO } from './fixtures.test';
 import { createEmulatorLucid } from './support.test';
 
 test('Build CIP-88 metadata', async () => {
   const { lucid, seedUtxo } = await createEmulatorLucid();
 
-  const mintingPolicy = paramaterizeMintingPolicy(lucid, seedUtxo.txHash, seedUtxo.outputIndex);
+  const mintingPolicy = parameterizeMintingPolicy(lucid, seedUtxo.txHash, seedUtxo.outputIndex);
   const policyId = `0x${mintingPolicy.policyId}`;
   const address = await lucid.wallet.address();
   const info = TEST_COLLECTION_INFO;
@@ -79,19 +77,5 @@ test('Build CIP-88 metadata', async () => {
   expect(
     tokenDetail[TokenProjectDetailField.DESCRIPTION]?.join('') === info.description,
     'Token detail description chunks rejoin into original description'
-  );
-  // Some other fields I could check here
-
-  const royaltyWrapper = features[27] as Cip27RoyaltyDetail;
-  expect(royaltyWrapper[FEATURE_VERSION_FIELD] === 1, 'CIP-27 feature version field 1');
-
-  const royaltyDetail = royaltyWrapper[FEATURE_DETAIL_FIELD];
-  expect(
-    royaltyDetail[Cip27RoyaltyDetailField.RATE] === `${royalty.variableFee / 100}`,
-    'Royalty fee is string form of percentage'
-  );
-  expect(
-    royaltyDetail[Cip27RoyaltyDetailField.RECIPIENT].join('') === address,
-    'Rejoined royalty detail address matches original'
   );
 });

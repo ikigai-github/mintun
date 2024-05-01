@@ -3,6 +3,12 @@ import { expect } from 'vitest';
 
 import { extractCollectionInfo } from './collection-info';
 import { extractCollectionState } from './collection-state';
+import {
+  createMintingPolicyReference,
+  createStateValidatorReference,
+  fetchMintingPolicyReferenceUtxo,
+  fetchStateValidatorReferenceUtxo,
+} from './contract';
 import { MintunNft } from './nft';
 import { fetchInfoUtxo, fetchOwnerUtxo, fetchStateUtxo, ScriptCache } from './script';
 import { submit } from './utils';
@@ -47,6 +53,32 @@ export async function createEmulatorLucid() {
   };
 }
 
+export async function applyScriptRefTx(lucid: Lucid, cache: ScriptCache) {
+  const mintReferenceTx = await createMintingPolicyReference(lucid, cache);
+  const mintReferenceTxHash = await submit(mintReferenceTx);
+  await lucid.awaitTx(mintReferenceTxHash);
+
+  const stateReferenceTx = await createStateValidatorReference(lucid, cache);
+  const stateReferenceTxHash = await submit(stateReferenceTx);
+  await lucid.awaitTx(stateReferenceTxHash);
+
+  // Use cache utils to check to tokens were distributed as expected
+  const mintScriptReferenceUtxo = await fetchMintingPolicyReferenceUtxo(cache);
+  expect(mintScriptReferenceUtxo, 'Failed to create a minting policy script reference utxo');
+
+  const stateScriptReferenceUtxo = await fetchStateValidatorReferenceUtxo(cache);
+  expect(stateScriptReferenceUtxo, 'Failed to create a state validator script reference utxo');
+
+  // NOTE: Typescript won't detect that the vitest expect will terminate the
+  //       function early so we use ! to manually indicate that is the case
+  return {
+    mintReferenceTxHash,
+    stateReferenceTxHash,
+    mintScriptReferenceUtxo: mintScriptReferenceUtxo!,
+    stateScriptReferenceUtxo: stateScriptReferenceUtxo!,
+  };
+}
+
 export async function applyTx(lucid: Lucid, tx: Tx, cache: ScriptCache) {
   const txHash = await submit(tx);
   await lucid.awaitTx(txHash);
@@ -61,11 +93,12 @@ export async function applyTx(lucid: Lucid, tx: Tx, cache: ScriptCache) {
   const { utxo: ownerUtxo } = await fetchOwnerUtxo(cache);
   expect(ownerUtxo, 'Must have found the owner utxo');
 
+  // NOTE: Typescript won't detect that the vitest expect will terminate the
+  //       function early so we use ! to manually indicate that is the case
   const state = await extractCollectionState(lucid, stateUtxo!);
-
   const info = await extractCollectionInfo(lucid, infoUtxo!);
 
-  return { txHash, stateUtxo, ownerUtxo, infoUtxo, state, info };
+  return { txHash, stateUtxo: stateUtxo!, ownerUtxo: ownerUtxo!, infoUtxo: infoUtxo!, state, info };
 }
 
 let nftId = 0;
@@ -87,7 +120,7 @@ export function generateNft(): MintunNft {
         purpose: 'General',
       },
     ],
-    attributes: {
+    traits: {
       test: 1,
     },
     tags: ['generated', 'test'],

@@ -14,7 +14,7 @@ import { DataContract } from './schema';
 
 export default function useGenesisMint() {
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { contract, images, describe, social } = useCreateCollectionContext();
+  const { contract, images, describe, social, traits, royalties } = useCreateCollectionContext();
   const { lucid } = useWallet();
   const numImages = useMemo(() => countImages(images), [images]);
 
@@ -40,11 +40,12 @@ export default function useGenesisMint() {
       for (const [mode, values] of Object.entries(images)) {
         for (const [purpose, detail] of Object.entries(values)) {
           if (detail) {
-            const fileName =
-              mode === 'desktop'
+            const fileName = detail.name
+              ? `${detail.name}.${detail.ext}`
+              : mode === 'desktop'
                 ? `${purpose.toLowerCase()}.${detail.ext}`
                 : `${mode}/${purpose.toLowerCase()}.${detail.ext}`;
-            const file = new File([detail.file], fileName, { type: detail.mime });
+            const file = new File([detail.data], fileName, { type: detail.mime });
             files.push(file);
 
             uploaded.push({
@@ -90,23 +91,27 @@ export default function useGenesisMint() {
     const upload = uploadImages();
     const offchain = import('@ikigai-github/mintun-offchain');
     const [seed, uploaded, { GenesisTxBuilder }] = await Promise.all([find, upload, offchain]);
-    const tx = GenesisTxBuilder.create(lucid).seed(seed).useCip88(true);
+
+    console.log(seed);
+    const builder = GenesisTxBuilder.create(lucid).seed(seed).useCip88(true);
 
     if (contract.maxTokens) {
-      tx.maxNfts(contract.maxTokens);
+      builder.maxNfts(contract.maxTokens);
     }
 
     if (contract.window) {
       const fromMs = getTime(contract.window.from);
       const toMs = getTime(contract.window.to);
-      tx.mintWindow(fromMs, toMs);
+      builder.mintWindow(fromMs, toMs);
     }
 
     if (contract.contract === DataContract.Immutable) {
-      tx.useImmutableNftValidator(true);
+      builder.useImmutableNftValidator();
+    } else {
+      builder.usePermissiveNftValidator();
     }
 
-    tx.info({
+    builder.info({
       name: describe.collection,
       artist: describe.artist,
       project: describe.project,
@@ -114,14 +119,19 @@ export default function useGenesisMint() {
       description: describe.description,
       images: [...uploaded],
       links: { ...social },
+      traits: [...traits],
     });
 
-    // TODO: Add royalty here
+    for (const { address, percent, minFee, maxFee } of royalties) {
+      builder.royalty(address, Number(percent), minFee || undefined, maxFee || undefined);
+    }
 
-    const built = await tx.build();
+    const { tx, cache } = await builder.build();
 
-    return built.tx;
-  }, [lucid, contract, describe, social, findSeed, uploadImages]);
+    const policyId = cache.mint().policyId;
+
+    return { tx, policyId };
+  }, [lucid, contract, describe, social, traits, royalties, findSeed, uploadImages]);
 
   return {
     uploadProgress,

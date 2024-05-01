@@ -1,6 +1,5 @@
 import type { Address, Lucid, Script, UTxO } from 'lucid-cardano';
 
-import { addCip27RoyaltyToTransaction } from './cip-27';
 import { addCip88MetadataToTransaction, Cip88ExtraConfig } from './cip-88';
 import { addCip102RoyaltyToTransaction } from './cip-102';
 import { SEQUENCE_MAX_VALUE } from './collection';
@@ -19,12 +18,24 @@ import { checkPolicyId } from './utils';
 
 export class GenesisTxBuilder {
   #lucid: Lucid;
+  #cache?: ScriptCache;
   #seed?: UTxO;
   #info?: CollectionInfo;
-  #state: Partial<CollectionState> = {};
-  #useCip27 = false;
+  #state: CollectionState = {
+    info: {
+      seed: {
+        hash: '',
+        index: 0,
+      },
+      scriptReferencePolicyId: '',
+    },
+    locked: false,
+    nfts: 0,
+    nextSequence: 0,
+  };
   #useCip88 = false;
-  #useImmutableNftValidator = false;
+  #delegate = '';
+  #nftValidator: 'permissive' | 'immutable' | 'custom' = 'immutable';
   #royalties: Record<string, Royalty> = {};
   #royaltyValidatorAddress?: Address;
   #ownerAddress?: string;
@@ -35,12 +46,21 @@ export class GenesisTxBuilder {
 
   seed(seed: UTxO) {
     this.#seed = seed;
+    this.#state.info.seed = {
+      hash: seed.txHash,
+      index: seed.outputIndex,
+    };
+    return this;
+  }
+
+  cache(cache: ScriptCache) {
+    this.#cache = cache;
     return this;
   }
 
   group(policyId: string) {
     if (checkPolicyId(policyId)) {
-      this.#state.group = policyId;
+      this.#state.info.group = policyId;
       return this;
     }
 
@@ -49,7 +69,7 @@ export class GenesisTxBuilder {
 
   mintWindow(fromMs: number, toMs: number) {
     if (fromMs >= 0 && fromMs < toMs) {
-      this.#state.mintWindow = {
+      this.#state.info.mintWindow = {
         fromMs,
         toMs,
       };
@@ -61,7 +81,7 @@ export class GenesisTxBuilder {
 
   maxNfts(maxNfts: number) {
     if (maxNfts > 0 || maxNfts < SEQUENCE_MAX_VALUE) {
-      this.#state.maxNfts = maxNfts;
+      this.#state.info.maxNfts = maxNfts;
       return this;
     }
 
@@ -70,7 +90,8 @@ export class GenesisTxBuilder {
 
   nftValidatorAddress(address: string) {
     if (address.startsWith('addr')) {
-      this.#state.nftValidatorAddress = address;
+      this.#nftValidator = 'custom';
+      this.#state.info.nftValidatorAddress = address;
       return this;
     }
 
@@ -78,12 +99,25 @@ export class GenesisTxBuilder {
   }
 
   nftValidator(validator: Script) {
-    this.#state.nftValidatorAddress = this.#lucid.utils.validatorToAddress(validator);
+    this.#nftValidator = 'custom';
+    this.#state.info.nftValidatorAddress = this.#lucid.utils.validatorToAddress(validator);
     return this;
   }
 
-  useImmutableNftValidator(useImmutableNftValidator: boolean) {
-    this.#useImmutableNftValidator = useImmutableNftValidator;
+  useImmutableNftValidator() {
+    this.#nftValidator = 'immutable';
+    this.#state.info.nftValidatorAddress = '';
+    return this;
+  }
+
+  usePermissiveNftValidator() {
+    this.#nftValidator = 'permissive';
+    this.#state.info.nftValidatorAddress = '';
+    return this;
+  }
+
+  allowDelegateToCreateScriptReferences(delegate: string) {
+    this.#delegate = delegate;
     return this;
   }
 
@@ -107,12 +141,7 @@ export class GenesisTxBuilder {
       return this;
     }
 
-    throw Error('Owner address bust be a bech32 encoded string');
-  }
-
-  state(state: Partial<CollectionState>) {
-    this.#state = state;
-    return this;
+    throw Error('Owner address must be a bech32 encoded string');
   }
 
   // Don't bother translating till build step
@@ -121,13 +150,7 @@ export class GenesisTxBuilder {
     return this;
   }
 
-  // When called the builder will include a null token and CIP-27 transaction metadata, if royalties are set
-  useCip27(useCip27: boolean) {
-    this.#useCip27 = useCip27;
-    return this;
-  }
-
-  // When called the builder will include CIP-88 data in transaction metadta
+  // When called the builder will include CIP-88 data in transaction metadata
   useCip88(useCip88: boolean) {
     this.#useCip88 = useCip88;
     return this;
@@ -175,7 +198,7 @@ export class GenesisTxBuilder {
     }
 
     // Create a script cache from seed utxo so that after build it can be reused if needed
-    const cache = ScriptCache.cold(this.#lucid, this.#seed);
+    const cache = this.#cache ? this.#cache : ScriptCache.cold(this.#lucid, this.#seed);
     const mintScript = cache.mint();
     const stateScript = cache.state();
     const infoScript = cache.immutableInfo();
@@ -204,16 +227,6 @@ export class GenesisTxBuilder {
     // Add royalties to minted assets, if they are included
     const royalties = Object.values(this.#royalties);
     if (royalties.length > 0) {
-      if (this.#useCip27) {
-        if (royalties.length > 1) {
-          throw new Error('Cannot use cip-27 royalty when there is more than one royalty recipient');
-        }
-        // TODO: Maybe send this to an always fail but at least if it goes to recipient it's burnable.
-        recipientAssets[mintScript.policyId] = 1n;
-
-        addCip27RoyaltyToTransaction(tx, mintScript.policyId, royalties[0], redeemer);
-      }
-
       const royaltyAddress = this.#royaltyValidatorAddress
         ? this.#royaltyValidatorAddress
         : await this.#lucid.wallet.address();
@@ -227,17 +240,21 @@ export class GenesisTxBuilder {
         cip102Royalties: royalties,
       };
 
-      if (this.#useCip27 && royalties.length === 1) {
-        config.cip27Royalty = royalties[0];
-      }
-
       addCip88MetadataToTransaction(this.#lucid, tx, mintScript.script, unit.owner, config);
     }
 
-    // If the validator address wasn't explicitly and the use immutable validator flag was then use
-    // that validator for the address
-    if (!this.#state.nftValidatorAddress && this.#useImmutableNftValidator) {
-      this.#state.nftValidatorAddress = cache.immutableNft().address;
+    // Set the address to send the reference half of the token to
+    if (this.#nftValidator === 'immutable') {
+      this.#state.info.nftValidatorAddress = cache.immutableNft().address;
+    } else if (this.#nftValidator === 'permissive') {
+      this.#state.info.nftValidatorAddress = cache.permissiveNft().address;
+    }
+
+    // Set the minting policy that create tokens that hold script references
+    if (this.#delegate) {
+      this.#state.info.scriptReferencePolicyId = cache.delegateMint(this.#delegate).policyId;
+    } else {
+      this.#state.info.scriptReferencePolicyId = cache.derivativeMint().policyId;
     }
 
     // Build out the gensis state and info datum

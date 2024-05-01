@@ -13,13 +13,13 @@ test('Minimal minting policy genesis transaction', async () => {
 
   // Check the state is on the datum as expected
   const { state, info } = await applyTx(lucid, tx, cache);
-  expect(state.group).toBeUndefined();
-  expect(state.mintWindow).toBeUndefined();
-  expect(state.maxNfts).toBeUndefined();
-  expect(state.currentNfts).toEqual(0);
+  expect(state.info.group).toBeUndefined();
+  expect(state.info.mintWindow).toBeUndefined();
+  expect(state.info.maxNfts).toBeUndefined();
+  expect(state.nfts).toEqual(0);
   expect(state.locked).toEqual(false);
   expect(state.nextSequence).toEqual(0);
-  expect(state.nftValidatorAddress).toBeUndefined();
+  expect(state.info.nftValidatorAddress).toEqual(cache.immutableNft().address);
   expect(info.name).toEqual('No Constraints');
 });
 
@@ -35,11 +35,10 @@ test('All configuration genesis transaction', async () => {
     .group(groupPolicyId)
     .maxNfts(1)
     .mintWindow(0, endMs)
-    .useImmutableNftValidator(true)
+    .useImmutableNftValidator()
     .royaltyValidatorAddress(royaltyTokenAddress)
     .ownerAddress(ownerAddress)
     .info(TEST_COLLECTION_INFO)
-    .useCip27(true)
     .useCip88(true)
     .royalty(accounts[0].address, 4.3)
     .build();
@@ -50,8 +49,8 @@ test('All configuration genesis transaction', async () => {
   expect(info.artist === TEST_COLLECTION_INFO.artist);
   expect(info.description === TEST_COLLECTION_INFO.description);
   expect(info.images?.[0].src === TEST_COLLECTION_INFO.images?.[0].src);
-  expect(state.mintWindow && state.mintWindow.fromMs === 0 && state.mintWindow.toMs === endMs);
-  expect(state.maxNfts === 1);
+  expect(state.info.mintWindow && state.info.mintWindow.fromMs === 0 && state.info.mintWindow.toMs === endMs);
+  expect(state.info.maxNfts === 1);
 });
 
 test('Builder errors during build', async () => {

@@ -1,16 +1,20 @@
 /// Allow passing in as little or as much already computed data as possible
 /// This cache will be updated if a some part is missing. The only case where
 
-import { applyDoubleCborEncoding, type Credential, type Lucid, type Script } from 'lucid-cardano';
+import { applyDoubleCborEncoding, Lucid, UTxO, type Credential, type Script } from 'lucid-cardano';
 
 import contracts from '../contracts.json';
 import { toInfoUnit, toOwnerUnit } from './collection';
-import { toStateUnit } from './collection-state';
+import { extractCollectionState, toStateUnit } from './collection-state';
 import {
-  paramaterizeImmutableInfoValidator,
-  paramaterizeImmutableNftValidator,
-  paramaterizeMintingPolicy,
-  paramaterizeStateValidator,
+  parameterizeDelegativeMintingPolicy,
+  parameterizeDerivativeMintingPolicy,
+  parameterizeImmutableInfoValidator,
+  parameterizeImmutableNftValidator,
+  parameterizeMintingPolicy,
+  parameterizePermissiveNftValidator,
+  parameterizeSpendLockValidator,
+  parameterizeStateValidator,
 } from './contract';
 import { findUtxo, TxReference } from './utils';
 
@@ -75,6 +79,11 @@ export class ScriptCache {
   #state?: ScriptInfo;
   #immutableInfo?: ScriptInfo;
   #immutableNft?: ScriptInfo;
+  #permissiveNft?: ScriptInfo;
+  #spendLock?: ScriptInfo;
+  #derivativeMint?: ScriptInfo;
+  #delegate: string = '';
+  #delegateMint?: ScriptInfo;
   #unit?: ManageUnitLookup;
 
   private constructor(lucid: Lucid, seed: TxReference) {
@@ -95,6 +104,32 @@ export class ScriptCache {
     return cache;
   }
 
+  // Utility for when you already know the minting policy id
+  static async fromMintPolicyId(lucid: Lucid, policyId: string) {
+    const stateUtxo = await lucid.utxoByUnit(toStateUnit(policyId));
+
+    // TODO: If contract code has changed the policy that we use here won't match
+    //       the constructed script cache.  Need to add versioning to the contract.json and
+    //       write that version as the 0 of the cbor so it is always readable.  That way
+    //       we can reproduce the correct script.  Ideally contract won't change too often
+    //       but need a way to handle it.  It would suck though to bloat the library with every
+    //       version of the contract so instead would need to upload contract versions to like IPFS
+    //       and fetch them on library init or something gross like that.
+    return ScriptCache.fromStateUtxo(lucid, stateUtxo);
+  }
+
+  // Utility for when you already have a state utxo
+  static async fromStateUtxo(lucid: Lucid, stateUtxo: UTxO) {
+    const state = await extractCollectionState(lucid, stateUtxo);
+
+    const cache = ScriptCache.cold(lucid, {
+      txHash: state.info.seed.hash,
+      outputIndex: state.info.seed.index,
+    });
+
+    return { state, cache };
+  }
+
   static copy(lucid: Lucid, cache: ScriptCache) {
     const copy = new ScriptCache(lucid, cache.#seed);
     copy.#mint = cache.#mint;
@@ -111,16 +146,25 @@ export class ScriptCache {
   mint() {
     if (!this.#mint) {
       const { txHash, outputIndex } = this.#seed;
-      this.#mint = paramaterizeMintingPolicy(this.#lucid, txHash, outputIndex);
+      this.#mint = parameterizeMintingPolicy(this.#lucid, txHash, outputIndex);
     }
 
     return this.#mint;
   }
 
+  spendLock() {
+    if (!this.#spendLock) {
+      const mint = this.mint();
+      this.#spendLock = parameterizeSpendLockValidator(this.#lucid, mint.policyId);
+    }
+
+    return this.#spendLock;
+  }
+
   state() {
     if (!this.#state) {
       const mint = this.mint();
-      this.#state = paramaterizeStateValidator(this.#lucid, mint.policyId);
+      this.#state = parameterizeStateValidator(this.#lucid, mint.policyId);
     }
 
     return this.#state;
@@ -130,7 +174,7 @@ export class ScriptCache {
   immutableInfo() {
     if (!this.#immutableInfo) {
       const mint = this.mint();
-      this.#immutableInfo = paramaterizeImmutableInfoValidator(this.#lucid, mint.policyId);
+      this.#immutableInfo = parameterizeImmutableInfoValidator(this.#lucid, mint.policyId);
     }
 
     return this.#immutableInfo;
@@ -139,10 +183,38 @@ export class ScriptCache {
   immutableNft() {
     if (!this.#immutableNft) {
       const mint = this.mint();
-      this.#immutableNft = paramaterizeImmutableNftValidator(this.#lucid, mint.policyId);
+      this.#immutableNft = parameterizeImmutableNftValidator(this.#lucid, mint.policyId);
     }
 
     return this.#immutableNft;
+  }
+
+  permissiveNft() {
+    if (!this.#permissiveNft) {
+      const mint = this.mint();
+      this.#permissiveNft = parameterizePermissiveNftValidator(this.#lucid, mint.policyId);
+    }
+
+    return this.#permissiveNft;
+  }
+
+  derivativeMint() {
+    if (!this.#derivativeMint) {
+      const mint = this.mint();
+      this.#derivativeMint = parameterizeDerivativeMintingPolicy(this.#lucid, mint.policyId);
+    }
+
+    return this.#derivativeMint;
+  }
+
+  delegateMint(delegate: string) {
+    if (!this.#delegateMint || this.#delegate !== delegate) {
+      const mint = this.mint();
+      this.#delegate = delegate;
+      this.#delegateMint = parameterizeDelegativeMintingPolicy(this.#lucid, mint.policyId, delegate);
+    }
+
+    return this.#delegateMint;
   }
 
   unit() {
@@ -159,7 +231,7 @@ export class ScriptCache {
   }
 }
 
-async function fetchUtxo(lucid: Lucid, address: string, unit: string) {
+export async function fetchUtxo(lucid: Lucid, address: string, unit: string) {
   const utxos = await lucid.utxosAt(address);
   const utxo = utxos.find((utxo) => utxo.assets[unit]);
   return utxo;
