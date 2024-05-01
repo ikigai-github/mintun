@@ -85,3 +85,26 @@ export function stringifyReplacer(_: unknown, value: unknown) {
 
   return value;
 }
+
+function isRecord(record: unknown): record is Record<string, unknown> | unknown[] {
+  return typeof record === 'object' || Array.isArray(record);
+}
+
+export function removeEmpty(record: Record<string, unknown> | unknown[]) {
+  if (Array.isArray(record)) {
+    record.forEach((item) => {
+      if (isRecord(item)) {
+        removeEmpty(item);
+      }
+    });
+  } else {
+    for (const key in record) {
+      const value = record[key];
+      if (value === null || value === undefined) {
+        delete record[key];
+      } else if (isRecord(value)) {
+        removeEmpty(value);
+      }
+    }
+  }
+}

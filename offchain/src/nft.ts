@@ -12,7 +12,7 @@ import { COLLECTION_TOKEN_PURPOSE, toNftReferenceAssetName, toNftUserAssetName, 
 import { TxMetadataPrimitive } from './common';
 import { Data } from './data';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
-import { chunk } from './utils';
+import { chunk, removeEmpty } from './utils';
 
 // Expands on CIP-25/68 File with dimension and purpose fields
 type MintunFile = {
@@ -137,6 +137,9 @@ function asChainNftData(nft: MintunNft) {
   const description = nft.description ? chunk(nft.description) : [];
   const files = nft.files ? nft.files.map((file) => ({ ...file, src: chunk(file.src) })) : [];
   const metadata = { ...nft, description, files };
+
+  // Data.fromJson chokes on null/undefined so remove the empty keys
+  removeEmpty(metadata);
   return Data.castFrom<NftMetadataType>(Data.fromJson(metadata), NftMetadataShape);
 }
 
@@ -156,7 +159,7 @@ export async function fetchNftReferenceUtxos(lucid: Lucid, policyId: string, add
 export async function toNftData(lucid: Lucid, utxo: UTxO): Promise<MintunNft> {
   const { metadata } = await lucid.datumOf(utxo, NftMetadataWrappedShape);
   const nft = Data.toJson(metadata) as MintunChainNft;
-  const description = nft.description ? nft.description.join('') : undefined;
+  const description = Array.isArray(nft.description) ? nft.description.join('') : undefined;
   const files = nft.files ? nft.files.map((file) => ({ ...file, src: file.src.join('') })) : [];
 
   return { ...nft, description, files };

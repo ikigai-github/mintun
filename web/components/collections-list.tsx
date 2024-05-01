@@ -2,59 +2,55 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CollectionInfo } from '@ikigai-github/mintun-offchain';
+import { Network } from 'lucid-cardano';
+import { Img } from 'react-image';
 
-import { getCollectionsInfo } from '@/lib/collection';
-import { getCollectionImageSrc } from '@/lib/image';
+import { CollectionInfoWithPolicy, getAllWalletCollections } from '@/lib/collection';
+import { getBrandImageUrl } from '@/lib/image';
 import { useWallet } from '@/lib/wallet';
 
-import { Card, CardContent, CardFooter } from './ui/card';
-
 type CollectionCardProps = {
-  name: string;
-  imageSrc: string;
+  info: CollectionInfoWithPolicy;
+  network: Network;
 };
 
-const CollectionCard = ({ name, imageSrc }: CollectionCardProps) => {
+const CollectionCard = ({ info, network }: CollectionCardProps) => {
+  const src = [
+    getBrandImageUrl(info) || '/collection-thumbnail-placeholder.webp',
+    '/collection-thumbnail-placeholder.webp',
+  ];
+  const name = info.name;
+
   return (
-    <Link href="/">
-      <Card>
-        <CardContent className="flex justify-center p-8">
-          <img
-            className="h-48 w-full object-cover object-center transition-transform duration-500 hover:scale-110"
-            src={imageSrc}
-            alt={name}
-            width={200}
-            height={200}
-          />
-        </CardContent>
-        <CardFooter>{name}</CardFooter>
-      </Card>
+    <Link href={`/collection/manage/${network}/${info.policyId}`}>
+      <div className="bg-accent duration-250 grid h-60 grid-cols-1 grid-rows-1 rounded-xl border transition-transform hover:scale-105">
+        <Img className="col-start-1 row-start-1 size-full rounded-xl object-cover" src={src} alt={name} />
+        <div className="bg-accent/30 text-primary-foreground dark:text-foreground font-heading col-start-1 row-start-1 m-2 self-end justify-self-center rounded-xl p-2 text-lg backdrop-blur-sm">
+          {name}
+        </div>
+      </div>
     </Link>
   );
 };
 
 export default function CollectionsList() {
-  const [collectionsInfo, setCollectionsInfo] = useState<CollectionInfo[]>([]);
-  const { lucid, isConnected } = useWallet();
+  const [infos, setInfos] = useState<CollectionInfoWithPolicy[]>([]);
+  const { lucid, isConnected, network } = useWallet();
 
   useEffect(() => {
-    if (isConnected && lucid) getCollectionsInfo(lucid).then((collectionsInfo) => setCollectionsInfo(collectionsInfo));
+    if (isConnected && lucid) getAllWalletCollections(lucid).then((infos) => setInfos(infos));
   }, [isConnected, lucid]);
 
-  return (
-    <>
-      <div className="mb-6 text-2xl font-bold">Manage Collections</div>
-      <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {/* could have some loading state so we can show a label if no collections here */}
-        {collectionsInfo.map((collection) => (
-          <CollectionCard
-            key={`collection-card-${collection.name}`}
-            name={collection.name}
-            imageSrc={getCollectionImageSrc(collection)}
-          />
-        ))}
-      </div>
-    </>
-  );
+  if (infos.length) {
+    return (
+      <>
+        <div className="mb-6 text-2xl font-bold">Manage Collections</div>
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {infos.map((info) => (
+            <CollectionCard info={info} key={`collection-card-${info.policyId}`} network={network} />
+          ))}
+        </div>
+      </>
+    );
+  }
 }

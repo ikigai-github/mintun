@@ -112,7 +112,6 @@ export async function updateProvider(lucid: Lucid, networkId: number, setters: W
         'https://cardano-mainnet.blockfrost.io/api/v0',
         process.env.NEXT_PUBLIC_BLOCKFROST_KEY_MAINNET
       );
-      console.log('Switching to main');
       await lucid.switchProvider(blockfrost, 'Mainnet');
       setters.setNetwork('Mainnet');
     }
@@ -122,7 +121,6 @@ export async function updateProvider(lucid: Lucid, networkId: number, setters: W
         'https://cardano-preprod.blockfrost.io/api/v0',
         process.env.NEXT_PUBLIC_BLOCKFROST_KEY_PREPROD
       );
-      console.log('Switching to preprod');
       await lucid.switchProvider(blockfrost, 'Preprod');
       setters.setNetwork('Preprod');
     }

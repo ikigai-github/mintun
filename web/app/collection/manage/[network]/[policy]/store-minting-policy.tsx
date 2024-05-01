@@ -57,7 +57,7 @@ export default function StoreMintingPolicy() {
   useEffect(() => {
     if (status === 'complete') {
       setStatus('ready');
-      // TODO: Callc some function to refetch the reference UTXO so the button dissappears
+      // TODO: Call some function to refetch the reference UTXO so the button dissappears
     }
   }, [status]);
 

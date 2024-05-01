@@ -139,9 +139,14 @@ export class MintTxBuilder {
     }
 
     // Check if there is the royalty token because we need to add a royalty flag if there is one
-    const royaltyUnit = toRoyaltyUnit(this.#mintingPolicyId);
-    const royaltyFindResult = await this.#lucid.utxoByUnit(royaltyUnit);
-    const hasRoyalty = royaltyFindResult !== undefined;
+    let hasRoyalty;
+    try {
+      const royaltyUnit = toRoyaltyUnit(this.#mintingPolicyId);
+      const royaltyFindResult = await this.#lucid.utxoByUnit(royaltyUnit);
+      hasRoyalty = royaltyFindResult !== undefined;
+    } catch {
+      hasRoyalty = false;
+    }
 
     // Compute the updated state
     const currentState = this.#currentState
@@ -231,7 +236,7 @@ export class MintTxBuilder {
     // Also clear nft array to make this builder fully reusable
     this.#nfts = [];
 
-    return { tx, cache: this.#cache };
+    return { tx, cache: this.#cache, state: nextState };
   }
 
   static create(lucid: Lucid) {

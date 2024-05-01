@@ -28,6 +28,8 @@ export type ManageCollectionContextType = {
   error: string;
   policy: string;
   setPolicy: Dispatch<SetStateAction<string>>;
+  cache?: ScriptCache;
+  setCache: Dispatch<SetStateAction<ScriptCache | undefined>>;
   info?: CollectionInfo;
   setInfo: Dispatch<SetStateAction<CollectionInfo | undefined>>;
   state?: CollectionState;
@@ -48,6 +50,8 @@ const ManageCollectionContext = createContext<ManageCollectionContextType>({
   error: '',
   policy: '',
   setPolicy: () => undefined,
+  cache: undefined,
+  setCache: () => undefined,
   info: undefined,
   setInfo: () => undefined,
   state: undefined,
@@ -83,18 +87,9 @@ export function ManageCollectionContextProvider(props: ManageCollectionContextPr
       setInitializing(true);
       try {
         const offchain = await import('@ikigai-github/mintun-offchain');
-        console.log('Imported Offchain');
         const { cache, state } = await offchain.ScriptCache.fromMintPolicyId(lucid, policy);
-        console.log('Grabbed the state');
-        console.log(state);
         const mintReferenceUtxo = await offchain.fetchMintingPolicyReferenceUtxo(cache);
-        console.log('Grabbed a reference utxo');
-        console.log(`Policy ID: ${policy}`);
-        console.log(`Minting Policy ID: ${cache.mint().policyId}`);
-        console.log(`State Unit: ${cache.unit().state}`);
-        console.log(`Infos Unit: ${cache.unit().info}`);
         const info = await offchain.fetchCollectionInfo(cache);
-        console.log('Grabbed the collection info');
         setInfo(info);
         setState(state);
         setCache(cache);
@@ -118,8 +113,8 @@ export function ManageCollectionContextProvider(props: ManageCollectionContextPr
         const address = state.info.nftValidatorAddress;
         if (address) {
           const utxos = await offchain.fetchNftReferenceUtxos(lucid, cache.mint().policyId, address);
-          // TODO: Check if this is causing a lot of calls I think the datum should already be included so it shouldn't
           const minted = await Promise.all(utxos.map((utxo) => offchain.toNftData(lucid, utxo)));
+
           setNfts(minted);
         } else {
           // Technically can search by policy as a fallback but it is alot of calls so will just throw for now
@@ -150,6 +145,8 @@ export function ManageCollectionContextProvider(props: ManageCollectionContextPr
         error,
         policy,
         setPolicy,
+        cache,
+        setCache,
         info,
         setInfo,
         state,

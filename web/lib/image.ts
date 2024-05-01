@@ -95,10 +95,20 @@ export function getWebImageUrl(url: string | undefined) {
   }
 }
 
-export function getCollectionImageSrc(collection: CollectionInfo) {
+export function getBannerImageUrl(info?: CollectionInfo) {
   const image =
-    collection.images?.find((image) => image.purpose === 'Brand' || image.purpose === 'Thumbnail') ||
-    collection.images?.[0];
+    info?.images?.find((image) => image.purpose === 'Banner' || image.purpose === 'General') || info?.images?.[0];
 
-  return getWebImageUrl(image?.src);
+  if (image) {
+    return getWebImageUrl(image.src);
+  }
+}
+
+export function getBrandImageUrl(info?: CollectionInfo) {
+  const image =
+    info?.images?.find((image) => image.purpose === 'Brand' || image.purpose === 'Thumbnail') || info?.images?.[0];
+
+  if (image) {
+    return getWebImageUrl(image.src);
+  }
 }

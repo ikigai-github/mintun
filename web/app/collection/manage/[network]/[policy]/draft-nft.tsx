@@ -1,19 +1,16 @@
 'use client';
 
-import React, { ReactNode, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import { HobbyKnifeIcon, PlusIcon } from '@radix-ui/react-icons';
 import { useForm } from 'react-hook-form';
 import { uid as createUid } from 'uid';
-import { useMediaQuery } from 'usehooks-ts';
 
 import { DefaultImageDetail, getWebImageUrl, ImageDetail } from '@/lib/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerTrigger } from '@/components/ui/drawer';
 import { Form, FormControl, FormDescription, FormField, FormItem } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import DrawerDialog from '@/components/drawer-dialog';
@@ -297,7 +294,7 @@ function DraftNftCardForm({ uid, onSaving, onSaved }: { uid: string; onSaving: (
 export default function DraftNft(props: { uid?: string }) {
   const [status, setStatus] = useState<'closed' | 'view' | 'saving'>('closed');
 
-  const uid = useMemo(() => props.uid || createUid(), [props.uid]);
+  const uid = props.uid || createUid();
   const closeDisabled = useMemo(() => status === 'saving', [status]);
   const handleSaving = useCallback(() => setStatus('saving'), [setStatus]);
   const handleSaved = useCallback(() => setStatus('closed'), [setStatus]);
