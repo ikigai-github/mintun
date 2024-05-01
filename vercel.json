@@ -4,7 +4,7 @@
   "framework": "nextjs",
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm build:full",
+  "buildCommand": "pnpm build",
   "outputDirectory": "web/.next",
   "github": {
     "enabled": false

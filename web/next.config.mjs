@@ -13,11 +13,9 @@ const nextConfig = {
     return config;
   },
   images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: '**.w3s.link' },
-      { protocol: 'https', hostname: 'ipfs.grabbit.market' },
-    ],
+    remotePatterns: [{ protocol: 'https', hostname: '**.w3s.link' }],
   },
+  productionBrowserSourceMaps: true,
   pageExtensions: ['jsx', 'js', 'ts', 'tsx', 'mdx'],
 };
 
