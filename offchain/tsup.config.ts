@@ -11,6 +11,9 @@ export const tsup: Options = {
   bundle: isProduction,
   target: 'es2022',
   skipNodeModulesBundle: true,
+  sourcemap: true,
+  treeshake: true,
+  shims: true,
   entryPoints: ['src/index.ts'],
   entry: ['src/**/*.ts', '!src/**/*.test.ts'],
 };
