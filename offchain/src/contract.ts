@@ -1,7 +1,7 @@
-import { applyParamsToScript, fromText, Script, toLabel, UTxO, type Lucid } from 'lucid-cardano';
+import { applyParamsToScript, Data, fromText, Script, toLabel, UTxO, type Lucid } from 'lucid-cardano';
 
 import { OutputReferenceSchema, PolicyIdSchema, PubKeyHashSchema } from './aiken';
-import { Data } from './data';
+// import { Data } from './data';
 import { fetchOwnerUtxo, fetchUtxo, getScript, getScriptInfo, ScriptCache } from './script';
 
 export const ScriptName = {
