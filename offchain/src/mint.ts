@@ -1,4 +1,4 @@
-import { Data, type Address, type Assets, type Lucid, type UTxO } from 'lucid-cardano';
+import { type Address, type Assets, type Lucid, type UTxO } from 'lucid-cardano';
 
 import { NftMetadataWrappedShape } from './cip-68';
 import { toRoyaltyUnit } from './cip-102';
@@ -17,7 +17,7 @@ import {
   MintRedeemerShape,
   StateValidatorRedeemerShape,
 } from './contract';
-// import { Data } from './data';
+import { Data } from './data';
 import { AddressedNft, MintunNft, prepareAssets } from './nft';
 import { fetchStateUtxo, ScriptCache } from './script';
 import { TxReference } from './utils';

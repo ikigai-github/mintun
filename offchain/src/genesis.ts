@@ -1,4 +1,4 @@
-import { Data, type Address, type Lucid, type Script, type UTxO } from 'lucid-cardano';
+import { type Address, type Lucid, type Script, type UTxO } from 'lucid-cardano';
 
 import { addCip88MetadataToTransaction, Cip88ExtraConfig } from './cip-88';
 import { addCip102RoyaltyToTransaction } from './cip-102';
@@ -11,7 +11,7 @@ import {
   toCollectionState,
 } from './collection-state';
 import { MintRedeemerShape } from './contract';
-// import { Data } from './data';
+import { Data } from './data';
 import { Royalty } from './royalty';
 import { ScriptCache } from './script';
 import { checkPolicyId } from './utils';

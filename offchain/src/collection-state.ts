@@ -1,6 +1,6 @@
 /// On chain schema for the collection state data. For more details on the purpose of the
 
-import { Data, type Lucid, type UTxO } from 'lucid-cardano';
+import { type Lucid, type UTxO } from 'lucid-cardano';
 
 import {
   asChainAddress,
@@ -15,7 +15,7 @@ import {
 import { createReferenceData } from './cip-68';
 import { SEQUENCE_MAX_VALUE } from './collection';
 import { TimeWindow } from './common';
-// import { Data } from './data';
+import { Data } from './data';
 
 const CollectionStateInfoSchema = Data.Object({
   seed: OutputReferenceSchema,

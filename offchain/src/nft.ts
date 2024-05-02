@@ -1,4 +1,4 @@
-import { Data, fromText, Lucid, toLabel, UTxO, type Address, type Assets } from 'lucid-cardano';
+import { fromText, Lucid, toLabel, UTxO, type Address, type Assets } from 'lucid-cardano';
 
 import {
   createReferenceData,
@@ -10,7 +10,7 @@ import {
 } from './cip-68';
 import { COLLECTION_TOKEN_PURPOSE, toNftReferenceAssetName, toNftUserAssetName, toPurposeHex } from './collection';
 import { TxMetadataPrimitive } from './common';
-// import { Data } from './data';
+import { Data } from './data';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
 import { chunk, removeEmpty } from './utils';
 
