@@ -4,12 +4,7 @@
  *  I think pomething to do with how lucid exports typebox but for now easiest workaround is to just use NPM version of typebox.
  */
 import {
-  Literal,
-  Tuple,
-  Array as TypeArray,
-  Object as TypeObject,
-  Union,
-  Unsafe,
+  Type,
   type Static as _Static,
   type TEnum,
   type TLiteral,
@@ -49,7 +44,7 @@ export const Data = {
     exclusiveMinimum?: number;
     exclusiveMaximum?: number;
   }) {
-    const integer = Unsafe<bigint>({ dataType: 'integer' });
+    const integer = Type.Unsafe<bigint>({ dataType: 'integer' });
     if (options) {
       Object.entries(options).forEach(([key, value]) => {
         integer[key] = value;
@@ -58,7 +53,7 @@ export const Data = {
     return integer;
   },
   Bytes: function (options?: { minLength?: number; maxLength?: number; enum?: string[] }) {
-    const bytes = Unsafe<string>({ dataType: 'bytes' });
+    const bytes = Type.Unsafe<string>({ dataType: 'bytes' });
     if (options) {
       Object.entries(options).forEach(([key, value]) => {
         bytes[key] = value;
@@ -67,7 +62,7 @@ export const Data = {
     return bytes;
   },
   Boolean: function () {
-    return Unsafe<boolean>({
+    return Type.Unsafe<boolean>({
       anyOf: [
         {
           title: 'False',
@@ -85,13 +80,13 @@ export const Data = {
     });
   },
   Any: function () {
-    return Unsafe<Data>({ description: 'Any Data.' });
+    return Type.Unsafe<Data>({ description: 'Any Data.' });
   },
   Array: function <T extends TSchema>(
     items: T,
     options?: { minItems?: number; maxItems?: number; uniqueItems?: boolean }
   ) {
-    const array = TypeArray(items);
+    const array = Type.Array(items);
     replaceProperties(array, { dataType: 'list', items });
     if (options) {
       Object.entries(options).forEach(([key, value]) => {
@@ -105,7 +100,7 @@ export const Data = {
     values: U,
     options?: { minItems?: number; maxItems?: number }
   ) {
-    const map = Unsafe<Map<Data.Static<T>, Data.Static<U>>>({
+    const map = Type.Unsafe<Map<Data.Static<T>, Data.Static<U>>>({
       dataType: 'map',
       keys,
       values,
@@ -122,7 +117,7 @@ export const Data = {
    * Set 'hasConstr' to false to serialize Object as PlutusData List.
    */
   Object: function <T extends TProperties>(properties: T, options?: { hasConstr?: boolean }) {
-    const object = TypeObject(properties);
+    const object = Type.Object(properties);
     replaceProperties(object, {
       anyOf: [
         {
@@ -139,7 +134,7 @@ export const Data = {
     return object;
   },
   Enum: function <T extends TSchema>(items: T[]) {
-    const union = Union(items);
+    const union = Type.Union(items);
     replaceProperties(union, {
       anyOf: items.map((item, index) =>
         item.anyOf[0].fields.length === 0
@@ -168,7 +163,7 @@ export const Data = {
    * Set 'hasConstr' to true to apply a PlutusData Constr with index 0.
    */
   Tuple: function <T extends TSchema[]>(items: [...T], options?: { hasConstr?: boolean }) {
-    const tuple = Tuple(items);
+    const tuple = Type.Tuple(items);
     replaceProperties(tuple, {
       dataType: 'list',
       items,
@@ -184,7 +179,7 @@ export const Data = {
     if ((title as string).charAt(0) !== (title as string).charAt(0).toUpperCase()) {
       throw new Error(`Enum '${title}' needs to start with an uppercase letter.`);
     }
-    const literal = Literal(title);
+    const literal = Type.Literal(title);
     replaceProperties(literal, {
       anyOf: [
         {
@@ -198,7 +193,7 @@ export const Data = {
     return literal;
   },
   Nullable: function <T extends TSchema>(item: T) {
-    return Unsafe<Data.Static<T> | null>({
+    return Type.Unsafe<Data.Static<T> | null>({
       anyOf: [
         {
           title: 'Some',
