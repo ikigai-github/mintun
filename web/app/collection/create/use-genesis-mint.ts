@@ -92,7 +92,6 @@ export default function useGenesisMint() {
     const offchain = import('@ikigai-github/mintun-offchain');
     const [seed, uploaded, { GenesisTxBuilder }] = await Promise.all([find, upload, offchain]);
 
-    console.log(seed);
     const builder = GenesisTxBuilder.create(lucid).seed(seed).useCip88(true);
 
     if (contract.maxTokens) {
