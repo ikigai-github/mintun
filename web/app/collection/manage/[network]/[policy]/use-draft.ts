@@ -25,7 +25,7 @@ export default function useDraft(uid: string, initialTraits?: string[]) {
     }
 
     return draft;
-  }, [drafts, uid]);
+  }, [drafts, uid, initialTraits]);
 
   return draft;
 }
