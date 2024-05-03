@@ -76,7 +76,7 @@ function DraftNftCard({ uid }: { uid: string }) {
 function DraftNftCardForm({ uid, onSaving, onSaved }: { uid: string; onSaving: () => void; onSaved: () => void }) {
   const [status, setStatus] = useState<'edit' | 'saving'>('edit');
   const { info } = useManageCollectionContext();
-  const draft = useDraft(uid);
+  const draft = useDraft(uid, info?.traits);
   const { saveDraft } = useSaveDraft(draft.uid);
 
   const form = useForm<DraftTokenData>({

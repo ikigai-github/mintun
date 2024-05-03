@@ -143,7 +143,7 @@ export default function MintDrafts() {
       notifyError(e);
       setStatus('ready');
     }
-  }, [lucid, policy, cache, state, mintReferenceUtxo, setStatus, setDrafts, options]);
+  }, [lucid, policy, cache, mintReferenceUtxo, setStatus, setCache, drafts, setState, setDrafts, options]);
 
   const onSelectToggle = useCallback(
     (index: number) => {
@@ -169,8 +169,8 @@ export default function MintDrafts() {
           return (
             <li key={option.uid} className="flex flex-row items-center gap-2" onClick={() => onSelectToggle(index)}>
               {option.selected ? <CheckIcon className="size-6" /> : <div className="size-6"></div>}
-              <img src={option.url} className="size-10 rounded-md" />
-              <span>{option.name || 'cheez'}</span>
+              <img src={option.url} alt={option.name} className="size-10 rounded-md" />
+              <span>{option.name || 'Generated'}</span>
             </li>
           );
         })}

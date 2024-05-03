@@ -38,7 +38,7 @@ export default function DrawerDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
         <DialogContent
-          className="p-4"
+          className="max-h-screen overflow-y-auto p-4"
           onInteractOutside={handleClose}
           onEscapeKeyDown={handleClose}
           hideCloseIcon={closeDisabled}
@@ -52,7 +52,7 @@ export default function DrawerDialog({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-      <DrawerContent onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
+      <DrawerContent  onInteractOutside={handleClose} onEscapeKeyDown={handleClose}>
         {children}
         <DrawerFooter className="pt-0">
           <DrawerClose asChild disabled={closeDisabled}>
