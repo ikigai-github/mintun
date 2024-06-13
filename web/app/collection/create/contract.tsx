@@ -150,7 +150,7 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                 <FormItem>
                   <FormLabel>Max Tokens</FormLabel>
                   <FormControl>
-                    <Input placeholder="Optional" type="number" {...field} />
+                    <Input placeholder="Optional" type="number" min={0} {...field} />
                   </FormControl>
                   <FormDescription>
                     The maximum number of NFTs that will be created under this collection.

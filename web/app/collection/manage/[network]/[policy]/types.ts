@@ -1,8 +1,7 @@
-import { randomUUID } from 'crypto';
-import type { CollectionInfo, MintunNft } from '@ikigai-github/mintun-offchain';
-import { array, boolean, Input, maxLength, object, string } from 'valibot';
+import type { MintunNft } from '@ikigai-github/mintun-offchain';
+import { array, boolean, InferInput, maxLength, object, pipe, string } from 'valibot';
 
-import { DefaultImageDetail, ImageDetail, ImageDetailSchema } from '@/lib/image';
+import { ImageDetailSchema } from '@/lib/image';
 
 export type CollectionNft = {
   nft: MintunNft;
@@ -12,26 +11,29 @@ export type CollectionNft = {
 export const DraftTokenSchema = object({
   uid: string(), // Internal random id for finding / updating
   image: ImageDetailSchema,
-  name: string('Name can be at most 64 characters in length', [
-    maxLength(64, 'Name can be at most 64 characters in length'),
-  ]),
-  description: string('Description can be at most 64 characters', [
-    maxLength(64, 'Description can be at most 64 characters'),
-  ]),
-  id: string('Id must be less than 64 characters', [maxLength(64, 'Id must be less than 64 characters')]),
-  tags: array(object({ tag: string([maxLength(20, 'Tag cannot exceed 24 characters')]) }), [
-    maxLength(8, 'Only up to 8 tags supported'),
-  ]),
+  name: pipe(
+    string('Name can be at most 64 characters in length'),
+    maxLength(64, 'Name can be at most 64 characters in length')
+  ),
+  description: pipe(
+    string('Description can be at most 64 characters'),
+    maxLength(64, 'Description can be at most 64 characters')
+  ),
+  id: pipe(string('Id must be less than 64 characters'), maxLength(64, 'Id must be less than 64 characters')),
+  tags: pipe(
+    array(object({ tag: pipe(string(), maxLength(20, 'Tag cannot exceed 24 characters')) })),
+    maxLength(8, 'Only up to 8 tags supported')
+  ),
   traits: array(
     object({
-      label: string([maxLength(64, 'Trait label cannot be more thant 64 character')]),
-      trait: string([maxLength(64, 'Trait value cannot be more thant 64 character')]),
+      label: pipe(string(), maxLength(64, 'Trait label cannot be more thant 64 character')),
+      trait: pipe(string(), maxLength(64, 'Trait value cannot be more thant 64 character')),
       preexisting: boolean(),
     })
   ),
 });
 
-export type DraftTokenData = Input<typeof DraftTokenSchema>;
+export type DraftTokenData = InferInput<typeof DraftTokenSchema>;
 
 // BELOW IS TEMPORARY for testing will move to a test or remove
 export const drafts: MintunNft[] = [

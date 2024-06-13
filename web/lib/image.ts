@@ -1,22 +1,20 @@
 /// TODO: Just import this section from offchain/image.ts  library once I have integrated it.
 
 import { CollectionInfo } from '@ikigai-github/mintun-offchain';
-import { blob, Input, maxSize, mimeType, minLength, minValue, number, object, string, union } from 'valibot';
+import { blob, InferInput, maxSize, mimeType, minLength, minValue, number, object, string, union, pipe } from 'valibot';
 
 export const ImageSchema = object({
-  src: string('Image not in string format', [minLength(1)]),
-  mime: string('Mime not in string format', [minLength(1)]),
-  width: number('Width not in number format', [minValue(1)]),
-  height: number('Height not in number format', [minValue(1)]),
+  src: pipe(string('Image not in string format'), minLength(1)),
+  mime: pipe(string('Mime not in string format'), minLength(1)),
+  width: pipe(number('Width not in number format'), minValue(1)),
+  height: pipe(number('Height not in number format'), minValue(1)),
 });
 
 export const ImageDetailSchema = object({
   data: union([
-    blob('Please select an image', [
-      mimeType(['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif', 'image/webp'], 'Please select an image'),
-      maxSize(1024 * 1024 * 10, 'Please select a file smaller than 10 MB.'),
-    ]),
-    string([minLength(1, 'Please select an image')]),
+    pipe(blob('Please select an image'), mimeType(['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif', 'image/webp'], 'Please select an image'),
+      maxSize(1024 * 1024 * 10, 'Please select a file smaller than 10 MB.'),),
+    pipe(string(), minLength(1, 'Please select an image')),
   ]),
   preview: string(),
   width: number(),
@@ -26,8 +24,8 @@ export const ImageDetailSchema = object({
   name: string(),
 });
 
-export type ImageData = Input<typeof ImageSchema>;
-export type ImageDetail = Input<typeof ImageDetailSchema>;
+export type ImageData = InferInput<typeof ImageSchema>;
+export type ImageDetail = InferInput<typeof ImageDetailSchema>;
 
 // Because we lazy import offchain to prevent issues with wasm loading
 // this is redefined here for now.
