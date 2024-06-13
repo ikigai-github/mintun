@@ -8,7 +8,7 @@ import { PopoverTrigger } from '@radix-ui/react-popover';
 import { format, subDays } from 'date-fns';
 import { useForm } from 'react-hook-form';
 
-import { cn } from '@/lib/utils';
+import { cn, ONE_DAY_MS } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -116,7 +116,12 @@ const ContractContent = forwardRef((_props, ref: Ref<ParentSubmitForm>) => {
                         numberOfMonths={2}
                         defaultMonth={field.value?.from}
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(event) => {
+                          if (event && !event?.to && event?.from) {
+                            event.to = new Date(event.from.getTime() + ONE_DAY_MS * 2);
+                          }
+                          field.onChange(event);
+                        }}
                         disabled={(date) => date < subDays(new Date(), 1)}
                         initialFocus
                       />

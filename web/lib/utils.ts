@@ -12,3 +12,5 @@ export function timeout<T>(promise: Promise<T>, timeoutMs: number, reason?: stri
 
   return Promise.race([promise, timeoutPromise]);
 }
+
+export const ONE_DAY_MS = 1000 * 60 * 60 * 24;

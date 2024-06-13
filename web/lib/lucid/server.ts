@@ -34,3 +34,26 @@ export async function fetchCollection(network: string, policyId: string) {
 
   return { state, info, mintReferenceUtxo };
 }
+
+export async function fetchTransactions(network: string, unit: string) {
+  const url = `https://cardano-${network.toLowerCase()}.blockfrost.io/api/v0`;
+  const key =
+    network.toLowerCase() === 'mainnet'
+      ? process.env.NEXT_PUBLIC_BLOCKFROST_KEY_MAINNET
+      : process.env.NEXT_PUBLIC_BLOCKFROST_KEY_PREPROD;
+
+  try {
+    const response = await fetch(`${url}/assets/${unit}/transactions`, {
+      method: 'GET',
+      headers: {
+        project_id: key || '',
+      },
+    });
+    const transactions = await response.json();
+
+    return transactions;
+  } catch (err) {
+    console.log(err);
+  }
+  return [];
+}
