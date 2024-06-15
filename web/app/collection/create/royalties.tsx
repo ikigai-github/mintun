@@ -117,7 +117,7 @@ export default function RoyaltiesContent() {
                 <FormItem>
                   <FormLabel>Percent Fee</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} max={100} placeholder="example: 1.5" {...field} />
+                    <Input type="number" min={0} max={100} placeholder="Optional" {...field} />
                   </FormControl>
                   <FormDescription>
                     A number between 0 and 100 representing the percent of a sale that should go to the address.

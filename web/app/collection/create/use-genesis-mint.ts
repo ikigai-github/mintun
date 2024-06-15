@@ -95,7 +95,7 @@ export default function useGenesisMint() {
     const builder = GenesisTxBuilder.create(lucid).seed(seed).useCip88(true);
 
     if (contract.maxTokens) {
-      builder.maxNfts(contract.maxTokens);
+      builder.maxNfts(+contract.maxTokens);
     }
 
     if (contract.window) {
@@ -122,7 +122,7 @@ export default function useGenesisMint() {
     });
 
     for (const { address, percent, minFee, maxFee } of royalties) {
-      builder.royalty(address, Number(percent), minFee || undefined, maxFee || undefined);
+      builder.royalty(address, Number(percent), +minFee || undefined, +maxFee || undefined);
     }
 
     const { tx, cache } = await builder.build();

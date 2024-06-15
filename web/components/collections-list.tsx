@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { Network } from 'lucid-cardano';
 import { Img } from 'react-image';
 
-import { CollectionInfoWithPolicy, getAllWalletCollections } from '@/lib/collection';
+import { CollectionInfoExtended, getAllWalletCollections } from '@/lib/collection';
 import { getBrandImageUrl } from '@/lib/image';
 import { useWallet } from '@/lib/wallet';
 
 type CollectionCardProps = {
-  info: CollectionInfoWithPolicy;
+  info: CollectionInfoExtended;
   network: Network;
 };
 
@@ -34,7 +34,7 @@ const CollectionCard = ({ info, network }: CollectionCardProps) => {
 };
 
 export default function CollectionsList() {
-  const [infos, setInfos] = useState<CollectionInfoWithPolicy[]>([]);
+  const [infos, setInfos] = useState<CollectionInfoExtended[]>([]);
   const { lucid, isConnected, network } = useWallet();
 
   useEffect(() => {
