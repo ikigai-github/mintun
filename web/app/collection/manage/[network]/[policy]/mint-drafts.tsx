@@ -6,7 +6,7 @@ import { getWebImageUrl } from '@/lib/image';
 import { timeout } from '@/lib/utils';
 import { notifyError, useWallet } from '@/lib/wallet';
 import { Button } from '@/components/ui/button';
-import TransactionDialog, { TransactionStatus } from '@/components/transaction-dialog';
+import TransactionDialog from '@/components/transaction-dialog';
 
 import { useManageCollectionContext } from './context';
 
@@ -18,8 +18,7 @@ type DraftOption = {
 };
 
 export default function MintDrafts() {
-  const [status, setStatus] = useState<TransactionStatus>('ready');
-  const { policy, cache, state, mintReferenceUtxo, setState, setCache, drafts, setDrafts } =
+  const { info, policy, cache, state, mintReferenceUtxo, setState, setCache, drafts, setDrafts, status, setStatus } =
     useManageCollectionContext();
   const [options, setOptions] = useState<DraftOption[]>([]);
 
@@ -29,7 +28,7 @@ export default function MintDrafts() {
     const sequence = state?.nextSequence || 0;
     const options = drafts.map((draft, index) => {
       const url = getWebImageUrl(draft.image.data as string);
-      const name = draft.name || `#${sequence + index}`;
+      const name = draft.name || `${info?.name} #${sequence + index}`;
       const uid = draft.uid;
       const selected = index < 10;
 
@@ -163,17 +162,37 @@ export default function MintDrafts() {
   return (
     <TransactionDialog status={status} label="Mint Drafts" submit={<Button onClick={mintDrafts}>Mint Selected</Button>}>
       <div className="font-heading font-bold">Select and Mint Drafts</div>
-      <div>Here are the drafts you can pick up to 10 of em.</div>
+      {status === 'ready' ? (
+        <div>Here are the drafts you can pick up to 10 of em.</div>
+      ) : (
+        <div>Drafts selected for minting.</div>
+      )}
       <ul className="bg-accent flex flex-col gap-2 border p-2">
-        {options.map((option, index) => {
-          return (
-            <li key={option.uid} className="flex flex-row items-center gap-2" onClick={() => onSelectToggle(index)}>
-              {option.selected ? <CheckIcon className="size-6" /> : <div className="size-6"></div>}
-              <img src={option.url} alt={option.name} className="size-10 rounded-md" />
-              <span>{option.name || 'Generated'}</span>
-            </li>
-          );
-        })}
+        {status === 'ready'
+          ? options.map((option, index) => {
+              return (
+                <li
+                  key={option.uid}
+                  className="flex cursor-pointer flex-row items-center gap-2"
+                  onClick={() => onSelectToggle(index)}
+                >
+                  {option.selected ? <CheckIcon className="size-6" /> : <div className="size-6"></div>}
+                  <img src={option.url} alt={option.name} className="size-10 rounded-md" />
+                  <span>{option.name || 'Generated'}</span>
+                </li>
+              );
+            })
+          : options
+              .filter((option) => option.selected)
+              .map((option) => {
+                return (
+                  <li key={option.uid} className="flex flex-row items-center gap-2">
+                    <CheckIcon className="size-6" />
+                    <img src={option.url} alt={option.name} className="size-10 rounded-md" />
+                    <span>{option.name || 'Generated'}</span>
+                  </li>
+                );
+              })}
       </ul>
     </TransactionDialog>
   );

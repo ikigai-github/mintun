@@ -93,7 +93,7 @@ export default function CollectionInfo() {
             NFTs
           </div>
           <div className="font-heading text-sm">Drafts</div>
-          <div className="truncate text-xs">{drafts.length} NFTs ready to mint</div>
+          <div className="truncate text-xs">{isMounted() ? drafts.length : 0} NFTs ready to mint</div>
         </div>
         <div className="flex flex-col gap-4">{mintReferenceUtxo ? <MintDrafts /> : <StoreMintingPolicy />}</div>
       </div>

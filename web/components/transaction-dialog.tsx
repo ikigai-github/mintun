@@ -4,6 +4,7 @@ import { useInterval } from 'usehooks-ts';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import DrawerDialog from '@/components/drawer-dialog';
+import { useManageCollectionContext } from '@/app/collection/manage/[network]/[policy]/context';
 
 export type TransactionStatus = 'ready' | 'preparing' | 'signing' | 'verifying' | 'complete';
 
@@ -13,12 +14,13 @@ export type TransactionDialogProps = {
   status: TransactionStatus;
 } & React.PropsWithChildren;
 
-export default function TransactionDialog({ status, label, submit, children }: TransactionDialogProps) {
+export default function TransactionDialog({ label, submit, children }: TransactionDialogProps) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('Save Minting Policy');
   const [progress, setProgress] = useState(0);
+  const { status, setStatus } = useManageCollectionContext();
 
-  const closeDisabled = useMemo(() => status !== 'ready', [status]);
+  const closeDisabled = useMemo(() => status !== 'ready' && status !== 'complete', [status]);
 
   useInterval(
     () => {
@@ -47,6 +49,14 @@ export default function TransactionDialog({ status, label, submit, children }: T
       setMessage('Transaction complete!');
     }
   }, [status, setProgress, setMessage]);
+
+  useEffect(() => {
+    if (!open) {
+      if (status === 'complete') {
+        setStatus('ready');
+      }
+    }
+  }, [open]);
 
   return (
     <DrawerDialog open={open} onOpenChange={setOpen} closeDisabled={closeDisabled} trigger={<Button>{label}</Button>}>
