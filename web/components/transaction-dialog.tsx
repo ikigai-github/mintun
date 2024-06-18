@@ -51,10 +51,8 @@ export default function TransactionDialog({ label, submit, children }: Transacti
   }, [status, setProgress, setMessage]);
 
   useEffect(() => {
-    if (!open) {
-      if (status === 'complete') {
-        setStatus('ready');
-      }
+    if (!open && status === 'complete') {
+      setStatus('ready');
     }
   }, [open]);
 
