@@ -15,6 +15,7 @@ import type { UTxO } from 'lucid-cardano';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { getErrorMessage, useWallet } from '@/lib/wallet';
+import { TransactionStatus } from '@/components/transaction-dialog';
 
 import { DraftTokenData } from './types';
 
@@ -34,6 +35,8 @@ export type ManageCollectionContextType = {
   setInfo: Dispatch<SetStateAction<CollectionInfo | undefined>>;
   state?: CollectionState;
   setState: Dispatch<SetStateAction<CollectionState | undefined>>;
+  status: TransactionStatus;
+  setStatus: Dispatch<SetStateAction<TransactionStatus>>;
   minted: MintunNft[];
   setMinted: Dispatch<SetStateAction<MintunNft[]>>;
   drafts: DraftTokenData[];
@@ -56,6 +59,8 @@ const ManageCollectionContext = createContext<ManageCollectionContextType>({
   setInfo: () => undefined,
   state: undefined,
   setState: () => undefined,
+  status: 'ready',
+  setStatus: () => undefined,
   minted: [],
   setMinted: () => [],
   drafts: [],
@@ -74,6 +79,7 @@ export function ManageCollectionContextProvider(props: ManageCollectionContextPr
   const [policy, setPolicy] = useState(props.policy);
   const [info, setInfo] = useState<CollectionInfo | undefined>();
   const [state, setState] = useState<CollectionState | undefined>();
+  const [status, setStatus] = useState<TransactionStatus>('ready');
   const [nfts, setNfts] = useState<MintunNft[]>([]);
   const [drafts, setDrafts] = useLocalStorage<DraftTokenData[]>(`mintun:drafts:v1:${policy}`, []);
   const [minting, setMinting] = useState<MintunNft[]>([]);
@@ -151,6 +157,8 @@ export function ManageCollectionContextProvider(props: ManageCollectionContextPr
         setInfo,
         state,
         setState,
+        status,
+        setStatus,
         minted: nfts,
         setMinted: setNfts,
         drafts,
