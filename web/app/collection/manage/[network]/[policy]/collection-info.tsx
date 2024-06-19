@@ -15,9 +15,9 @@ import MintDrafts from './mint-drafts';
 import StoreMintingPolicy from './store-minting-policy';
 
 export default function CollectionInfo() {
-  const { info, state, policy, drafts, mintReferenceUtxo } = useManageCollectionContext();
+  const { info, state, royalties, policy, drafts, mintReferenceUtxo } = useManageCollectionContext();
   const brandUrl = getBrandImageUrl(info);
-
+  console.log({ royalties });
   const isMounted = useIsMounted();
 
   const remaining = useMemo(() => {
@@ -81,7 +81,12 @@ export default function CollectionInfo() {
 
           <div className="font-heading text-sm">Royalties</div>
           <div className="flex items-center gap-2 truncate text-xs">
-            <span>2%</span> <InfoCircledIcon className="size-3" />
+            <span>
+              {royalties?.length
+                ? `${royalties.reduce((acc, curr) => Number(curr.variableFee || 0) + acc, 0)}%`
+                : 'N/A'}
+            </span>
+            <InfoCircledIcon className="size-3" />
           </div>
           <div className="font-heading text-sm">Minted</div>
           <div className="truncate text-xs">

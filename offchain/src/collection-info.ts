@@ -1,6 +1,7 @@
 import { fromText, toText, type Lucid, type UTxO } from 'lucid-cardano';
 
 import { createReferenceData } from './cip-68';
+import { RoyaltyInfoShape, RoyaltyInfoType, RoyaltyRecipientType, toRoyaltyUnit } from './cip-102';
 import { Data } from './data';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
 import { ScriptCache } from './script';
@@ -187,6 +188,35 @@ export function toCollectionInfo(chainInfo: CollectionInfoMetadataType): Collect
 export async function extractCollectionInfo(lucid: Lucid, utxo: UTxO) {
   const chainInfo = await lucid.datumOf(utxo, CollectionInfoMetadataShape);
   return toCollectionInfo(chainInfo);
+}
+
+export function toRoyaltyInfo(chainInfo: RoyaltyInfoType): RoyaltyRecipientType[] {
+  const { metadata } = chainInfo;
+  let royalties: RoyaltyRecipientType[] = [];
+  metadata.forEach((royalty) => {
+    royalties.push({
+      address: royalty.address,
+      variableFee: royalty.variableFee,
+      minFee: royalty.minFee ? royalty.minFee : null,
+      maxFee: royalty.maxFee ? royalty.maxFee : null,
+    });
+  });
+
+  return royalties;
+}
+
+export async function extractRoyaltyInfo(lucid: Lucid, policy: string) {
+  try {
+    const utxo = await lucid.utxoByUnit(toRoyaltyUnit(policy));
+    if (utxo) {
+      const chainInfo = await lucid.datumOf(utxo, RoyaltyInfoShape);
+      return toRoyaltyInfo(chainInfo);
+    } else return undefined;
+  } catch (err) {
+    console.log('Error getting royalties');
+    console.log(err);
+  }
+  return undefined;
 }
 
 export async function fetchCollectionInfo(cache: ScriptCache) {
