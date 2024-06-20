@@ -98,7 +98,7 @@ export const Cip27RoyaltyDetailField = {
 export type Cip27RoyaltyDetail = {
   [FEATURE_VERSION_FIELD]: 1;
   [FEATURE_DETAIL_FIELD]: {
-    [Cip27RoyaltyDetailField.RATE]: string;
+    [Cip27RoyaltyDetailField.RATE]?: string;
     [Cip27RoyaltyDetailField.RECIPIENT]: string[];
   };
 };
@@ -112,7 +112,7 @@ export const Cip102RoyaltyDetailField = {
 
 export type Cip102RoyaltyRecipient = {
   [Cip102RoyaltyDetailField.ADDRESS]: string[];
-  [Cip102RoyaltyDetailField.VARIABLE_FEE]: number;
+  [Cip102RoyaltyDetailField.VARIABLE_FEE]?: number;
   [Cip102RoyaltyDetailField.MIN_FEE]?: number;
   [Cip102RoyaltyDetailField.MAX_FEE]?: number;
 };
@@ -224,10 +224,18 @@ export function toTokenProjectDetail(info: CollectionInfo): TokenProjectDetail {
 
 export function toCip27RoyaltyDetail(royalty: Royalty): Cip27RoyaltyDetail {
   const address = chunk(royalty.address);
+  if (royalty.variableFee) {
+    return {
+      [FEATURE_VERSION_FIELD]: 1,
+      [FEATURE_DETAIL_FIELD]: {
+        [Cip27RoyaltyDetailField.RECIPIENT]: address,
+        [Cip27RoyaltyDetailField.RATE]: `${royalty.variableFee / 100}`,
+      },
+    };
+  }
   return {
     [FEATURE_VERSION_FIELD]: 1,
     [FEATURE_DETAIL_FIELD]: {
-      [Cip27RoyaltyDetailField.RATE]: `${royalty.variableFee / 100}`,
       [Cip27RoyaltyDetailField.RECIPIENT]: address,
     },
   };
@@ -237,8 +245,11 @@ export function toCip102RoyaltyRecipient(royalty: Royalty) {
   const address = chunk(royalty.address);
   const recipient: Cip102RoyaltyRecipient = {
     [Cip102RoyaltyDetailField.ADDRESS]: address,
-    [Cip102RoyaltyDetailField.VARIABLE_FEE]: Number(asChainVariableFee(royalty.variableFee)),
   };
+
+  if (royalty.variableFee !== undefined) {
+    recipient[Cip102RoyaltyDetailField.VARIABLE_FEE] = Number(asChainVariableFee(royalty.variableFee));
+  }
 
   if (royalty.maxFee !== undefined) {
     recipient[Cip102RoyaltyDetailField.MAX_FEE] = royalty.maxFee;
