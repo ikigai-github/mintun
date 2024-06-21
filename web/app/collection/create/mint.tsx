@@ -101,7 +101,7 @@ function MintDialogButton({ allowOpen }: MintProps) {
     return (
       <Dialog open={open} onOpenChange={handleOpen}>
         <DialogTrigger asChild>
-          <Button onClick={allowOpen}>{mintButtonLabel}</Button>
+          <Button onClick={() => allowOpen()}>{mintButtonLabel}</Button>
         </DialogTrigger>
         <DialogContent
           className="sm:max-w-[425px]"

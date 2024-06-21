@@ -21,8 +21,8 @@ function NftCard({ nft, status }: CollectionNft) {
 
   return (
     <Card className="hover:bg-foreground/10 h-56 min-w-36 max-w-60 transition-colors">
-      <div className="relative h-44 rounded-t-xl">
-        <Image fill={true} sizes="228px" src={url} className="rounded-t-xl object-cover" alt={nft.name} />
+      <div className="relative h-44 overflow-hidden rounded-t-xl">
+        <img src={url} className="inset-0 size-full object-cover" alt={nft.name} />
       </div>
       <div className="flex justify-between p-4">
         <div className="font-heading truncate text-left leading-none">{nft.name}</div>
@@ -40,7 +40,7 @@ function NftCardDetail({ nft, status }: CollectionNft) {
       <DialogHeader className="text-left">
         <div className="relative mb-4 h-72">
           {/* TODO: Make this a carousel if there is more than one image */}
-          <Image fill={true} src={url} className="object-contain" alt={nft.name} />
+          <img src={url} className="size-full object-contain" alt={nft.name} />
         </div>
         <DialogTitle className="flex items-center gap-2">
           <span className="flex-1">{nft.name}</span>
