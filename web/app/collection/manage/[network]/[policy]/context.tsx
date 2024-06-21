@@ -10,7 +10,13 @@ import {
   useEffect,
   useState,
 } from 'react';
-import type { CollectionInfo, CollectionState, MintunNft, ScriptCache } from '@ikigai-github/mintun-offchain';
+import type {
+  CollectionInfo,
+  CollectionState,
+  MintunNft,
+  RoyaltyRecipientType,
+  ScriptCache,
+} from '@ikigai-github/mintun-offchain';
 import type { UTxO } from 'lucid-cardano';
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -31,6 +37,8 @@ export type ManageCollectionContextType = {
   setPolicy: Dispatch<SetStateAction<string>>;
   cache?: ScriptCache;
   setCache: Dispatch<SetStateAction<ScriptCache | undefined>>;
+  royalties?: RoyaltyRecipientType[];
+  setRoyalties: Dispatch<SetStateAction<RoyaltyRecipientType[] | undefined>>;
   info?: CollectionInfo;
   setInfo: Dispatch<SetStateAction<CollectionInfo | undefined>>;
   state?: CollectionState;
@@ -55,6 +63,8 @@ const ManageCollectionContext = createContext<ManageCollectionContextType>({
   setPolicy: () => undefined,
   cache: undefined,
   setCache: () => undefined,
+  royalties: undefined,
+  setRoyalties: () => undefined,
   info: undefined,
   setInfo: () => undefined,
   state: undefined,
@@ -78,6 +88,7 @@ export function ManageCollectionContextProvider(props: ManageCollectionContextPr
   const [error, setError] = useState('');
   const [policy, setPolicy] = useState(props.policy);
   const [info, setInfo] = useState<CollectionInfo | undefined>();
+  const [royalties, setRoyalties] = useState<RoyaltyRecipientType[] | undefined>();
   const [state, setState] = useState<CollectionState | undefined>();
   const [status, setStatus] = useState<TransactionStatus>('ready');
   const [nfts, setNfts] = useState<MintunNft[]>([]);
@@ -96,6 +107,8 @@ export function ManageCollectionContextProvider(props: ManageCollectionContextPr
         const { cache, state } = await offchain.ScriptCache.fromMintPolicyId(lucid, policy);
         const mintReferenceUtxo = await offchain.fetchMintingPolicyReferenceUtxo(cache);
         const info = await offchain.fetchCollectionInfo(cache);
+        const royalties = await offchain.extractRoyaltyInfo(lucid, policy);
+        setRoyalties(royalties);
         setInfo(info);
         setState(state);
         setCache(cache);
@@ -153,6 +166,8 @@ export function ManageCollectionContextProvider(props: ManageCollectionContextPr
         setPolicy,
         cache,
         setCache,
+        royalties,
+        setRoyalties,
         info,
         setInfo,
         state,

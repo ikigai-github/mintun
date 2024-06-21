@@ -1,8 +1,11 @@
 import { fromText, toText, type Lucid, type UTxO } from 'lucid-cardano';
 
+import { toBech32Address } from './aiken';
 import { createReferenceData } from './cip-68';
+import { fromChainVariableFee, RoyaltyInfoShape, RoyaltyInfoType, toRoyaltyUnit } from './cip-102';
 import { Data } from './data';
 import { IMAGE_PURPOSE, ImageDimension, ImagePurpose } from './image';
+import { Royalty } from './royalty';
 import { ScriptCache } from './script';
 import { asChunkedHex, toJoinedText } from './utils';
 
@@ -187,6 +190,35 @@ export function toCollectionInfo(chainInfo: CollectionInfoMetadataType): Collect
 export async function extractCollectionInfo(lucid: Lucid, utxo: UTxO) {
   const chainInfo = await lucid.datumOf(utxo, CollectionInfoMetadataShape);
   return toCollectionInfo(chainInfo);
+}
+
+export function toRoyaltyInfo(lucid: Lucid, chainInfo: RoyaltyInfoType): Royalty[] {
+  const { metadata } = chainInfo;
+  let royalties: Royalty[] = [];
+  metadata.forEach((royalty) => {
+    royalties.push({
+      address: toBech32Address(lucid, royalty.address),
+      variableFee: royalty.variableFee ? fromChainVariableFee(royalty.variableFee) || undefined : undefined,
+      minFee: royalty.minFee ? Number(royalty.minFee) : undefined,
+      maxFee: royalty.maxFee ? Number(royalty.maxFee) : undefined,
+    });
+  });
+
+  return royalties;
+}
+
+export async function extractRoyaltyInfo(lucid: Lucid, policy: string) {
+  try {
+    const utxo = await lucid.utxoByUnit(toRoyaltyUnit(policy));
+    if (utxo) {
+      const chainInfo = await lucid.datumOf(utxo, RoyaltyInfoShape);
+      return toRoyaltyInfo(lucid, chainInfo);
+    } else return undefined;
+  } catch (err) {
+    console.log('Error getting royalties');
+    console.log(err);
+  }
+  return undefined;
 }
 
 export async function fetchCollectionInfo(cache: ScriptCache) {

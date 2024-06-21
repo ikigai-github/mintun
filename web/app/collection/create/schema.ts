@@ -82,7 +82,8 @@ export const RoyaltySchema = pipe(
         return Number.isNaN(num) ? 0 : num;
       }),
       maxValue(100, 'Percent must between 0 and 100'),
-      minValue(0, 'Percent must between 0 and 100')
+      minValue(0, 'Percent must between 0 and 100'),
+      transform((num) => (num === 0 ? undefined : num))
     ),
     minFee: pipe(
       string(),
@@ -110,7 +111,7 @@ export const RoyaltySchema = pipe(
   ),
   forward(
     check(
-      (royalty) => royalty.minFee > 0 || royalty.percent > 0,
+      (royalty) => royalty.minFee > 0 || (royalty.percent || 0) > 0,
       'Must set a min fee or a percent fee greater than zero'
     ),
     ['percent']

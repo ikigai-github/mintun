@@ -158,14 +158,12 @@ export class GenesisTxBuilder {
 
   royalty(
     address: string,
-    variableFee: number,
+    variableFee: number | undefined = undefined,
     minFee: number | undefined = undefined,
     maxFee: number | undefined = undefined
   ) {
-    if (variableFee < 0.1) {
-      throw new Error(
-        'Royalty percent must be greater than 0.1%. If you want a fixed fee set min fee equal to max fee and percent to any postive number'
-      );
+    if (variableFee && variableFee < 1) {
+      throw new Error('Royalty percent must be greater than 1%. If you want a fixed fee set min fee equal to max fee');
     }
 
     if (!address.startsWith('addr')) {
@@ -178,7 +176,7 @@ export class GenesisTxBuilder {
     this.#royalties[address] = { address, variableFee, minFee, maxFee };
 
     const total = Object.values(this.#royalties)
-      .map((royalty) => royalty.variableFee)
+      .map((royalty) => royalty.variableFee || 0)
       .reduce((acc, next) => acc + next, 0);
 
     if (total > 100) {

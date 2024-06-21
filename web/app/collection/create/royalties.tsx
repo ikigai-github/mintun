@@ -195,7 +195,7 @@ export default function RoyaltiesContent() {
                         key={`royalty-address-reveiew-${royalty.address}`}
                       >
                         <TableCell className="max-w-64 truncate">{royalty.address}</TableCell>
-                        <TableCell className="text-center">{royalty.percent + '%'}</TableCell>
+                        <TableCell className="text-center">{royalty.percent ? royalty.percent + '%' : '-'}</TableCell>
                         <TableCell className="text-center">{royalty.minFee ? royalty.minFee + ' ₳' : '-'}</TableCell>
                         <TableCell className="text-center">{royalty.maxFee ? royalty.maxFee + ' ₳' : '-'}</TableCell>
                       </TableRow>

@@ -9,7 +9,7 @@ export const ROYALTY_TOKEN_NAME = fromText('Royalty');
 
 export const RoyaltyRecipientSchema = Data.Object({
   address: ChainAddressSchema,
-  variableFee: Data.Integer({ minimum: 1 }),
+  variableFee: Data.Nullable(Data.Integer({ minimum: 1 })),
   minFee: Data.Nullable(Data.Integer()),
   maxFee: Data.Nullable(Data.Integer()),
 });
@@ -30,17 +30,19 @@ export function toRoyaltyUnit(policyId: string) {
 }
 
 /// Converts a percentage between 0 and 100 inclusive to the CIP-102 fee format
-export function asChainVariableFee(percent: number) {
-  if (percent < 0.1 || percent > 100) {
-    throw new Error('Royalty fee must be between 0.1 and 100 percent');
+export function asChainVariableFee(percent: number | undefined) {
+  if (percent) {
+    if (percent < 0.1 || percent > 100) {
+      throw new Error('Royalty fee must be between 0.1 and 100 percent');
+    }
+    return BigInt(Math.floor(1 / (percent / 1000)));
   }
-
-  return BigInt(Math.floor(1 / (percent / 1000)));
+  return null;
 }
 
 /// Converts from a on chain royalty to a percent between 0 and 100
-export function fromChainVariableFee(fee: bigint) {
-  return Math.ceil(Number(10000n / fee)) / 10;
+export function fromChainVariableFee(fee: bigint | null) {
+  return fee ? Math.ceil(Number(10000n / fee)) / 10 : null;
 }
 
 /// Confirms the fee is a positive integer and casts it to a bigint otherwise returns null

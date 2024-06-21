@@ -9,15 +9,15 @@ import { formatDistanceStrict, formatDistanceToNow } from 'date-fns';
 import { useIsMounted } from 'usehooks-ts';
 
 import { getBrandImageUrl } from '@/lib/image';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { useManageCollectionContext } from './context';
 import MintDrafts from './mint-drafts';
 import StoreMintingPolicy from './store-minting-policy';
 
 export default function CollectionInfo() {
-  const { info, state, policy, drafts, mintReferenceUtxo } = useManageCollectionContext();
+  const { info, state, royalties, policy, drafts, mintReferenceUtxo } = useManageCollectionContext();
   const brandUrl = getBrandImageUrl(info);
-
   const isMounted = useIsMounted();
 
   const remaining = useMemo(() => {
@@ -80,8 +80,43 @@ export default function CollectionInfo() {
           ) : undefined}
 
           <div className="font-heading text-sm">Royalties</div>
-          <div className="flex items-center gap-2 truncate text-xs">
-            <span>2%</span> <InfoCircledIcon className="size-3" />
+          <div className="flex items-center gap-1 truncate text-xs">
+            {royalties?.length ? (
+              <>
+                <span>{royalties.reduce((acc, curr) => curr.variableFee || 0 + acc, 0)}%</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <InfoCircledIcon className="size-3" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {royalties.map((royalty) => (
+                        <div key={`royalty-${royalty.address}`} className="flex items-center gap-x-3 gap-y-2">
+                          <div className="flex items-center gap-1">
+                            <span>Address:</span>
+                            <div className="w-20 truncate">{royalty.address}</div>
+                          </div>
+                          <div className="w-20">
+                            <span>Percent Fee: </span>
+                            <span>{royalty.variableFee ? `${royalty.variableFee}%` : '-'}</span>
+                          </div>
+                          <div className="w-20">
+                            <span>Min Fee: </span>
+                            <span>{royalty.minFee ? `₳ ${royalty.minFee}` : '-'}</span>
+                          </div>
+                          <div className="w-20">
+                            <span>Max Fee: </span>
+                            <span>{royalty.maxFee ? `₳ ${royalty.maxFee}` : '-'}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </>
+            ) : (
+              'N/A'
+            )}
           </div>
           <div className="font-heading text-sm">Minted</div>
           <div className="truncate text-xs">
