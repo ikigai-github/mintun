@@ -18,7 +18,6 @@ import StoreMintingPolicy from './store-minting-policy';
 export default function CollectionInfo() {
   const { info, state, royalties, policy, drafts, mintReferenceUtxo } = useManageCollectionContext();
   const brandUrl = getBrandImageUrl(info);
-  console.log({ royalties });
   const isMounted = useIsMounted();
 
   const remaining = useMemo(() => {
