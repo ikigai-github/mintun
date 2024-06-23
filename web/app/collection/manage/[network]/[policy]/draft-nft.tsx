@@ -62,8 +62,8 @@ function DraftNftCard({ uid }: { uid: string }) {
 
   return (
     <Card className="hover:bg-foreground/10 h-56 min-w-36 max-w-60 transition-colors">
-      <div className="relative h-44 rounded-t-xl">
-        <Image fill={true} sizes="228px" src={url} className="rounded-t-xl object-cover" alt={name} />
+      <div className="relative h-44 overflow-hidden rounded-t-xl">
+        <img src={url} className="inset-0 size-full object-cover" alt={name} />
       </div>
       <div className="flex justify-between p-4">
         <div className="font-heading truncate text-left leading-none">{displayName}</div>
