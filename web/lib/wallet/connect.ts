@@ -107,7 +107,7 @@ export async function connect(lucid: Lucid, wallet: string, setters: WalletConte
 export async function updateProvider(lucid: Lucid, networkId: number, setters: WalletContextSetters) {
   const { Blockfrost } = await import('lucid-cardano');
   if (networkId === 1) {
-    if (lucid.network !== 'Mainnet') {
+    if (lucid.network !== 'Mainnet' || !lucid.txBuilderConfig) {
       const blockfrost = new Blockfrost(
         'https://cardano-mainnet.blockfrost.io/api/v0',
         process.env.NEXT_PUBLIC_BLOCKFROST_KEY_MAINNET
@@ -116,7 +116,7 @@ export async function updateProvider(lucid: Lucid, networkId: number, setters: W
       setters.setNetwork('Mainnet');
     }
   } else {
-    if (lucid.network !== 'Preprod') {
+    if (lucid.network !== 'Preprod' || !lucid.txBuilderConfig) {
       const blockfrost = new Blockfrost(
         'https://cardano-preprod.blockfrost.io/api/v0',
         process.env.NEXT_PUBLIC_BLOCKFROST_KEY_PREPROD
