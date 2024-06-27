@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Aiken
-        uses: aiken-lang/setup-aiken@v0.1.0
+        uses: aiken-lang/setup-aiken@v1.0.2
         with:
-          version: v1.0.24-alpha
+          version: v1.0.29-alpha
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4

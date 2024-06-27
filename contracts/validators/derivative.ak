@@ -10,13 +10,12 @@ validator(mint_policy_id: PolicyId) {
   /// but minting to its own unique policy id.  Main intent is to use this policy to mint tokens
   /// holding script references to the main minting policy.
   fn mint(_redeemer, context: ScriptContext) {
-    let spends_parent_owner_token =
-      in.has_nft(
+    expect Some(_parent_owner_token) =
+      in.find_asset(
         context.transaction.inputs,
         mint_policy_id,
         collection.owner_asset_name,
       )
-
-    spends_parent_owner_token?
+    True
   }
 }

@@ -78,7 +78,7 @@ test('Builder errors during build', async () => {
 
   // Less that 0.1%
   expect(() => {
-    GenesisTxBuilder.create(lucid).royalty('addr1superlegit', 0);
+    GenesisTxBuilder.create(lucid).royalty('addr1superlegit', 0.01);
   }).toThrowError();
 
   // Invalid bech32 royalty address (well more invalid)

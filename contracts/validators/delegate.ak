@@ -1,6 +1,6 @@
 use aiken/hash.{Blake2b_224, Hash}
 use aiken/list
-use aiken/transaction.{ScriptContext}
+use aiken/transaction.{ScriptContext, Transaction}
 use aiken/transaction/credential.{VerificationKey}
 use aiken/transaction/value.{PolicyId}
 use mintun/collection
@@ -18,17 +18,14 @@ validator(
   /// but minting to its own unique policy id. Main intent is to use this policy to mint tokens
   /// holding script references to the main minting policy.
   fn mint(_redeemer, context: ScriptContext) {
-    let spends_parent_owner_token =
-      in.has_nft(
-        context.transaction.inputs,
-        mint_policy_id,
-        collection.owner_asset_name,
-      )
+    let ScriptContext { transaction: tx, .. } = context
+    let Transaction { inputs, extra_signatories, .. } = tx
+    expect Some(_parent_owner_token) =
+      in.find_asset(inputs, mint_policy_id, collection.owner_asset_name)
 
     // Delegate can sign or if delegate is left blank during parameterization this will be equivalent to derivate contract
-    let delegate_signed =
-      list.has(context.transaction.extra_signatories, delegate)
+    let delegate_signed = list.has(extra_signatories, delegate)
 
-    spends_parent_owner_token? || delegate_signed?
+    delegate_signed?
   }
 }

@@ -4,9 +4,9 @@ use aiken/transaction.{Input, ScriptContext, Spend, Transaction}
 use aiken/transaction/value.{MintedValue, PolicyId}
 use mintun/cip68
 use mintun/collection.{CollectionState}
-use mintun/common
 use mintun/input as in
 use mintun/output as out
+use mintun/time
 
 /// Endpoints available to be called on the batch mint spending validator
 type Endpoint {
@@ -51,37 +51,34 @@ fn validate_spend(
 ) {
   let Transaction { inputs, outputs, mint, .. } = transaction
   // Make sure the (111)(Management)Collection token for that minting policy is also spent 
-  let spends_owner_token =
-    in.has_nft(inputs, mint_policy_id, collection.owner_asset_name)
-  expect spends_owner_token?
+  expect Some(_owner_token) =
+    in.find_asset(inputs, mint_policy_id, collection.owner_asset_name)
+
   // Previous state should be stored on the datum of the state reference input
   let input_data =
     collection.state_from_datum(transaction, state_input.output.datum)
 
+  let CollectionState { info, force_locked, .. } = input_data
+
   // Ensure that the state tokens validity range constraint is met, if that constraint exists.
   let mint_window_valid =
-    common.time_contains(
-      transaction.validity_range,
-      input_data.info.mint_window,
-    )
+    time.contains(transaction.validity_range, info.mint_window)
 
   // If the contract is locked you can no longer spend the reference token (which means you can't update the datum)
-  let contract_is_not_locked = input_data.force_locked == False
+  let contract_is_not_locked = force_locked == False
 
-  // Get the output utxo where the reference token is spent
-  expect [spent_utxo_output] =
-    out.find_by_asset(outputs, mint_policy_id, collection.state_asset_name)
+  // Get the output where the reference token is sent
+  expect Some(state_output) =
+    out.find_asset(outputs, mint_policy_id, collection.state_asset_name)
 
   // Verify it is spent back to this spending validator
   let spends_back_to_validator =
-    state_input.output.address == spent_utxo_output.address
+    state_input.output.address == state_output.address
 
   // Finally we can verify the datum
-  let output_data =
-    collection.state_from_datum(transaction, spent_utxo_output.datum)
+  let output_data = collection.state_from_datum(transaction, state_output.datum)
 
   expect and {
-      spends_owner_token?,
       mint_window_valid?,
       contract_is_not_locked?,
       spends_back_to_validator,
