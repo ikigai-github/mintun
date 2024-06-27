@@ -8,10 +8,10 @@ import { ScriptCache } from './script';
 import { applyScriptRefTx, applyTx, createEmulatorLucid, generateNft } from './support.test';
 
 export async function genesis() {
-  const { lucid, seedUtxo, accounts } = await createEmulatorLucid();
+  const { lucid, emulator, seedUtxo, accounts } = await createEmulatorLucid();
 
   // Use different address than selected wallet (account 0)
-  const endMs = Date.now() + 1_000_000;
+  const endMs = Date.now() + 10_000_000;
   const groupPolicyId = 'de2340edc45629456bf695200e8ea32f948a653b21ada10bc6f0c554';
   const cache = ScriptCache.cold(lucid, seedUtxo);
   const { tx } = await GenesisTxBuilder.create(lucid)
@@ -32,13 +32,24 @@ export async function genesis() {
 
   const { mintScriptReferenceUtxo, stateScriptReferenceUtxo } = await applyScriptRefTx(lucid, cache);
 
-  return { cache, lucid, accounts, stateUtxo, ownerUtxo, state, mintScriptReferenceUtxo, stateScriptReferenceUtxo };
+  return {
+    cache,
+    lucid,
+    emulator,
+    accounts,
+    stateUtxo,
+    ownerUtxo,
+    state,
+    mintScriptReferenceUtxo,
+    stateScriptReferenceUtxo,
+  };
 }
 
 test('Mint a token', async () => {
   const {
     cache,
     lucid,
+    emulator,
     stateUtxo,
     state: genesisState,
     mintScriptReferenceUtxo,
@@ -59,6 +70,8 @@ test('Mint a token', async () => {
   const { tx } = await MintTxBuilder.create(lucid)
     .cache(cache)
     .stateUtxo(stateUtxo)
+    .validFrom(emulator.now())
+    .validTo(emulator.now() + 10_000)
     .mintingPolicyReferenceUtxo(mintScriptReferenceUtxo)
     .stateValidatorReferenceUtxo(stateScriptReferenceUtxo)
     .state(genesisState)

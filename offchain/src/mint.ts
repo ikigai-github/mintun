@@ -36,6 +36,8 @@ export class MintTxBuilder {
   #stateValidatorReferenceUtxo?: UTxO;
   #currentState?: CollectionState;
   #nfts: AddressedNft[] = [];
+  #validFrom?: number;
+  #validTo?: number;
   #useCip25 = false;
 
   private constructor(lucid: Lucid) {
@@ -100,6 +102,16 @@ export class MintTxBuilder {
   //       Also, if NFT metadata is in any way modifiable then we shouldn't use cip-25.
   useCip25(useCip25: boolean) {
     this.#useCip25 = useCip25;
+    return this;
+  }
+
+  validFrom(unixTime: number) {
+    this.#validFrom = unixTime;
+    return this;
+  }
+
+  validTo(unixTime: number) {
+    this.#validTo = unixTime;
     return this;
   }
 
@@ -206,8 +218,22 @@ export class MintTxBuilder {
       tx.attachMintingPolicy(this.#cache.mint().script);
     }
 
-    tx.mintAssets(prepared.mints, mintRedeemer)
-      // TODO: Maybe enforce this just goes back to the original utxo address to prevent accidentally sending this to some other wallet
+    // Force a validity range but allow override to keep from creating infinite validity transaction
+    if (this.#validFrom) {
+      tx.validFrom(this.#validFrom);
+    } else {
+      tx.validFrom(Date.now() - 1_000);
+    }
+
+    if (this.#validTo) {
+      tx.validTo(this.#validTo);
+    } else {
+      tx.validTo(Date.now() + 30_000);
+    }
+
+    // TODO: Maybe enforce this just goes back to the original utxo address to prevent accidentally sending this to some other wallet
+    tx.mintAssets(prepared.userMints, mintRedeemer)
+      .mintAssets(prepared.referenceMints, mintRedeemer)
       .payToAddress(recipientAddress, ownerAsset)
       .payToAddressWithData(this.#cache.state().address, stateOutput, stateAsset);
 

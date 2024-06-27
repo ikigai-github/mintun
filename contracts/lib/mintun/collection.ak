@@ -1,7 +1,6 @@
 //// 
 
 use aiken/bytearray
-use aiken/dict.{Dict}
 use aiken/interval.{Interval}
 use aiken/time.{PosixTime}
 use aiken/transaction.{Datum, OutputReference, Transaction}
@@ -74,11 +73,11 @@ pub type CollectionInfo {
   /// Supporting images to be used to display the collection 
   images: List<CollectionImage>,
   /// Links to social media and website associated with the project or artist
-  links: Dict<ByteArray, List<ByteArray>>,
+  links: Pairs<ByteArray, List<ByteArray>>,
   /// Declared traits that NFTs in the collection will contain
   traits: List<ByteArray>,
   /// Anything else not defined in the standard
-  extra: Dict<ByteArray, Data>,
+  extra: Pairs<ByteArray, Data>,
 }
 
 pub type CollectionStateInfo {

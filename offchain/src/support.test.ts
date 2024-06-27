@@ -48,6 +48,7 @@ export async function createEmulatorLucid() {
 
   return {
     lucid,
+    emulator,
     accounts: [ACCOUNT_0, ACCOUNT_1, ACCOUNT_2, ACCOUNT_3],
     seedUtxo,
   };

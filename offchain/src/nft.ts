@@ -59,8 +59,9 @@ type UserPayouts = {
 type Cip25Metadata = Record<string, MintunNft>;
 
 type PreparedAssets = {
-  mints: Assets;
+  userMints: Assets;
   userPayouts: UserPayouts;
+  referenceMints: Assets;
   referencePayouts: ReferencePayout[];
   cip25Metadata: Cip25Metadata;
 };
@@ -174,8 +175,9 @@ export function prepareAssets(
   hasRoyalty: boolean,
   nftValidatorAddress?: Address
 ): PreparedAssets {
-  const mints: Assets = {};
+  const userMints: Assets = {};
   const userPayouts: UserPayouts = {};
+  const referenceMints: Assets = {};
   const cip25Metadata: Cip25Metadata = {};
   const referencePayouts: ReferencePayout[] = [];
   let extra: Data = '';
@@ -196,19 +198,21 @@ export function prepareAssets(
     const referencePayoutAddress = nftValidatorAddress ? nftValidatorAddress : recipientAdress;
     const userPayout = userPayouts[recipientAdress] || [];
 
+    userMints[userUnit] = 1n;
     userPayout.push(userUnit);
+    userPayouts[recipientAdress] = userPayout;
+
+    referenceMints[referenceUnit] = 1n;
     referencePayouts.push({ unit: referenceUnit, address: referencePayoutAddress, chainData });
     cip25Metadata[userAssetName] = metadata;
-    userPayouts[recipientAdress] = userPayout;
-    mints[userUnit] = 1n;
-    mints[referenceUnit] = 1n;
 
     sequence += 1;
   }
 
   return {
-    mints,
+    userMints,
     userPayouts,
+    referenceMints,
     referencePayouts,
     cip25Metadata,
   };

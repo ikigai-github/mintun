@@ -1,7 +1,6 @@
 //// CIP-68 standard defined types and constants along with some utility functions
 
 use aiken/bytearray.{drop, take}
-use aiken/dict.{Dict}
 use aiken/transaction.{Datum, Transaction}
 use aiken/transaction/value.{AssetName}
 use mintun/data
@@ -32,13 +31,13 @@ pub type Cip68AssetName {
 }
 
 /// 222 reference token specific shape.
-/// metadata is Dict<ByteArray, Data> because spec allows including arbitrary extra 
+/// metadata is Pairs<ByteArray, Data> because spec allows including arbitrary extra 
 /// data in addition to the standard defined data. 
 /// For example, 'name' is in standard but 'traits' is not so we can't have a well 
 /// defined index of that field in the metadata.
 pub type Reference222TokenData {
   /// A map of metadata field and their values
-  metadata: Dict<ByteArray, Data>,
+  metadata: Pairs<ByteArray, Data>,
   /// Version of the reference token metadata
   version: Int,
   /// Any custom data not defined in base standard (ie royalty_included flag from cip-102)

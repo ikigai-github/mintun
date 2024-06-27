@@ -1,3 +1,4 @@
+use aiken/builtin
 use aiken/bytearray
 use aiken/dict
 use aiken/list
@@ -5,13 +6,11 @@ use aiken/option
 use aiken/transaction.{
   Input, Mint, Output, OutputReference, ScriptContext, Transaction,
 }
-use aiken/transaction/value.{MintedValue, PolicyId}
+use aiken/transaction/value.{AssetName, MintedValue, PolicyId}
 use mintun/cip102
 use mintun/cip68
 use mintun/collection.{CollectionName, CollectionState, NFT}
 use mintun/input as in
-
-//use mintun/output as out
 
 /// The redeemer indicates if this is a genesis transaction, mint, or burn.  
 type Endpoint {
@@ -142,54 +141,52 @@ fn nft_asset_in_output(output: Output, asset_name: ByteArray) -> Bool {
   output_asset_name == asset_name && output_asset_quantity == 1
 }
 
-/// Validates the management user and reference token are spent the returns the reference input
-fn validate_witness_input(inputs: List<Input>, mint_policy_id: PolicyId) {
-  // Make sure the (111)Collection token is spent in the inputs 
-  let spends_owner_token =
-    in.has_nft(inputs, mint_policy_id, collection.owner_asset_name)
-
-  expect spends_owner_token?
-
-  // The state should be in the references so that we can check this is going to register address
-  in.find_nft(inputs, mint_policy_id, collection.state_asset_name)
-}
-
-/// Flattens and groups assets into a list of tuple pairs. 
-/// For example, if minting two NFTs one name A and another name B
-/// would return [((100A, 1), (222A, 1)), ((100B, 1), (222B, 1))].
-/// Any tokens not paired the 222 or 100 labels are returned in the remainder 
-fn pair_nfts(mint: MintedValue, mint_policy_id: PolicyId) {
-  let (assets, remainder) =
+/// Groups user and reference tokens together into tuples
+/// This function assumes the tokens are partially ordered 
+/// example: [(100A, 1), (100B,1), (222A, 1), (222B, 1)]
+/// becomes [((100A,1), (222A,1)), ((100B,1), (222B,1))]
+fn validate_tokens(
+  mint: MintedValue,
+  mint_policy_id: PolicyId,
+  next_sequence: Int,
+) {
+  let tokens =
     mint
       |> value.from_minted_value()
       |> value.tokens(mint_policy_id)
-      |> dict.to_list()
-      |> list.partition(
-           fn(asset) {
-             cip68.has_label(asset.1st, cip68.reference_token_label) || cip68.has_label(
-               asset.1st,
-               cip68.nft_user_token_label,
-             )
-           },
-         )
+      |> dict.to_pairs()
 
-  // Each asset is a pair so the minted assets length should always be even and > 0
-  let num_assets = list.length(assets)
-  let even_number_assets = num_assets % 2 == 0
-  let num_nfts = num_assets / 2
-  let mints_at_least_one_nft = num_nfts > 0
-  expect even_number_assets? && mints_at_least_one_nft?
-  // Sort so we end up with a list like [100A, 100B, 222A, 222B]
-  // Then up the tokens into tuple pairs: [100A, 100B, 222A, 222B] -> [(100A, 222A), (100B, 222B)]
-  let (reference_nfts, user_nfts) =
-    assets
-      |> list.sort(fn(l, r) { bytearray.compare(l.1st, r.1st) })
-      |> list.span(num_nfts)
+  let num_tokens = list.length(tokens)
+  let num_nfts = num_tokens / 2
+  // should always be pairs of 100 and 200 tokens minted so should always be an even number
+  let even_tokens = num_tokens % 2 == 0
+  let at_least_one_nft = num_nfts > 0
 
-  // Could also check output datum for the reference_token_asset as below:
-  let nfts = list.zip(reference_nfts, user_nfts)
+  expect even_tokens? && at_least_one_nft?
 
-  (nfts, remainder)
+  // Split the list in half 
+  let (reference_tokens, user_tokens) = list.span(tokens, num_nfts)
+
+  // Each user token and reference token should now be grouped together
+  // So we check each pair is valid
+  let updated_sequence =
+    reference_tokens
+      |> list.zip(user_tokens)
+      |> list.foldl(
+          next_sequence,
+          fn(token_pair, expected_sequence) {
+            if validate_token_pair(token_pair, expected_sequence) {
+              expected_sequence + 1
+            } else {
+              expected_sequence
+            }
+          },
+        )
+
+  let expected_sequence = updated_sequence == next_sequence + num_nfts
+
+  // NOTE: could check datum of reference token but probably overkill
+  expected_sequence?
 }
 
 /// This function sorts through the minted tokens to pair user and reference tokens.  
@@ -197,93 +194,79 @@ fn pair_nfts(mint: MintedValue, mint_policy_id: PolicyId) {
 fn validate_mint(transaction: Transaction, mint_policy_id: PolicyId) {
   let Transaction { mint, inputs, .. } = transaction
 
-  expect Some(state_input) = validate_witness_input(inputs, mint_policy_id)
+  // Make sure the (111)Collection owner token is spent in the inputs 
+  expect Some(_owner_input) =
+    in.find_asset(inputs, mint_policy_id, collection.owner_asset_name)
+
+  // Make sure the (600)Collection state token is spent in the inputs 
+  expect Some(state_input) =
+    in.find_asset(inputs, mint_policy_id, collection.state_asset_name)
 
   // Get the next_sequence number from state datum. 
   let CollectionState { next_sequence, .. } =
     collection.state_from_datum(transaction, state_input.output.datum)
-
   // Can only mint (222) and (100) pairs in batch mint any other tokens must be minted during genesis
-  let (nfts, remainder) = pair_nfts(mint, mint_policy_id)
-  let only_mints_nfts = list.is_empty(remainder)
-  expect only_mints_nfts?
-  // Make sure each pair has tokens matching the patterns:
-  let tokens_valid = validate_mint_recursive(nfts, next_sequence)
+  let tokens_valid = validate_tokens(mint, mint_policy_id, next_sequence)
 
   tokens_valid?
-  // trace @"Checking the datum is valid"
-  // // Make sure each reference token includes a datum in the 222 shape
-  // let datums_valid =
-  //   list.all(
-  //     nfts,
-  //     fn(asset) {
-  //       let (asset_name, _quantity) = asset.1st
-  //       expect [reference_token_output] =
-  //         out.find_by_asset(transaction.outputs, mint_policy_id, asset_name)
-  //       let reference_data =
-  //         cip68.from_222_reference_datum(
-  //           transaction,
-  //           reference_token_output.datum,
-  //         )
-  //       // Just need to check something here so the cast above doesn't get optimized out
-  //       reference_data.version > 0
-  //     },
-  //   )
-  // tokens_valid? && datums_valid?
 }
 
-// NOTE: Validating the sequence number increment per token may add extra work with little benefit.  Also, it is arguably the
-//       responsibility of the spending validator to make certain the sequence number of the state is updated properly.
-
-/// This function takes the first pair in the list and validates it matches CIP-68 
-/// by validating the pair match the following pattern:
-/// (100)(purpose)(sequence)(content) and (222)(purpose)(sequence)(content) 
-/// (purpose)(sequence)(content) of be the same for both tokens
-/// Purpose should always be 0x01 (Nft) for NFT mints
-/// The 3 byte sequence number match the value of `sequence` argument passed to the function
-/// Recursively calls this function with the remainder of the list with sequence incremented by 1
-/// Returns true if this and all recursively called validates return true
-fn validate_mint_recursive(
-  nfts: List<((ByteArray, Int), (ByteArray, Int))>,
-  sequence: Int,
+fn validate_token_pair(
+  pair: (Pair<AssetName, Int>, Pair<AssetName, Int>),
+  expected_sequence: Int,
 ) {
-  when nfts is {
-    [(reference_token_asset, user_token_asset), ..rest] -> {
-      let reference_token_name =
-        collection.parse_name(reference_token_asset.1st)
-      let user_token_name = collection.parse_name(user_token_asset.1st)
+  let (reference_token, user_token) = pair
+  let reference_name = builtin.fst_pair(reference_token)
+  let reference_quantity = builtin.snd_pair(reference_token)
+  let user_name = builtin.fst_pair(user_token)
+  let user_quantity = builtin.snd_pair(user_token)
 
-      // Just for traceability we pull these each into a bool
-      let mints_single_reference_token = reference_token_asset.2nd == 1
-      let reference_token_has_valid_label =
-        reference_token_name.label == cip68.reference_token_label
-      let reference_token_has_valid_sequence =
-        reference_token_name.sequence == sequence
-      let reference_token_purpose_is_nft = reference_token_name.purpose == NFT
-      let user_token_has_valid_label =
-        user_token_name.label == cip68.nft_user_token_label
-      let user_token_sequence_matches_reference =
-        reference_token_name.sequence == user_token_name.sequence
-      let user_token_content_matches_reference =
-        reference_token_name.content == user_token_name.content
-      let user_token_quantity_matches_reference = user_token_asset.2nd == 1
-      let user_token_purpose_is_nft = user_token_name.purpose == NFT
+  let CollectionName {
+    label: reference_label,
+    purpose: reference_purpose,
+    sequence: reference_sequence,
+    content: reference_content,
+  } = collection.parse_name(reference_name)
 
-      expect and {
-          mints_single_reference_token?,
-          reference_token_has_valid_label?,
-          reference_token_has_valid_sequence?,
-          reference_token_purpose_is_nft?,
-          user_token_has_valid_label?,
-          user_token_sequence_matches_reference?,
-          user_token_content_matches_reference?,
-          user_token_quantity_matches_reference?,
-          user_token_purpose_is_nft?,
-        }
-      validate_mint_recursive(rest, sequence + 1)
+  let CollectionName {
+    label: user_label,
+    purpose: user_purpose,
+    sequence: user_sequence,
+    content: user_content,
+  } = collection.parse_name(user_name)
+
+  // NFT quantity should always be 1 on both tokens
+  let mints_single_reference = reference_quantity == 1
+  let mints_single_user = user_quantity == 1
+
+  // Should have the 222 and 100 labels 
+  let reference_correct_label = reference_label == cip68.reference_token_label
+  let user_correct_label = user_label == cip68.nft_user_token_label
+
+  // Sequence number should be the same expected sequence number for both tokens
+  let reference_correct_sequence = reference_sequence == expected_sequence
+  let user_correct_sequence = user_sequence == expected_sequence
+
+  // Should both have the NFT purpose
+  let reference_correct_purpose = reference_purpose == NFT
+  let user_correct_purpose = user_purpose == NFT
+
+  // Content name should match
+  let shared_content_name = reference_content == user_content
+
+  expect and {
+      mints_single_reference?,
+      mints_single_user?,
+      reference_correct_label?,
+      user_correct_label?,
+      reference_correct_sequence?,
+      user_correct_sequence?,
+      reference_correct_purpose?,
+      user_correct_purpose?,
+      shared_content_name?,
     }
-    [] -> True
-  }
+
+  True
 }
 
 /// Currently only the holder of the owner token can burn because we need to update the NFT count state
@@ -294,12 +277,12 @@ fn validate_burn(transaction: Transaction, mint_policy_id: PolicyId) {
 
   // Just verify reference input is included so that spending validator tracks state but don't need to grab anything from it for burn
   // Make sure the (111)Collection token is spent in the inputs 
-  let spends_owner_token =
-    in.has_nft(inputs, mint_policy_id, collection.owner_asset_name)
+  expect Some(_owner_token) =
+    in.find_asset(inputs, mint_policy_id, collection.owner_asset_name)
 
   // Make sure the (600)Collection token is also spent in the inputs
-  let spends_state_token =
-    in.has_nft(inputs, mint_policy_id, collection.state_asset_name)
+  expect Some(_state_token) =
+    in.find_asset(inputs, mint_policy_id, collection.state_asset_name)
 
   // Make sure we only have burns
   let only_burns =
@@ -309,9 +292,5 @@ fn validate_burn(transaction: Transaction, mint_policy_id: PolicyId) {
       |> dict.values()
       |> list.all(fn(quantity) { quantity == -1 })
 
-  and {
-    spends_owner_token?,
-    spends_state_token?,
-    only_burns,
-  }
+  only_burns?
 }
