@@ -81,6 +81,8 @@ pub type CollectionInfo {
 }
 
 pub type CollectionStateInfo {
+  // The url for the resource containing the corresponding smart contracts used for this collection.
+  contracts_url: List<ByteArray>,
   // The original seed utxo used to create this minting policy.
   seed: OutputReference,
   /// The group that this collection claims to be a part of.

@@ -11,9 +11,10 @@ import {
   toCollectionState,
 } from './collection-state';
 import { MintRedeemerShape } from './contract';
+import CONTRACTS_URL from './contracts-url';
 import { Data } from './data';
 import { Royalty } from './royalty';
-import { ScriptCache } from './script';
+import { fetchContracts, ScriptCache } from './script';
 import { checkPolicyId } from './utils';
 
 export class GenesisTxBuilder {
@@ -23,6 +24,7 @@ export class GenesisTxBuilder {
   #info?: CollectionInfo;
   #state: CollectionState = {
     info: {
+      contractsUrl: CONTRACTS_URL,
       seed: {
         hash: '',
         index: 0,
@@ -53,8 +55,14 @@ export class GenesisTxBuilder {
     return this;
   }
 
+  contractsUrl(url: string) {
+    this.#state.info.contractsUrl = url;
+    return this;
+  }
+
   cache(cache: ScriptCache) {
     this.#cache = cache;
+    this.#state.info.contractsUrl = cache.contractsUrl();
     return this;
   }
 
@@ -196,7 +204,9 @@ export class GenesisTxBuilder {
     }
 
     // Create a script cache from seed utxo so that after build it can be reused if needed
-    const cache = this.#cache ? this.#cache : ScriptCache.cold(this.#lucid, this.#seed);
+    const cache = this.#cache
+      ? this.#cache
+      : ScriptCache.cold(this.#lucid, await fetchContracts(this.#state.info.contractsUrl), this.#seed);
     const mintScript = cache.mint();
     const stateScript = cache.state();
     const infoScript = cache.immutableInfo();

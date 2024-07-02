@@ -16,8 +16,10 @@ import { createReferenceData } from './cip-68';
 import { SEQUENCE_MAX_VALUE } from './collection';
 import { TimeWindow } from './common';
 import { Data } from './data';
+import { asChunkedHex, toJoinedText } from './utils';
 
 const CollectionStateInfoSchema = Data.Object({
+  contracts_url: Data.Array(Data.Bytes()),
   seed: OutputReferenceSchema,
   group: Data.Nullable(PolicyIdSchema),
   mint_window: Data.Nullable(PosixTimeIntervalSchema),
@@ -51,6 +53,7 @@ export type CollectionStateMetadataType = Data.Static<typeof CollectionStateMeta
 export const CollectionStateMetadataShape = CollectionStateMetadataSchema as unknown as CollectionStateMetadataType;
 
 export type CollectionStateInfo = {
+  contractsUrl: string;
   seed: { hash: string; index: number };
   group?: string;
   mintWindow?: TimeWindow;
@@ -81,7 +84,9 @@ export async function extractCollectionState(lucid: Lucid, utxo: UTxO) {
 export function toCollectionState(lucid: Lucid, chainState: CollectionStateMetadataType): CollectionState {
   const { metadata } = chainState;
   const chainInfo = metadata.info;
+
   const info: CollectionStateInfo = {
+    contractsUrl: toJoinedText(chainInfo.contracts_url),
     seed: { hash: chainInfo.seed.transaction_id.hash, index: Number(chainInfo.seed.output_index) },
     group: chainInfo.group ?? undefined,
     mintWindow: chainInfo.mint_window ? toTimeWindow(chainInfo.mint_window) : undefined,
@@ -123,6 +128,8 @@ function asChainStateInfo(info?: CollectionStateInfo) {
     throw new Error('Collection state information must be specified.');
   }
 
+  const contracts_url = asChunkedHex(info.contractsUrl);
+
   const seed = {
     transaction_id: {
       hash: info.seed.hash,
@@ -136,6 +143,7 @@ function asChainStateInfo(info?: CollectionStateInfo) {
   const script_reference_policy_id = info.scriptReferencePolicyId;
 
   return {
+    contracts_url,
     seed,
     group,
     mint_window,
