@@ -45,6 +45,6 @@ jobs:
           exit 1
 
       - name: Success message
-        if: steps.contracts_changed.outputs.contracts_changed == 'true' && steps.base_version.outputs.base_version != steps.head_version.outputs.head_version
+        if: steps.plutus_changed.outputs.plutus_changed == 'true' && steps.base_version.outputs.base_version != steps.head_version.outputs.head_version
         run: |
           echo "Both contracts.json changed and aiken.toml version updated."
