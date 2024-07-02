@@ -24,12 +24,14 @@ jobs:
           fi
 
       - name: Extract version from aiken.toml (base)
+        if: steps.plutus_changed.outputs.plutus_changed == 'true'
         id: base_version
         run: |
           base_version=$(git show ${{ github.event.pull_request.base.sha }}:contracts/aiken.toml | grep -oP '(?<=version = ").*(?=")' | head -n 1)
           echo "base_version=$base_version" >> $GITHUB_OUTPUT
 
       - name: Extract version from aiken.toml (head)
+        if: steps.plutus_changed.outputs.plutus_changed == 'true'
         id: head_version
         run: |
           head_version=$(grep -oP '(?<=version = ").*(?=")' contracts/aiken.toml | head -n 1)
