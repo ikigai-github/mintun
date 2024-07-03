@@ -213,13 +213,13 @@ export class MintTxBuilder {
     if (this.#validFrom) {
       tx.validFrom(this.#validFrom);
     } else {
-      tx.validFrom(Date.now() - 1_000);
+      tx.validFrom(Date.now() - 5_000);
     }
 
     if (this.#validTo) {
       tx.validTo(this.#validTo);
     } else {
-      tx.validTo(Date.now() + 30_000);
+      tx.validTo(Date.now() + 600_000);
     }
 
     // TODO: Maybe enforce this just goes back to the original utxo address to prevent accidentally sending this to some other wallet
