@@ -51,9 +51,10 @@ w3 key create
 
 # ❗️ Store the private key (starting "Mg...") in environment variable W3_STORAGE_KEY
 
-w3 delegation create --can 'store/add' --can 'upload/add' <did_from_ucan-key_command_above> | base64
+w3 delegation create <did:key:blah-from-create-above> --can space/blob/add --can space/index/add --can filecoin/offer --can upload/add --can store/add --base64 > web/.proof
 
-# ❗️ Store the output in environment variable W3_STORAGE_PROOF
+# ❗️ Create a delegate proof and store it in 'web/.proof'
+
 ```
 
 Now you should be ready to upload. If you get some parse errors when uploading then something probably went wrong with generating the key. The [detailed guide](https://web3.storage/docs/how-to/upload/#using-the-cli) on web3.storage site may be of help.
