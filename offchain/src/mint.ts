@@ -20,14 +20,12 @@ import {
 import { Data } from './data';
 import { AddressedNft, MintunNft, prepareAssets } from './nft';
 import { fetchStateUtxo, ScriptCache } from './script';
-import { TxReference } from './utils';
 
 // Don't have a dedicated cip-25.ts so just putting this here
 export const CIP_25_METADATA_LABEL = 721;
 
 export class MintTxBuilder {
   #lucid: Lucid;
-  #seed?: TxReference;
   #mintingPolicyId?: string;
   #cache?: ScriptCache;
   #recipient?: Address;
@@ -42,11 +40,6 @@ export class MintTxBuilder {
 
   private constructor(lucid: Lucid) {
     this.#lucid = lucid;
-  }
-
-  seed(seed: TxReference) {
-    this.#seed = seed;
-    return this;
   }
 
   mintingPolicyId(mintingPolicyId: string) {
@@ -122,9 +115,7 @@ export class MintTxBuilder {
     }
 
     if (!this.#cache) {
-      if (this.#seed) {
-        this.#cache = ScriptCache.cold(this.#lucid, this.#seed);
-      } else if (this.#stateUtxo) {
+      if (this.#stateUtxo) {
         const { state, cache } = await ScriptCache.fromStateUtxo(this.#lucid, this.#stateUtxo);
         this.#cache = cache;
         this.#currentState = state;

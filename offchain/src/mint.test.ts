@@ -4,7 +4,7 @@ import { TEST_COLLECTION_INFO } from './fixtures.test';
 import { GenesisTxBuilder } from './genesis';
 import { MintTxBuilder } from './mint';
 import { fetchNftReferenceUtxos, toNftData } from './nft';
-import { ScriptCache } from './script';
+import { fetchContracts, ScriptCache } from './script';
 import { applyScriptRefTx, applyTx, createEmulatorLucid, generateNft } from './support.test';
 
 export async function genesis() {
@@ -13,7 +13,8 @@ export async function genesis() {
   // Use different address than selected wallet (account 0)
   const endMs = Date.now() + 10_000_000;
   const groupPolicyId = 'de2340edc45629456bf695200e8ea32f948a653b21ada10bc6f0c554';
-  const cache = ScriptCache.cold(lucid, seedUtxo);
+  const contracts = await fetchContracts('local');
+  const cache = ScriptCache.cold(lucid, contracts, seedUtxo);
   const { tx } = await GenesisTxBuilder.create(lucid)
     .seed(seedUtxo)
     .group(groupPolicyId)

@@ -16,6 +16,7 @@ export function createReferenceData<T>(metadata: T, extra: Data = '') {
 
 export type CollectionReferenceData<T> = ReturnType<typeof createReferenceData<T>>;
 
+// TODO: Check if it would be better to not assume a map at all and use an array of tuples
 export const NftMetadataFileSchema = Data.Map(Data.Bytes(), Data.Any());
 export type NftMetadataFileType = Data.Static<typeof NftMetadataFileSchema>;
 export const NftMetadataFileShape = NftMetadataFileSchema as unknown as NftMetadataFileType;

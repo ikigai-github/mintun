@@ -3,7 +3,6 @@
 
 import { applyDoubleCborEncoding, Lucid, UTxO, type Credential, type Script } from 'lucid-cardano';
 
-import contracts from '../contracts.json';
 import { toInfoUnit, toOwnerUnit } from './collection';
 import { extractCollectionState, toStateUnit } from './collection-state';
 import {
@@ -17,6 +16,21 @@ import {
   parameterizeStateValidator,
 } from './contract';
 import { findUtxo, TxReference } from './utils';
+
+/// A loose definition of the contracts json structure.
+/// Just enough to lookup scripts by name and get the compiled code.
+export type Contracts = {
+  url: string;
+  preamble: unknown;
+  validators: {
+    title: string;
+    redeemer?: unknown;
+    parameters?: unknown;
+    compiledCode: string;
+    hash: string;
+  }[];
+  definitions: unknown;
+};
 
 /// All the parts commonly used when dealing with a paramaterized script
 export type ScriptInfo = {
@@ -34,8 +48,32 @@ export type ManageUnitLookup = {
   state: string;
 };
 
+// Fetches contracts from a given path and lightly checks it matches the expected schema
+export async function fetchContracts(url: string) {
+  try {
+    if (url == 'local') {
+      const contracts = (await import('../../contracts/plutus.json')) as unknown as Contracts;
+      contracts.url = 'local';
+      return contracts;
+    }
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error();
+    const json = await response.json();
+    const contracts = json as unknown as Contracts;
+    contracts.url = url;
+    if (!contracts.preamble || !contracts.definitions || !contracts.validators) {
+      throw new Error();
+    }
+
+    return contracts;
+  } catch (error) {
+    throw new Error(`Failed to fetch contract json at url: ${url}`);
+  }
+}
+
 // Utility function for fetching a validator from the generated plutus.json
-export function getScript(title: string) {
+export function getScript(contracts: Contracts, title: string) {
   const script = contracts.validators.find((v) => v.title === title);
   if (!script) {
     throw new Error('script not found');
@@ -65,6 +103,7 @@ export function getScriptInfo(lucid: Lucid, name: string, paramaterizedScript: s
 }
 
 export type ScriptCacheWarmer = {
+  contracts: Contracts;
   mint?: ScriptInfo;
   state?: ScriptInfo;
   unit?: ManageUnitLookup;
@@ -74,6 +113,7 @@ export type ScriptCacheWarmer = {
 /// allow subsequent transactions to reuse computed data
 export class ScriptCache {
   #lucid: Lucid;
+  #contracts: Contracts;
   #seed: TxReference;
   #mint?: ScriptInfo;
   #state?: ScriptInfo;
@@ -86,17 +126,18 @@ export class ScriptCache {
   #delegateMint?: ScriptInfo;
   #unit?: ManageUnitLookup;
 
-  private constructor(lucid: Lucid, seed: TxReference) {
+  private constructor(lucid: Lucid, contracts: Contracts, seed: TxReference) {
     this.#lucid = lucid;
     this.#seed = seed;
+    this.#contracts = contracts;
   }
 
-  static cold(lucid: Lucid, seed: TxReference) {
-    return new ScriptCache(lucid, seed);
+  static cold(lucid: Lucid, contracts: Contracts, seed: TxReference) {
+    return new ScriptCache(lucid, contracts, seed);
   }
 
   static warm(lucid: Lucid, seed: TxReference, warmer: ScriptCacheWarmer) {
-    const cache = new ScriptCache(lucid, seed);
+    const cache = new ScriptCache(lucid, warmer.contracts, seed);
     cache.#mint = warmer.mint;
     cache.#state = warmer.state;
     cache.#unit = warmer.unit;
@@ -108,13 +149,6 @@ export class ScriptCache {
   static async fromMintPolicyId(lucid: Lucid, policyId: string) {
     const stateUtxo = await lucid.utxoByUnit(toStateUnit(policyId));
 
-    // TODO: If contract code has changed the policy that we use here won't match
-    //       the constructed script cache.  Need to add versioning to the contract.json and
-    //       write that version as the 0 of the cbor so it is always readable.  That way
-    //       we can reproduce the correct script.  Ideally contract won't change too often
-    //       but need a way to handle it.  It would suck though to bloat the library with every
-    //       version of the contract so instead would need to upload contract versions to like IPFS
-    //       and fetch them on library init or something gross like that.
     return ScriptCache.fromStateUtxo(lucid, stateUtxo);
   }
 
@@ -122,7 +156,9 @@ export class ScriptCache {
   static async fromStateUtxo(lucid: Lucid, stateUtxo: UTxO) {
     const state = await extractCollectionState(lucid, stateUtxo);
 
-    const cache = ScriptCache.cold(lucid, {
+    const contracts = await fetchContracts(state.info.contractsUrl);
+
+    const cache = ScriptCache.cold(lucid, contracts, {
       txHash: state.info.seed.hash,
       outputIndex: state.info.seed.index,
     });
@@ -131,7 +167,7 @@ export class ScriptCache {
   }
 
   static copy(lucid: Lucid, cache: ScriptCache) {
-    const copy = new ScriptCache(lucid, cache.#seed);
+    const copy = new ScriptCache(lucid, cache.#contracts, cache.#seed);
     copy.#mint = cache.#mint;
     copy.#state = cache.#state;
     copy.#unit = cache.#unit;
@@ -143,10 +179,14 @@ export class ScriptCache {
     return this.#lucid;
   }
 
+  contractsUrl() {
+    return this.#contracts.url;
+  }
+
   mint() {
     if (!this.#mint) {
       const { txHash, outputIndex } = this.#seed;
-      this.#mint = parameterizeMintingPolicy(this.#lucid, txHash, outputIndex);
+      this.#mint = parameterizeMintingPolicy(this.#lucid, this.#contracts, txHash, outputIndex);
     }
 
     return this.#mint;
@@ -155,7 +195,7 @@ export class ScriptCache {
   spendLock() {
     if (!this.#spendLock) {
       const mint = this.mint();
-      this.#spendLock = parameterizeSpendLockValidator(this.#lucid, mint.policyId);
+      this.#spendLock = parameterizeSpendLockValidator(this.#lucid, this.#contracts, mint.policyId);
     }
 
     return this.#spendLock;
@@ -164,7 +204,7 @@ export class ScriptCache {
   state() {
     if (!this.#state) {
       const mint = this.mint();
-      this.#state = parameterizeStateValidator(this.#lucid, mint.policyId);
+      this.#state = parameterizeStateValidator(this.#lucid, this.#contracts, mint.policyId);
     }
 
     return this.#state;
@@ -174,7 +214,7 @@ export class ScriptCache {
   immutableInfo() {
     if (!this.#immutableInfo) {
       const mint = this.mint();
-      this.#immutableInfo = parameterizeImmutableInfoValidator(this.#lucid, mint.policyId);
+      this.#immutableInfo = parameterizeImmutableInfoValidator(this.#lucid, this.#contracts, mint.policyId);
     }
 
     return this.#immutableInfo;
@@ -183,7 +223,7 @@ export class ScriptCache {
   immutableNft() {
     if (!this.#immutableNft) {
       const mint = this.mint();
-      this.#immutableNft = parameterizeImmutableNftValidator(this.#lucid, mint.policyId);
+      this.#immutableNft = parameterizeImmutableNftValidator(this.#lucid, this.#contracts, mint.policyId);
     }
 
     return this.#immutableNft;
@@ -192,7 +232,7 @@ export class ScriptCache {
   permissiveNft() {
     if (!this.#permissiveNft) {
       const mint = this.mint();
-      this.#permissiveNft = parameterizePermissiveNftValidator(this.#lucid, mint.policyId);
+      this.#permissiveNft = parameterizePermissiveNftValidator(this.#lucid, this.#contracts, mint.policyId);
     }
 
     return this.#permissiveNft;
@@ -201,7 +241,7 @@ export class ScriptCache {
   derivativeMint() {
     if (!this.#derivativeMint) {
       const mint = this.mint();
-      this.#derivativeMint = parameterizeDerivativeMintingPolicy(this.#lucid, mint.policyId);
+      this.#derivativeMint = parameterizeDerivativeMintingPolicy(this.#lucid, this.#contracts, mint.policyId);
     }
 
     return this.#derivativeMint;
@@ -211,7 +251,7 @@ export class ScriptCache {
     if (!this.#delegateMint || this.#delegate !== delegate) {
       const mint = this.mint();
       this.#delegate = delegate;
-      this.#delegateMint = parameterizeDelegativeMintingPolicy(this.#lucid, mint.policyId, delegate);
+      this.#delegateMint = parameterizeDelegativeMintingPolicy(this.#lucid, this.#contracts, mint.policyId, delegate);
     }
 
     return this.#delegateMint;
