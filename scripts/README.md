@@ -19,7 +19,7 @@ You should only need to run these steps once on your machine. The script uses th
   - `w3 key create `
 - Write the private key (starting "Mg...") in the .env file variable `W3_KEY`
 - Create a delegate proof and store in proof.txt
-  - `w3 delegate create <did_from_w3_key_create_above> --can space/blob/add --can space/index/add --can filecoin/offer --can upload/add --base64 > proof.txt`
+  - `w3 delegation create <did_from_w3_key_create_above> --can space/blob/add --can space/index/add --can filecoin/offer --can upload/add --base64 > proof.txt`
 
 ## Bump version
 

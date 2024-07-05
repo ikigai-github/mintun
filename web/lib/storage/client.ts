@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { extract } from '@ucanto/core/delegation';
 import { Client, create } from '@web3-storage/w3up-client';
+import * as Delegation from '@web3-storage/w3up-client/delegation';
 
 export async function createWebClient() {
   const client = await create();
@@ -16,7 +16,7 @@ export async function createWebClient() {
   const data = await response.arrayBuffer();
 
   // Deserialize the delegation
-  const delegation = await extract(new Uint8Array(data));
+  const delegation = await Delegation.extract(new Uint8Array(data));
   if (!delegation.ok) {
     throw new Error('Failed to extract delegation', { cause: delegation.error });
   }
