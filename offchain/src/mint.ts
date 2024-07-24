@@ -213,7 +213,7 @@ export class MintTxBuilder {
     if (this.#validFrom) {
       tx.validFrom(this.#validFrom);
     } else {
-      tx.validFrom(Date.now() - 5_000);
+      tx.validFrom(Date.now() - 500_000_000);
     }
 
     if (this.#validTo) {

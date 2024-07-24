@@ -166,7 +166,7 @@ export class GenesisTxBuilder {
 
   royalty(
     address: string,
-    variableFee: number | undefined = undefined,
+    variableFee: number = 0,
     minFee: number | undefined = undefined,
     maxFee: number | undefined = undefined
   ) {
@@ -210,6 +210,7 @@ export class GenesisTxBuilder {
     const mintScript = cache.mint();
     const stateScript = cache.state();
     const infoScript = cache.immutableInfo();
+    const spendLock = cache.spendLock();
     const unit = cache.unit();
     const recipient = this.#ownerAddress ? this.#ownerAddress : await this.#lucid.wallet.address();
 
@@ -237,7 +238,7 @@ export class GenesisTxBuilder {
     if (royalties.length > 0) {
       const royaltyAddress = this.#royaltyValidatorAddress
         ? this.#royaltyValidatorAddress
-        : await this.#lucid.wallet.address();
+        : await spendLock.address
       addCip102RoyaltyToTransaction(tx, mintScript.policyId, royaltyAddress, royalties, redeemer);
     }
 
