@@ -198,7 +198,7 @@ export function toRoyaltyInfo(lucid: Lucid, chainInfo: RoyaltyInfoType): Royalty
   metadata.forEach((royalty) => {
     royalties.push({
       address: toBech32Address(lucid, royalty.address),
-      variableFee: royalty.variableFee ? fromChainVariableFee(royalty.variableFee) || undefined : undefined,
+      variableFee: fromChainVariableFee(royalty.variableFee),
       minFee: royalty.minFee ? Number(royalty.minFee) : undefined,
       maxFee: royalty.maxFee ? Number(royalty.maxFee) : undefined,
     });

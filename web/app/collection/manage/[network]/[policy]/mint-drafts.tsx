@@ -71,16 +71,16 @@ export default function MintDrafts() {
               id: draft.id,
               traits,
               tags,
-              files: [
-                {
-                  src: draft.image.data as string,
-                  mediaType: draft.image.mime,
-                  dimension: {
-                    width: draft.image.width,
-                    height: draft.image.height,
-                  },
-                },
-              ],
+              //files: [
+              //  {
+              //    src: draft.image.data as string,
+              //    mediaType: draft.image.mime,
+              //    dimension: {
+              //      width: draft.image.width,
+              //      height: draft.image.height,
+              //    },
+              //  },
+              //],
             });
           }
         }
