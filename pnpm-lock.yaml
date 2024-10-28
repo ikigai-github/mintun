@@ -22,7 +22,7 @@ importers:
         version: 0.5.11(@ianvs/prettier-plugin-sort-imports@4.1.1(prettier@3.2.5))(prettier@3.2.5)
       vercel:
         specifier: ^33.6.2
-        version: 33.6.2(@swc/core@1.4.17)(encoding@0.1.13)
+        version: 33.6.2(@swc/core@1.4.17(@swc/helpers@0.5.2))(encoding@0.1.13)
 
   offchain:
     dependencies:
@@ -30,8 +30,8 @@ importers:
         specifier: ^0.32.27
         version: 0.32.27
       lucid-cardano:
-        specifier: ^0.10.7
-        version: 0.10.7
+        specifier: ^0.10.10
+        version: 0.10.10
     devDependencies:
       '@parcel/packager-ts':
         specifier: 2.12.0
@@ -71,13 +71,13 @@ importers:
         version: 3.4.0
       '@mdx-js/loader':
         specifier: ^3.0.1
-        version: 3.0.1(webpack@5.90.3(@swc/core@1.4.17))
+        version: 3.0.1(webpack@5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2)))
       '@mdx-js/react':
         specifier: ^3.0.1
         version: 3.0.1(@types/react@18.3.1)(react@18.3.1)
       '@next/mdx':
         specifier: ^14.1.3
-        version: 14.1.3(@mdx-js/loader@3.0.1(webpack@5.90.3(@swc/core@1.4.17)))(@mdx-js/react@3.0.1(@types/react@18.3.1)(react@18.3.1))
+        version: 14.1.3(@mdx-js/loader@3.0.1(webpack@5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2))))(@mdx-js/react@3.0.1(@types/react@18.3.1)(react@18.3.1))
       '@peculiar/webcrypto':
         specifier: ^1.4.6
         version: 1.4.6
@@ -151,8 +151,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
       lucid-cardano:
-        specifier: ^0.10.7
-        version: 0.10.7
+        specifier: ^0.10.10
+        version: 0.10.10
       magic-bytes.js:
         specifier: ^1.10.0
         version: 1.10.0
@@ -194,7 +194,7 @@ importers:
         version: 2.3.0
       tailwindcss-animate:
         specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5)))
+        version: 1.0.7(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5)))
       uid:
         specifier: ^2.0.2
         version: 2.0.2
@@ -213,10 +213,10 @@ importers:
     devDependencies:
       '@tailwindcss/line-clamp':
         specifier: ^0.4.4
-        version: 0.4.4(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5)))
+        version: 0.4.4(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5)))
       '@tailwindcss/typography':
         specifier: ^0.5.13
-        version: 0.5.13(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5)))
+        version: 0.5.13(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5)))
       '@types/node':
         specifier: ^20.12.7
         version: 20.12.7
@@ -243,13 +243,13 @@ importers:
         version: 7.34.1(eslint@8.57.0)
       eslint-plugin-tailwindcss:
         specifier: ^3.15.1
-        version: 3.15.1(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5)))
+        version: 3.15.1(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5)))
       postcss:
         specifier: ^8.4.38
         version: 8.4.38
       tailwindcss:
         specifier: ^3.4.3
-        version: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5))
+        version: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5))
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -580,6 +580,7 @@ packages:
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
     engines: {node: '>=10.10.0'}
+    deprecated: Use @eslint/config-array instead
 
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
@@ -587,6 +588,7 @@ packages:
 
   '@humanwhocodes/object-schema@2.0.2':
     resolution: {integrity: sha512-6EwiSjwWYP7pTckG6I5eyFANjPhmPjUX9JRLUSfNPC7FX7zK9gyZAfUEaECL6ALTpGX5AjnBq3C9XmVWPitNpw==}
+    deprecated: Use @eslint/object-schema instead
 
   '@ianvs/prettier-plugin-sort-imports@4.1.1':
     resolution: {integrity: sha512-kJhXq63ngpTQ2dxgf5GasbPJWsJA3LgoOdd7WGhpUSzLgLgI4IsIzYkbJf9kmpOHe7Vdm/o3PcRA3jmizXUuAQ==}
@@ -1274,10 +1276,6 @@ packages:
     resolution: {integrity: sha512-coUfuoMeIB7B8/NMekxaDzLhaYmp0HZNPEjYRm9goRou8UZIC3z21s0sL9AWoCw4EG876QyO3kYrc61WNF9B/w==}
     engines: {node: '>=8.0.0'}
 
-  '@peculiar/webcrypto@1.4.5':
-    resolution: {integrity: sha512-oDk93QCDGdxFRM8382Zdminzs44dg3M2+E5Np+JWkpqLDyJC9DviMh8F8mEJkYuUcUOGA5jHO5AJJ10MFWdbZw==}
-    engines: {node: '>=10.12.0'}
-
   '@peculiar/webcrypto@1.4.6':
     resolution: {integrity: sha512-YBcMfqNSwn3SujUJvAaySy5tlYbYm6tVt9SKoXu8BaTdKGROiJDgPR3TXpZdAKUfklzm3lRapJEAltiMQtBgZg==}
     engines: {node: '>=10.12.0'}
@@ -1836,6 +1834,10 @@ packages:
   '@sinclair/typebox@0.32.27':
     resolution: {integrity: sha512-JHRrubCKiXi6VKlbBTpTQnExkUFasPMIaXCJYJhqVBGLliQVt1yBZZgiZo3/uSmvAdXlIIdGoTAT6RB09L0QqA==}
 
+  '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6':
+    resolution: {tarball: https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6}
+    version: 1.0.1
+
   '@swc/core-darwin-arm64@1.4.17':
     resolution: {integrity: sha512-HVl+W4LezoqHBAYg2JCqR+s9ife9yPfgWSj37iIawLWzOmuuJ7jVdIB7Ee2B75bEisSEKyxRlTl6Y1Oq3owBgw==}
     engines: {node: '>=10'}
@@ -2334,6 +2336,7 @@ packages:
   are-we-there-yet@2.0.0:
     resolution: {integrity: sha512-Ci/qENmwHnsYo9xKIcUJN5LeDKdJ6R1Z1j9V/J5wyq8nh/mYPEpIKJbBZXtZjG04HiK7zV/p6Vs9952MrMeUIw==}
     engines: {node: '>=10'}
+    deprecated: This package is no longer supported.
 
   arg@4.1.0:
     resolution: {integrity: sha512-ZWc51jO3qegGkVh8Hwpv636EkbesNV5ZNQPCtRa+0qytRYPEs9IYT9qITY9buezqUH5uqyzlWLcufrzU2rffdg==}
@@ -2660,7 +2663,7 @@ packages:
     engines: {node: '>= 10'}
 
   concat-map@0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   conf@11.0.2:
     resolution: {integrity: sha512-jjyhlQ0ew/iwmtwsS2RaB6s8DBifcE2GYBEaw2SJDUY/slJJbNfY4GlDVzOs/ff8cM/Wua5CikqXgbFl5eu85A==}
@@ -3371,6 +3374,7 @@ packages:
   gauge@3.0.2:
     resolution: {integrity: sha512-+5J6MS/5XksCuXq++uFRsnUd7Ovu1XenbeuIuNRJxYWjgQbPuFhT14lAvsWfqfAmnwluf1OwMjz39HjfLPci0Q==}
     engines: {node: '>=10'}
+    deprecated: This package is no longer supported.
 
   generic-pool@3.4.2:
     resolution: {integrity: sha512-H7cUpwCQSiJmAHM4c/aFu6fUfrhWXW1ncyh8ftxEPMu6AiYkHw9K8br720TGPZJbk5eOH2bynjZD1yPvdDAmag==}
@@ -3427,6 +3431,7 @@ packages:
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   globals@11.12.0:
     resolution: {integrity: sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==}
@@ -3572,6 +3577,7 @@ packages:
 
   inflight@1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
+    deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
 
   inherits@2.0.1:
     resolution: {integrity: sha512-8nWq2nLTAwd02jTqJExUYFSD/fKq6VH9Y/oG2accc/kdI0V98Bag8d5a4gi3XHz73rDWa2PvTtvcWYquKqSENA==}
@@ -3967,8 +3973,8 @@ packages:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
 
-  lucid-cardano@0.10.7:
-    resolution: {integrity: sha512-hxJRMWj8VH+SGFqsVMG6T3LSRuxzwFbWOQ5DTGQQUyR/20FL7bjiVL+2ivMJF52tAbFKcwqpRD4fddR7LbqcAw==}
+  lucid-cardano@0.10.10:
+    resolution: {integrity: sha512-Yp1o8/kbVUgkRpQqllGQCT9I9w70a+uQKSoJdZEHVrEo5MFbT3Vds314Q8ClqgExzN7pj9NHGbiwiow2ik7mUA==}
     engines: {node: '>=14'}
 
   magic-bytes.js@1.10.0:
@@ -4332,6 +4338,7 @@ packages:
 
   npmlog@5.0.1:
     resolution: {integrity: sha512-AqZtDUWOMKs1G/8lwylVjrdYgqA4d9nu8hc+0gzRxlDb1I10+FHBGMXs6aiQHFdCUUlqH99MUMuLfzWDNDtfxw==}
+    deprecated: This package is no longer supported.
 
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
@@ -4384,10 +4391,6 @@ packages:
 
   one-webcrypto@1.0.3:
     resolution: {integrity: sha512-fu9ywBVBPx0gS9K0etIROTiCkvI5S1TDjFsYFb3rC1ewFxeOqsbzq7aIMBHsYfrTHBcGXJaONXXjTl8B01cW1Q==}
-
-  one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/5148cd14d5489a8ac4cd38223870e02db15a2382:
-    resolution: {tarball: https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/5148cd14d5489a8ac4cd38223870e02db15a2382}
-    version: 1.0.3
 
   onetime@5.1.2:
     resolution: {integrity: sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==}
@@ -4747,6 +4750,7 @@ packages:
   react-remove-scroll-bar@2.3.5:
     resolution: {integrity: sha512-3cqjOqg6s0XbOjWvmasmqHch+RLxIEk2r/70rzGXuz3iIGQsQheEQyqYCBb5EECoD01Vo2SIbDqW4paLeLTASw==}
     engines: {node: '>=10'}
+    deprecated: please update to the following version as this contains a bug (https://github.com/theKashey/react-remove-scroll-bar/issues/57)
     peerDependencies:
       '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
@@ -4849,6 +4853,7 @@ packages:
 
   rimraf@3.0.2:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
   rollup@4.11.0:
@@ -5535,9 +5540,6 @@ packages:
   web-vitals@0.2.4:
     resolution: {integrity: sha512-6BjspCO9VriYy12z356nL6JBS0GYeEcA457YyRzD+dD6XYCQ75NKhcOHUMHentOE7OcVCIXXDvOm0jKFfQG2Gg==}
 
-  webcrypto-core@1.7.8:
-    resolution: {integrity: sha512-eBR98r9nQXTqXt/yDRtInszPMjTaSAMJAFDg2AHsgrnczawT1asx9YNBX6k5p+MekbPF4+s/UJJrr88zsTqkSg==}
-
   webcrypto-core@1.7.9:
     resolution: {integrity: sha512-FE+a4PPkOmBbgNDIyRmcHhgXn+2ClRl3JzJdDu/P4+B8y81LqKe6RAsI9b3lAOHe1T1BMkSjsRHTYRikImZnVA==}
 
@@ -6165,11 +6167,11 @@ snapshots:
       - encoding
       - supports-color
 
-  '@mdx-js/loader@3.0.1(webpack@5.90.3(@swc/core@1.4.17))':
+  '@mdx-js/loader@3.0.1(webpack@5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2)))':
     dependencies:
       '@mdx-js/mdx': 3.0.1
       source-map: 0.7.4
-      webpack: 5.90.3(@swc/core@1.4.17)
+      webpack: 5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2))
     transitivePeerDependencies:
       - supports-color
 
@@ -6242,11 +6244,11 @@ snapshots:
     dependencies:
       glob: 10.3.10
 
-  '@next/mdx@14.1.3(@mdx-js/loader@3.0.1(webpack@5.90.3(@swc/core@1.4.17)))(@mdx-js/react@3.0.1(@types/react@18.3.1)(react@18.3.1))':
+  '@next/mdx@14.1.3(@mdx-js/loader@3.0.1(webpack@5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2))))(@mdx-js/react@3.0.1(@types/react@18.3.1)(react@18.3.1))':
     dependencies:
       source-map: 0.7.4
     optionalDependencies:
-      '@mdx-js/loader': 3.0.1(webpack@5.90.3(@swc/core@1.4.17))
+      '@mdx-js/loader': 3.0.1(webpack@5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2)))
       '@mdx-js/react': 3.0.1(@types/react@18.3.1)(react@18.3.1)
 
   '@next/swc-darwin-arm64@14.1.0':
@@ -6909,14 +6911,6 @@ snapshots:
     dependencies:
       tslib: 2.6.2
 
-  '@peculiar/webcrypto@1.4.5':
-    dependencies:
-      '@peculiar/asn1-schema': 2.3.8
-      '@peculiar/json-schema': 1.1.12
-      pvtsutils: 1.3.5
-      tslib: 2.6.2
-      webcrypto-core: 1.7.8
-
   '@peculiar/webcrypto@1.4.6':
     dependencies:
       '@peculiar/asn1-schema': 2.3.8
@@ -7496,6 +7490,8 @@ snapshots:
 
   '@sinclair/typebox@0.32.27': {}
 
+  '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6': {}
+
   '@swc/core-darwin-arm64@1.4.17':
     optional: true
 
@@ -7553,17 +7549,17 @@ snapshots:
     dependencies:
       '@swc/counter': 0.1.3
 
-  '@tailwindcss/line-clamp@0.4.4(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5)))':
+  '@tailwindcss/line-clamp@0.4.4(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5)))':
     dependencies:
-      tailwindcss: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5))
+      tailwindcss: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5))
 
-  '@tailwindcss/typography@0.5.13(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5)))':
+  '@tailwindcss/typography@0.5.13(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5)))':
     dependencies:
       lodash.castarray: 4.4.0
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
-      tailwindcss: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5))
+      tailwindcss: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5))
 
   '@tanstack/react-table@8.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -7825,7 +7821,7 @@ snapshots:
       - encoding
       - supports-color
 
-  '@vercel/node@3.0.25(@swc/core@1.4.17)(encoding@0.1.13)':
+  '@vercel/node@3.0.25(@swc/core@1.4.17(@swc/helpers@0.5.2))(encoding@0.1.13)':
     dependencies:
       '@edge-runtime/node-utils': 2.3.0
       '@edge-runtime/primitives': 4.1.0
@@ -7844,7 +7840,7 @@ snapshots:
       node-fetch: 2.6.9(encoding@0.1.13)
       path-to-regexp: 6.2.1
       ts-morph: 12.0.0
-      ts-node: 10.9.1(@swc/core@1.4.17)(@types/node@14.18.33)(typescript@4.9.5)
+      ts-node: 10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@14.18.33)(typescript@4.9.5)
       typescript: 4.9.5
       undici: 5.26.5
     transitivePeerDependencies:
@@ -7939,7 +7935,7 @@ snapshots:
       bigint-mod-arith: 3.3.1
       conf: 11.0.2
       multiformats: 12.1.3
-      one-webcrypto: https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/5148cd14d5489a8ac4cd38223870e02db15a2382
+      one-webcrypto: '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6'
       p-defer: 4.0.0
       type-fest: 4.11.1
       uint8arrays: 4.0.10
@@ -9055,7 +9051,7 @@ snapshots:
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0)
-      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
+      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.57.0)
       eslint-plugin-react: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks: 4.6.0(eslint@8.57.0)
@@ -9083,7 +9079,7 @@ snapshots:
       enhanced-resolve: 5.15.0
       eslint: 8.57.0
       eslint-module-utils: 2.8.0(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0)
-      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
+      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.7.2
       is-core-module: 2.13.1
@@ -9105,7 +9101,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0):
+  eslint-plugin-import@2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0):
     dependencies:
       array-includes: 3.1.7
       array.prototype.findlastindex: 1.2.4
@@ -9178,11 +9174,11 @@ snapshots:
       semver: 6.3.1
       string.prototype.matchall: 4.0.10
 
-  eslint-plugin-tailwindcss@3.15.1(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5))):
+  eslint-plugin-tailwindcss@3.15.1(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5))):
     dependencies:
       fast-glob: 3.3.2
       postcss: 8.4.38
-      tailwindcss: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5))
+      tailwindcss: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5))
 
   eslint-scope@5.1.1:
     dependencies:
@@ -10035,9 +10031,9 @@ snapshots:
     dependencies:
       yallist: 4.0.0
 
-  lucid-cardano@0.10.7:
+  lucid-cardano@0.10.10:
     dependencies:
-      '@peculiar/webcrypto': 1.4.5
+      '@peculiar/webcrypto': 1.4.6
       node-fetch: 3.3.2
       ws: 8.16.0
     transitivePeerDependencies:
@@ -10638,8 +10634,6 @@ snapshots:
 
   one-webcrypto@1.0.3: {}
 
-  one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/5148cd14d5489a8ac4cd38223870e02db15a2382: {}
-
   onetime@5.1.2:
     dependencies:
       mimic-fn: 2.1.0
@@ -10806,13 +10800,13 @@ snapshots:
       camelcase-css: 2.0.1
       postcss: 8.4.38
 
-  postcss-load-config@4.0.2(postcss@8.4.38)(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5)):
+  postcss-load-config@4.0.2(postcss@8.4.38)(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5)):
     dependencies:
       lilconfig: 3.1.0
       yaml: 2.3.4
     optionalDependencies:
       postcss: 8.4.38
-      ts-node: 10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5)
+      ts-node: 10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5)
 
   postcss-nested@6.0.1(postcss@8.4.38):
     dependencies:
@@ -11435,11 +11429,11 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.24.4
 
-  tailwindcss-animate@1.0.7(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5))):
+  tailwindcss-animate@1.0.7(tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5))):
     dependencies:
-      tailwindcss: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5))
+      tailwindcss: 3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5))
 
-  tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5)):
+  tailwindcss@3.4.3(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5)):
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
@@ -11458,7 +11452,7 @@ snapshots:
       postcss: 8.4.38
       postcss-import: 15.1.0(postcss@8.4.38)
       postcss-js: 4.0.1(postcss@8.4.38)
-      postcss-load-config: 4.0.2(postcss@8.4.38)(ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5))
+      postcss-load-config: 4.0.2(postcss@8.4.38)(ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5))
       postcss-nested: 6.0.1(postcss@8.4.38)
       postcss-selector-parser: 6.0.15
       resolve: 1.22.8
@@ -11489,14 +11483,14 @@ snapshots:
 
   term-size@2.2.1: {}
 
-  terser-webpack-plugin@5.3.10(@swc/core@1.4.17)(webpack@5.90.3(@swc/core@1.4.17)):
+  terser-webpack-plugin@5.3.10(@swc/core@1.4.17(@swc/helpers@0.5.2))(webpack@5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2))):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.22
       jest-worker: 27.5.1
       schema-utils: 3.3.0
       serialize-javascript: 6.0.2
       terser: 5.29.1
-      webpack: 5.90.3(@swc/core@1.4.17)
+      webpack: 5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2))
     optionalDependencies:
       '@swc/core': 1.4.17(@swc/helpers@0.5.2)
 
@@ -11556,7 +11550,7 @@ snapshots:
       '@ts-morph/common': 0.11.1
       code-block-writer: 10.1.1
 
-  ts-node@10.9.1(@swc/core@1.4.17)(@types/node@14.18.33)(typescript@4.9.5):
+  ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@14.18.33)(typescript@4.9.5):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
@@ -11576,7 +11570,7 @@ snapshots:
     optionalDependencies:
       '@swc/core': 1.4.17(@swc/helpers@0.5.2)
 
-  ts-node@10.9.1(@swc/core@1.4.17)(@types/node@20.12.7)(typescript@5.4.5):
+  ts-node@10.9.1(@swc/core@1.4.17(@swc/helpers@0.5.2))(@types/node@20.12.7)(typescript@5.4.5):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
@@ -11799,14 +11793,14 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  vercel@33.6.2(@swc/core@1.4.17)(encoding@0.1.13):
+  vercel@33.6.2(@swc/core@1.4.17(@swc/helpers@0.5.2))(encoding@0.1.13):
     dependencies:
       '@vercel/build-utils': 7.10.0
       '@vercel/fun': 1.1.0(encoding@0.1.13)
       '@vercel/go': 3.0.5
       '@vercel/hydrogen': 1.0.2
       '@vercel/next': 4.1.6(encoding@0.1.13)
-      '@vercel/node': 3.0.25(@swc/core@1.4.17)(encoding@0.1.13)
+      '@vercel/node': 3.0.25(@swc/core@1.4.17(@swc/helpers@0.5.2))(encoding@0.1.13)
       '@vercel/python': 4.1.1
       '@vercel/redwood': 2.0.8(encoding@0.1.13)
       '@vercel/remix-builder': 2.1.5(encoding@0.1.13)
@@ -11907,14 +11901,6 @@ snapshots:
 
   web-vitals@0.2.4: {}
 
-  webcrypto-core@1.7.8:
-    dependencies:
-      '@peculiar/asn1-schema': 2.3.8
-      '@peculiar/json-schema': 1.1.12
-      asn1js: 3.0.5
-      pvtsutils: 1.3.5
-      tslib: 2.6.2
-
   webcrypto-core@1.7.9:
     dependencies:
       '@peculiar/asn1-schema': 2.3.8
@@ -11927,7 +11913,7 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
-  webpack@5.90.3(@swc/core@1.4.17):
+  webpack@5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2)):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.5
@@ -11950,7 +11936,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.10(@swc/core@1.4.17)(webpack@5.90.3(@swc/core@1.4.17))
+      terser-webpack-plugin: 5.3.10(@swc/core@1.4.17(@swc/helpers@0.5.2))(webpack@5.90.3(@swc/core@1.4.17(@swc/helpers@0.5.2)))
       watchpack: 2.4.0
       webpack-sources: 3.2.3
     transitivePeerDependencies:

@@ -49,6 +49,6 @@
     "@sinclair/typebox": "^0.32.27"
   },
   "peerDependencies": {
-    "lucid-cardano": "^0.10.7"
+    "lucid-cardano": "^0.10.10"
   }
 }
