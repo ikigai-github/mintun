@@ -1,16 +1,12 @@
-use aiken/transaction.{ScriptContext, Spend}
+use aiken/transaction.{OutputReference, Transaction}
 use aiken/transaction/value.{PolicyId}
 use mintun/collection
 
 /// Currently just locks the info token and doesn't let it be spent.  
 /// Allows spending of anything else that happens to have landed at this script address.
-validator(mint_policy_id: PolicyId) {
-  fn spend(_datum, _redeemer, context: ScriptContext) {
-    let ScriptContext { transaction, purpose } = context
-
-    expect Spend(output_reference) = purpose
-    expect Some(info_input) =
-      transaction.find_input(transaction.inputs, output_reference)
+validator imm_info_script(mint_policy_id: PolicyId) {
+  spend(_datum, _redeemer, utxo: OutputReference, self: Transaction) {
+    expect Some(info_input) = transaction.find_input(self.inputs, utxo)
 
     // Don't allow collection info token to be spent. Anything else we don't care about.
     value.quantity_of(
@@ -18,5 +14,9 @@ validator(mint_policy_id: PolicyId) {
       mint_policy_id,
       collection.reference_asset_name,
     ) == 0
+  }
+
+  else(_) {
+    fail
   }
 }
