@@ -1,6 +1,5 @@
 use aiken/dict
-use aiken/string
-use aiken/transaction.{Input, ScriptContext, Spend, Transaction}
+use aiken/transaction.{Input, OutputReference, Transaction}
 use aiken/transaction/value.{MintedValue, PolicyId}
 use mintun/cip68
 use mintun/collection.{CollectionState}
@@ -9,7 +8,7 @@ use mintun/output as out
 use mintun/time
 
 /// Endpoints available to be called on the batch mint spending validator
-type Endpoint {
+pub type Endpoint {
   /// Indicates the transaction is for minting or burning 
   EndpointMint
 
@@ -17,15 +16,11 @@ type Endpoint {
   EndpointLock
 }
 
-validator(mint_policy_id: PolicyId) {
+validator state_script(mint_policy_id: PolicyId) {
   /// Validates changes to mutable parts of state datum: current nfts, sequence, and locked.
   /// Allows spending anything that is not a state token.
-  fn spend(_datum, endpoint: Endpoint, context: ScriptContext) {
-    let ScriptContext { transaction, purpose } = context
-
-    expect Spend(output_reference) = purpose
-    expect Some(state_input) =
-      transaction.find_input(transaction.inputs, output_reference)
+  spend(_datum, endpoint: Endpoint, utxo: OutputReference, self: Transaction) {
+    expect Some(state_input) = transaction.find_input(self.inputs, utxo)
 
     let spends_state =
       value.quantity_of(
@@ -37,9 +32,13 @@ validator(mint_policy_id: PolicyId) {
     // Only validate spend if it is the state token. If it is anything else we
     // don't care and let it be spent.
     when spends_state is {
-      True -> validate_spend(endpoint, transaction, mint_policy_id, state_input)
+      True -> validate_spend(endpoint, self, mint_policy_id, state_input)
       False -> True
     }
+  }
+
+  else(_) {
+    fail
   }
 }
 

@@ -1,13 +1,13 @@
 use aiken/hash.{Blake2b_224, Hash}
 use aiken/list
-use aiken/transaction.{ScriptContext, Transaction}
+use aiken/transaction.{Transaction}
 use aiken/transaction/credential.{VerificationKey}
 use aiken/transaction/value.{PolicyId}
 use mintun/collection
 use mintun/input as in
 
 /// It is parameterized by a policy id to give it a unique script address
-validator(
+validator delegate_script(
   mint_policy_id: PolicyId,
   delegate: Hash<Blake2b_224, VerificationKey>,
 ) {
@@ -17,9 +17,8 @@ validator(
   /// This derivative mint is useful for minting with the authority of the original minting policy
   /// but minting to its own unique policy id. Main intent is to use this policy to mint tokens
   /// holding script references to the main minting policy.
-  fn mint(_redeemer, context: ScriptContext) {
-    let ScriptContext { transaction: tx, .. } = context
-    let Transaction { inputs, extra_signatories, .. } = tx
+  mint(_redeemer, _policy_id, self: Transaction) {
+    let Transaction { inputs, extra_signatories, .. } = self
     expect Some(_parent_owner_token) =
       in.find_asset(inputs, mint_policy_id, collection.owner_asset_name)
 
@@ -27,5 +26,9 @@ validator(
     let delegate_signed = list.has(extra_signatories, delegate)
 
     delegate_signed?
+  }
+
+  else(_) {
+    fail
   }
 }

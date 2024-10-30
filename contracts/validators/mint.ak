@@ -3,9 +3,7 @@ use aiken/bytearray
 use aiken/dict
 use aiken/list
 use aiken/option
-use aiken/transaction.{
-  Input, Mint, Output, OutputReference, ScriptContext, Transaction,
-}
+use aiken/transaction.{Input, Output, OutputReference, Transaction}
 use aiken/transaction/value.{AssetName, MintedValue, PolicyId}
 use mintun/cip102
 use mintun/cip68
@@ -13,7 +11,7 @@ use mintun/collection.{CollectionName, CollectionState, NFT}
 use mintun/input as in
 
 /// The redeemer indicates if this is a genesis transaction, mint, or burn.  
-type Endpoint {
+pub type Endpoint {
   /// The genesis transaction must spend the seed UTxO to guarantee it can only be called once.
   EndpointGenesis {
     state_validator_policy_id: PolicyId,
@@ -26,12 +24,10 @@ type Endpoint {
 }
 
 /// Seed is used to make genesis transaction a one-shot
-validator(seed: OutputReference) {
+validator mint_script(seed: OutputReference) {
   /// Minting policy validates minted tokens are named in CIP-68 format and output to correct addresses
   /// We could also enforce constraints on datum shape but that may be overkill
-  fn mint(endpoint: Endpoint, context: ScriptContext) {
-    let ScriptContext { transaction, purpose } = context
-    expect Mint(mint_policy_id) = purpose
+  mint(endpoint: Endpoint, policy_id: PolicyId, self: Transaction) {
     trace @"Begin minting policy validation"
 
     // Branch evaluation based on endpoint being called
@@ -39,14 +35,18 @@ validator(seed: OutputReference) {
       EndpointGenesis(state_validator_policy_id, info_validator_policy_id) ->
         validate_genesis(
           seed,
-          transaction,
-          mint_policy_id,
+          self,
+          policy_id,
           state_validator_policy_id,
           info_validator_policy_id,
         )
-      EndpointMint -> validate_mint(transaction, mint_policy_id)
-      EndpointBurn -> validate_burn(transaction, mint_policy_id)
+      EndpointMint -> validate_mint(self, policy_id)
+      EndpointBurn -> validate_burn(self, policy_id)
     }
+  }
+
+  else(_) {
+    fail
   }
 }
 
